@@ -44,6 +44,20 @@ class TransactionNotifier extends Notifier<void> {
     ref.read(syncServiceProvider).syncTransactions();
   }
 
+  Future<void> updateTransactionAmount(Transaction transaction, double newAmount) async {
+    final db = ref.read(databaseProvider);
+    await db.updateTransaction(transaction.copyWith(amount: newAmount, isSynced: false));
+    ref.read(syncServiceProvider).syncTransactions();
+  }
+
+  Future<void> deleteTransaction(Transaction transaction) async {
+    final db = ref.read(databaseProvider);
+    await db.deleteTransaction(transaction);
+    // Note: In a real app, you might want to mark as deleted for remote sync
+    // but for now we just delete locally.
+    ref.read(syncServiceProvider).syncTransactions();
+  }
+
   double calculateBalance(List<Transaction> transactions) {
     return transactions.fold(0, (sum, item) {
       return item.isIncome ? sum + item.amount : sum - item.amount;

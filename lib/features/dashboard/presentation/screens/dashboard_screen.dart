@@ -159,13 +159,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       (context, index) {
                         final tx = transactions[index];
                         final category = categories.firstWhere(
-                          (c) => c.name == tx.category,
+                          (c) => c.id == tx.category || c.name == tx.category,
                           orElse: () => categories.first,
                         );
                         return TransactionItem(
                           transaction: tx,
                           categoryIcon: category.icon,
                           categoryColor: category.color,
+                          onEdit: (newAmount) {
+                            ref.read(transactionNotifierProvider.notifier)
+                               .updateTransactionAmount(tx, newAmount);
+                          },
+                          onDelete: () {
+                            ref.read(transactionNotifierProvider.notifier)
+                               .deleteTransaction(tx);
+                          },
                         );
                       },
                       childCount: transactions.length,
