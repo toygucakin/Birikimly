@@ -11,6 +11,10 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
 import 'package:birikimly/features/profile/presentation/screens/profile_screen.dart';
+import 'package:birikimly/core/database/database.dart';
+import 'package:birikimly/features/categories/domain/models/category_model.dart';
+import 'package:intl/intl.dart';
+import 'package:birikimly/core/utils/currency_utils.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
