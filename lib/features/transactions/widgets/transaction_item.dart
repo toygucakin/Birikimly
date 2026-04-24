@@ -260,7 +260,8 @@ class TransactionItem extends StatelessWidget {
                   controller: controller,
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [ThousandsFormatter()],
                   decoration: const InputDecoration(
                     border: InputBorder.none,
                     suffixText: 'TL',
@@ -274,7 +275,8 @@ class TransactionItem extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    final newAmount = double.tryParse(controller.text);
+                    final cleanText = controller.text.replaceAll('.', '').replaceAll(',', '.');
+                    final newAmount = double.tryParse(cleanText);
                     if (newAmount != null) {
                       onEdit?.call(newAmount);
                     }

@@ -74,7 +74,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     // Ensure keyboard is closed
     FocusScope.of(context).unfocus();
     
-    final amount = double.tryParse(_amountController.text);
+    final amountString = _amountController.text.replaceAll('.', '').replaceAll(',', '.');
+    final amount = double.tryParse(amountString);
     if (amount == null || _selectedCategoryId == null) return;
 
     final categories = ref.read(categoryProvider);
@@ -191,6 +192,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               focusNode: _amountFocusNode,
               controller: _amountController,
               keyboardType: TextInputType.number,
+              inputFormatters: [ThousandsFormatter()],
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.primary),
               decoration: const InputDecoration(
