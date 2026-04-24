@@ -100,42 +100,115 @@ class TransactionItem extends StatelessWidget {
               fontSize: 15,
             ),
           ),
-          PopupMenuButton<String>(
+          IconButton(
             icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            onSelected: (value) {
-              if (value == 'edit') {
-                _showEditAmountDialog(context);
-              } else if (value == 'delete') {
-                _showDeleteConfirm(context);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'edit',
-                child: Row(
-                  children: [
-                    Icon(Icons.edit, size: 18),
-                    SizedBox(width: 8),
-                    Text('Düzenle'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'delete',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete, size: 18, color: AppColors.expense),
-                    SizedBox(width: 8),
-                    Text('Sil', style: TextStyle(color: AppColors.expense)),
-                  ],
-                ),
-              ),
-            ],
+            onPressed: () => _showOptionsSheet(context),
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  void _showOptionsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 32),
+            _buildOptionTile(
+              context,
+              icon: Icons.edit_outlined,
+              title: 'Düzenle',
+              subtitle: 'İşlem miktarını güncelleyin',
+              color: AppColors.primary,
+              onTap: () {
+                Navigator.pop(context);
+                _showEditAmountDialog(context);
+              },
+            ),
+            const SizedBox(height: 16),
+            _buildOptionTile(
+              context,
+              icon: Icons.delete_outline,
+              title: 'Sil',
+              subtitle: 'İşlemi kalıcı olarak kaldırın',
+              color: AppColors.expense,
+              onTap: () {
+                Navigator.pop(context);
+                _showDeleteConfirm(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: color.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.withValues(alpha: 0.5)),
+          ],
+        ),
       ),
     );
   }
