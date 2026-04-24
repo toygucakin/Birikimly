@@ -107,8 +107,6 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           Row(
                             children: [
-                              _SyncIndicator(transactions: transactions, isGuest: isGuest),
-                              const SizedBox(width: 12),
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
@@ -229,71 +227,3 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-class _SyncIndicator extends StatelessWidget {
-  final List<dynamic> transactions;
-  final bool isGuest;
-
-  const _SyncIndicator({required this.transactions, this.isGuest = false});
-
-  @override
-  Widget build(BuildContext context) {
-    if (isGuest) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.storage,
-              size: 14,
-              color: AppColors.primary,
-            ),
-            SizedBox(width: 6),
-            Text(
-              'Yerel Mod',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final unsyncedCount = transactions.where((t) => !t.isSynced).length;
-    final isSynced = unsyncedCount == 0;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: isSynced ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isSynced ? Icons.cloud_done : Icons.cloud_upload_outlined,
-            size: 14,
-            color: isSynced ? Colors.green : Colors.orange,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            isSynced ? 'Synced' : '$unsyncedCount Pending',
-            style: TextStyle(
-              fontSize: 12,
-              color: isSynced ? Colors.green : Colors.orange,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
