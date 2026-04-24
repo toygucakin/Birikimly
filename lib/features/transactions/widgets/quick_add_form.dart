@@ -67,132 +67,134 @@ class _QuickAddFormState extends ConsumerState<QuickAddForm> {
         right: 24,
         top: 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Expanded(
-                child: Text(
-                  'Yeni İşlem',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Yeni İşlem',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              ToggleButtons(
-                constraints: const BoxConstraints(minHeight: 40),
-                borderRadius: BorderRadius.circular(12),
-                isSelected: [!_isIncome, _isIncome],
-                onPressed: (index) {
-                  setState(() {
-                    _isIncome = index == 1;
-                  });
-                },
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('Gider'),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text('Gelir'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          TextField(
-            controller: _amountController,
-            keyboardType: TextInputType.number,
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(
-              labelText: 'Miktar',
-              prefixText: '₺ ',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text('Kategori Seç',
-              style: TextStyle(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 100,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = _selectedCategoryId == category.id;
-                return GestureDetector(
-                  onTap: () {
+                const SizedBox(width: 8),
+                ToggleButtons(
+                  constraints: const BoxConstraints(minHeight: 40),
+                  borderRadius: BorderRadius.circular(12),
+                  isSelected: [!_isIncome, _isIncome],
+                  onPressed: (index) {
                     setState(() {
-                      _selectedCategoryId = category.id;
+                      _isIncome = index == 1;
                     });
                   },
-                  child: Container(
-                    width: 70,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? category.color.withValues(alpha: 0.2)
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: isSelected
-                          ? Border.all(color: category.color, width: 2)
-                          : null,
+                  children: const [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('Gider'),
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(category.icon,
-                            color: isSelected ? category.color : Colors.grey),
-                        const SizedBox(height: 4),
-                        Text(
-                          category.name,
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isSelected ? category.color : Colors.grey,
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      child: Text('Gelir'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                labelText: 'Miktar',
+                prefixText: '₺ ',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text('Kategori Seç',
+                style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  final category = categories[index];
+                  final isSelected = _selectedCategoryId == category.id;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedCategoryId = category.id;
+                      });
+                    },
+                    child: Container(
+                      width: 70,
+                      margin: const EdgeInsets.only(right: 12),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? category.color.withValues(alpha: 0.2)
+                            : AppColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: isSelected
+                            ? Border.all(color: category.color, width: 2)
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(category.icon,
+                              color: isSelected ? category.color : Colors.grey),
+                          const SizedBox(height: 4),
+                          Text(
+                            category.name,
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isSelected ? category.color : Colors.grey,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _descriptionController,
-            decoration: InputDecoration(
-              labelText: 'Açıklama (Opsiyonel)',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+                  );
+                },
               ),
             ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(double.infinity, 56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: 'Açıklama (Opsiyonel)',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
-            child: const Text('Kaydet',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ),
-          const SizedBox(height: 24),
-        ],
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 56),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: const Text('Kaydet',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
