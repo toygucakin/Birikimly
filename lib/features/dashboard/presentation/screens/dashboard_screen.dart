@@ -11,6 +11,7 @@ import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
+import 'package:birikimly/features/profile/presentation/screens/profile_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -91,59 +92,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Profile Button with Popup Menu
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: PopupMenuButton<String>(
-                              icon: const Icon(Icons.account_circle_outlined, size: 28),
-                              onSelected: (value) {
-                                if (value == 'logout') {
-                                  if (isGuest) {
-                                    ref.read(guestModeProvider.notifier).setGuestMode(false);
-                                  } else {
-                                    ref.read(authNotifierProvider.notifier).signOut();
-                                  }
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'logout',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.logout, color: AppColors.expense, size: 20),
-                                      SizedBox(width: 8),
-                                      Text('Çıkış Yap'),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Theme Toggle
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: IconButton(
-                              icon: Icon(
-                                ref.watch(themeProvider.notifier).isDarkMode 
-                                  ? Icons.light_mode_outlined 
-                                  : Icons.dark_mode_outlined
-                              ),
-                              onPressed: () => ref.read(themeProvider.notifier).toggleTheme(),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
                           GestureDetector(
-                            onTap: () => _showEditNameDialog(context, ref, customName),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -154,20 +107,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                     fontSize: 16,
                                   ),
                                 ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      displayName,
-                                      style: const TextStyle(
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Icon(Icons.edit, size: 14, color: AppColors.textSecondary),
-                                  ],
+                                Text(
+                                  displayName,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
+                            ),
+                          ),
+                          // Profile Button on Right
+                          Container(
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: IconButton(
+                              icon: const Icon(Icons.account_circle_outlined, size: 28),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                );
+                              },
                             ),
                           ),
                         ],

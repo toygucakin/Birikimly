@@ -289,7 +289,8 @@ Future<void> _openDatePicker() async {
   }
 }
   Widget _buildCategoryStep() {
-    final categories = ref.watch(categoryProvider);
+    final allCategories = ref.watch(categoryProvider);
+    final categories = allCategories.where((c) => c.isIncome == widget.isIncome).toList();
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Column(
