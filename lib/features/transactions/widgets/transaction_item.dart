@@ -292,7 +292,10 @@ class TransactionItem extends StatelessWidget {
   }
 
   void _showEditAmountDialog(BuildContext context) {
-    final controller = TextEditingController(text: transaction.amount.toString());
+    final initialValue = NumberFormat('#,###', 'tr_TR')
+        .format(transaction.amount.toInt())
+        .replaceAll(',', '.');
+    final controller = TextEditingController(text: initialValue);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
