@@ -267,16 +267,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final tx = transactions[index];
-                        final category = categories.firstWhere(
-                          (c) => c.id == tx.category || c.name == tx.category,
+                        final txCategory = categories.firstWhere(
+                          (c) => c.id == tx.categoryId || c.name == tx.categoryId,
                           orElse: () => categories.first,
                         );
                         return TransactionItem(
                           transaction: tx,
-                          categoryIcon: category.icon,
-                          categoryColor: category.color,
-                          categoryName: category.name,
-                          onTap: () => _showTransactionDetail(context, tx, category),
+                          categoryIcon: txCategory.icon,
+                          categoryColor: txCategory.color,
+                          categoryName: txCategory.name,
+                          onTap: () => _showTransactionDetail(context, tx, txCategory),
                           onEdit: (newAmount) {
                             ref.read(transactionNotifierProvider.notifier)
                                .updateTransactionAmount(tx, newAmount);
