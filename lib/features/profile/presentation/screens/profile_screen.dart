@@ -195,6 +195,10 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
         insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+        ),
         title: const Text('İsmini Değiştir'),
         content: TextField(
           controller: controller,
@@ -354,7 +358,10 @@ class ProfileScreen extends ConsumerWidget {
           alignment: Alignment.topCenter,
           insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
           backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+          ),
           title: const Text('Kategoriyi Düzenle'),
           content: SingleChildScrollView(
             child: Column(
@@ -458,6 +465,10 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
         insetPadding: const EdgeInsets.only(top: 120, left: 20, right: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
+        ),
         title: const Text('Kategoriyi Sil'),
         content: Text('${cat.name} kategorisini silmek istediğinize emin misiniz?'),
         actions: [
@@ -487,7 +498,10 @@ class ProfileScreen extends ConsumerWidget {
           alignment: Alignment.topCenter,
           insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
           backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+          ),
           title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
           content: SingleChildScrollView(
             child: Column(
@@ -591,6 +605,10 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
         insetPadding: const EdgeInsets.only(top: 120, left: 20, right: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
+        ),
         title: const Text('Çıkış Yap'),
         content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
         actions: [
