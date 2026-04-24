@@ -11,6 +11,7 @@ class TransactionItem extends StatelessWidget {
   final String categoryName;
   final VoidCallback? onDelete;
   final Function(double)? onEdit;
+  final VoidCallback? onTap;
 
   const TransactionItem({
     super.key,
@@ -20,12 +21,15 @@ class TransactionItem extends StatelessWidget {
     required this.categoryName,
     this.onDelete,
     this.onEdit,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -120,6 +124,7 @@ class TransactionItem extends StatelessWidget {
             ],
           ),
         ],
+      ),
       ),
     );
   }
