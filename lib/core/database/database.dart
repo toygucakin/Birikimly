@@ -55,7 +55,7 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(transactions, transactions.categoryId);
           // Data recovery: Copy legacy category names to the new categoryId column
           try {
-            await m.issue('UPDATE transactions SET category_id = category WHERE category_id IS NULL');
+            await customStatement('UPDATE transactions SET category_id = category WHERE category_id IS NULL');
           } catch (e) {
             print('Migration data recovery skipped or failed: $e');
           }
