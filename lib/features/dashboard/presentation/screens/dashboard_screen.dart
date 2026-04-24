@@ -10,7 +10,6 @@ import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
-import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/profile/presentation/screens/profile_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -35,36 +34,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => TransactionWizard(isIncome: isIncome),
-    );
-  }
-
-  void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
-    final controller = TextEditingController(text: currentName);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('İsmini Değiştir'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Yeni isminiz'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                ref.read(userNameProvider.notifier).setUserName(controller.text.trim());
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
     );
   }
 
