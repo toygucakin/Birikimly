@@ -27,19 +27,6 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Profil'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.expense),
-            onPressed: () {
-              if (isGuest) {
-                ref.read(guestModeProvider.notifier).setGuestMode(false);
-              } else {
-                ref.read(authNotifierProvider.notifier).signOut();
-              }
-              Navigator.pop(context);
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -92,7 +79,6 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
-            // Expense Categories
             _buildCategorySection(
               context,
               ref,
@@ -100,6 +86,28 @@ class ProfileScreen extends ConsumerWidget {
               categories: expenseCategories,
               isIncome: false,
             ),
+            const SizedBox(height: 48),
+
+            // Logout Button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _showLogoutConfirm(context, ref, isGuest),
+                icon: const Icon(Icons.logout),
+                label: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.expense.withValues(alpha: 0.1),
+                  foregroundColor: AppColors.expense,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: const BorderSide(color: AppColors.expense, width: 1.5),
+                  ),
+                  elevation: 0,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -388,6 +396,34 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+  void _showLogoutConfirm(BuildContext context, WidgetRef ref, bool isGuest) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Çıkış Yap'),
+        content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (isGuest) {
+                ref.read(guestModeProvider.notifier).setGuestMode(false);
+              } else {
+                ref.read(authNotifierProvider.notifier).signOut();
+              }
+              Navigator.pop(context); // Close dialog
+              Navigator.pop(context); // Go back to Auth Screen (if applicable)
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+            child: const Text('Çıkış Yap'),
+          ),
+        ],
       ),
     );
   }
