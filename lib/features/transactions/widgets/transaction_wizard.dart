@@ -136,7 +136,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ],
               ),
             ),
-            SizedBox(
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               height: _currentStep == 0 
                   ? 150 
                   : (_currentStep == 3 ? 300 : (_currentStep == 2 ? 180 : 180)),
@@ -274,21 +276,23 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     final allCategories = ref.watch(categoryProvider);
     final categories = allCategories.where((c) => c.isIncome == widget.isIncome).toList();
     return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Column(
-        children: [
-          const Text(
-            'Kategori Seçin ve Kaydedin',
-            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: SingleChildScrollView(
+        child: Column(
+          children: [
+            const Text(
+              'Kategori Seçin ve Kaydedin',
+              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 20),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 1.1,
               ),
               itemCount: categories.length,
               itemBuilder: (context, index) {
@@ -312,12 +316,12 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(category.icon,
-                            color: isSelected ? category.color : Colors.grey, size: 32),
-                        const SizedBox(height: 8),
+                            color: isSelected ? category.color : Colors.grey, size: 24),
+                        const SizedBox(height: 4),
                         Text(
                           category.name,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                             color: isSelected ? category.color : Colors.grey,
                           ),
@@ -329,8 +333,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 );
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
