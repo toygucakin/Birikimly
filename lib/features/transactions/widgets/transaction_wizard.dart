@@ -139,9 +139,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              height: _currentStep == 0 
-                  ? 150 
-                  : (_currentStep == 3 ? 300 : (_currentStep == 2 ? 180 : 180)),
+              height: _currentStep == 3 ? 300 : 180,
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
