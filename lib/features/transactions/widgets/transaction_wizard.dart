@@ -109,18 +109,18 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.fastOutSlowIn,
+      child: Container(
         clipBehavior: Clip.antiAlias,
-        height: (MediaQuery.of(context).size.height * 
-                (_currentStep == 0 ? 0.42 : (_currentStep == 3 ? 0.65 : 0.5))) + 
-                MediaQuery.of(context).viewInsets.bottom,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      child: Column(
+        width: double.infinity,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.7,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.circular(30),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 12),
           Container(
@@ -189,6 +189,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             TextField(
               focusNode: _amountFocusNode,
               controller: _amountController,
+              autofocus: true,
               keyboardType: TextInputType.number,
               inputFormatters: [ThousandsFormatter()],
               textAlign: TextAlign.center,

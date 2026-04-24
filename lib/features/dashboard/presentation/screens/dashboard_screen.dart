@@ -33,11 +33,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   void _showTransactionWizard(BuildContext context, bool isIncome) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => TransactionWizard(isIncome: isIncome),
+      barrierDismissible: true,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: TransactionWizard(isIncome: isIncome),
+      ),
     );
   }
 
