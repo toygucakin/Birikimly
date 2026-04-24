@@ -41,7 +41,7 @@ dependencies:
   font_awesome_flutter: ^11.0.0
   path_provider: ^2.1.5
   supabase_flutter: ^2.12.4
-  connectivity_plus: ^7.1.1
+  connectivity_plus: ^6.0.5
   drift: ^2.32.1
   sqlite3_flutter_libs: ^0.6.0+eol
   path: ^1.9.1
