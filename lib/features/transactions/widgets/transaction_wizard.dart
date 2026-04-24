@@ -118,16 +118,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.textSecondary.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
@@ -135,19 +126,19 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 children: [
                   Text(
                     widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   Text(
                     '${_currentStep + 1} / 4',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
             ),
             SizedBox(
               height: _currentStep == 0 
-                  ? 140 
-                  : (_currentStep == 3 ? 340 : (_currentStep == 2 ? 240 : 200)),
+                  ? 120 
+                  : (_currentStep == 3 ? 300 : (_currentStep == 2 ? 180 : 180)),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
@@ -246,13 +237,13 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         children: [
           const Text(
             'Açıklama Ekleyin',
-            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           TextField(
             focusNode: _descriptionFocusNode,
             controller: _descriptionController,
-            maxLines: 2,
+            maxLines: 1,
             decoration: InputDecoration(
               hintText: 'Harcama veya gelir detayı...',
               border: OutlineInputBorder(
@@ -344,7 +335,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
 
   Widget _buildNavigation() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
           if (_currentStep > 0)
