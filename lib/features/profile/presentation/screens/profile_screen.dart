@@ -159,6 +159,19 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  static const List<IconData> _availableIcons = [
+    Icons.restaurant, Icons.shopping_bag, Icons.directions_car, 
+    Icons.videogame_asset, Icons.home, Icons.account_balance_wallet, 
+    Icons.trending_up, Icons.fitness_center, Icons.medical_services, 
+    Icons.school, Icons.flight, Icons.local_gas_station, 
+    Icons.coffee, Icons.pets, Icons.celebration, Icons.work, 
+    Icons.phone_android, Icons.subscriptions, Icons.movie, 
+    Icons.brush, Icons.shopping_cart, Icons.build, 
+    Icons.child_care, Icons.electric_bolt, Icons.water_drop,
+    Icons.fastfood, Icons.local_mall, Icons.sports_esports, 
+    Icons.health_and_safety, Icons.savings, Icons.receipt_long,
+  ];
+
   void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
     final controller = TextEditingController(text: currentName);
     showDialog(
@@ -186,29 +199,118 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  void _showIconPicker(BuildContext context, IconData currentIcon, Function(IconData) onSelected) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text('İkon Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 300,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: _availableIcons.length,
+                itemBuilder: (context, index) {
+                  final icon = _availableIcons[index];
+                  final isSelected = icon == currentIcon;
+                  return InkWell(
+                    onTap: () {
+                      onSelected(icon);
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.2),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textPrimary),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showRenameDialog(BuildContext context, WidgetRef ref, CategoryModel cat) {
     final controller = TextEditingController(text: cat.name);
+    IconData selectedIcon = cat.icon;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Kategoriyi Düzenle'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(hintText: 'Kategori adı'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
-          TextButton(
-            onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                ref.read(categoryProvider.notifier).updateCategory(cat.id, controller.text.trim());
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Kaydet'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Kategoriyi Düzenle'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () => _showIconPicker(context, selectedIcon, (icon) {
+                  setDialogState(() => selectedIcon = icon);
+                }),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: cat.color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(selectedIcon, color: cat.color, size: 40),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(hintText: 'Kategori adı'),
+                autofocus: true,
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+            TextButton(
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  ref.read(categoryProvider.notifier).updateCategory(
+                    cat.id, 
+                    name: controller.text.trim(),
+                    icon: selectedIcon,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Kaydet'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -235,33 +337,57 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showAddCategoryDialog(BuildContext context, WidgetRef ref, bool isIncome) {
-    String name = '';
+    final controller = TextEditingController();
+    IconData selectedIcon = isIncome ? Icons.trending_up : Icons.category;
+    final color = isIncome ? Colors.teal : Colors.blueGrey;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
-        content: TextField(
-          onChanged: (v) => name = v,
-          decoration: const InputDecoration(hintText: 'Kategori adı'),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
-          TextButton(
-            onPressed: () {
-              if (name.trim().isNotEmpty) {
-                ref.read(categoryProvider.notifier).addCategory(
-                  name.trim(),
-                  isIncome ? Icons.trending_up : Icons.category,
-                  isIncome ? Colors.teal : Colors.blueGrey,
-                  isIncome,
-                );
-              }
-              Navigator.pop(context);
-            },
-            child: const Text('Ekle'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InkWell(
+                onTap: () => _showIconPicker(context, selectedIcon, (icon) {
+                  setDialogState(() => selectedIcon = icon);
+                }),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(selectedIcon, color: color, size: 40),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(hintText: 'Kategori adı'),
+                autofocus: true,
+              ),
+            ],
           ),
-        ],
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+            TextButton(
+              onPressed: () {
+                if (controller.text.trim().isNotEmpty) {
+                  ref.read(categoryProvider.notifier).addCategory(
+                    controller.text.trim(),
+                    selectedIcon,
+                    color,
+                    isIncome,
+                  );
+                }
+                Navigator.pop(context);
+              },
+              child: const Text('Ekle'),
+            ),
+          ],
+        ),
       ),
     );
   }

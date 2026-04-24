@@ -28,11 +28,17 @@ class CategoryNotifier extends Notifier<List<CategoryModel>> {
     state = [...state, newCategory];
   }
 
-  void updateCategory(String id, String newName) {
+  void updateCategory(String id, {String? name, IconData? icon, Color? color}) {
     state = [
       for (final cat in state)
         if (cat.id == id)
-          CategoryModel(id: cat.id, name: newName, icon: cat.icon, color: cat.color, isIncome: cat.isIncome)
+          CategoryModel(
+            id: cat.id, 
+            name: name ?? cat.name, 
+            icon: icon ?? cat.icon, 
+            color: color ?? cat.color, 
+            isIncome: cat.isIncome
+          )
         else
           cat
     ];
