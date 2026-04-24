@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taptap/core/theme/app_colors.dart';
-import 'package:taptap/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/theme/app_colors.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/providers/preferences_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -195,6 +196,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         : 'Zaten hesabın var mı? Giriş Yap',
                     style: const TextStyle(
                       color: AppColors.textPrimary,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    ref.read(guestModeProvider.notifier).setGuestMode(true);
+                  },
+                  child: const Text(
+                    'Misafir olarak giriş yap',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ),

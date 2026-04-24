@@ -1,11 +1,12 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taptap/core/database/database.dart';
-import 'package:taptap/core/theme/app_colors.dart';
-import 'package:taptap/features/categories/presentation/providers/category_provider.dart';
-import 'package:taptap/features/transactions/presentation/providers/transaction_provider.dart';
-import 'package:taptap/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/database/database.dart';
+import 'package:birikimly/core/theme/app_colors.dart';
+import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
+import 'package:birikimly/features/transactions/presentation/providers/transaction_provider.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/providers/preferences_provider.dart';
 
 class QuickAddForm extends ConsumerStatefulWidget {
   const QuickAddForm({super.key});
@@ -34,11 +35,15 @@ class _QuickAddFormState extends ConsumerState<QuickAddForm> {
     final categories = ref.read(categoryProvider);
     final category = categories.firstWhere((c) => c.id == _selectedCategoryId);
 
+    final isGuest = ref.read(guestModeProvider);
     final user = ref.read(currentUserProvider);
-    if (user == null) return;
+    
+    if (!isGuest && user == null) return;
+    
+    final userId = isGuest ? 'guest' : user!.id;
 
     final entry = TransactionsCompanion(
-      userId: drift.Value(user.id),
+      userId: drift.Value(userId),
       amount: drift.Value(amount),
       category: drift.Value(category.name),
       description: drift.Value(_descriptionController.text),

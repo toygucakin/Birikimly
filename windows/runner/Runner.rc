@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "taptap" "\0"
+            VALUE "FileDescription", "birikimly" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "taptap" "\0"
+            VALUE "InternalName", "birikimly" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "taptap.exe" "\0"
-            VALUE "ProductName", "taptap" "\0"
+            VALUE "OriginalFilename", "birikimly.exe" "\0"
+            VALUE "ProductName", "birikimly" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

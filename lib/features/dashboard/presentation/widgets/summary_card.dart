@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:taptap/core/theme/app_colors.dart';
-import 'package:taptap/core/utils/currency_utils.dart';
+import 'package:birikimly/core/theme/app_colors.dart';
+import 'package:birikimly/core/utils/currency_utils.dart';
 
 class SummaryCard extends StatelessWidget {
   final double totalBalance;

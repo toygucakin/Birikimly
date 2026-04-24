@@ -1,4 +1,4 @@
-import 'package:taptap/features/categories/domain/models/category_model.dart';
+import 'package:birikimly/features/categories/domain/models/category_model.dart';
 
 class TransactionModel {
   final String id;

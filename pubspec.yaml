@@ -1,5 +1,5 @@
-name: taptap
-description: "A new Flutter project."
+name: birikimly
+description: "Birikimlerini takip etmen için modern bir finans uygulaması."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -46,6 +46,7 @@ dependencies:
   sqlite3_flutter_libs: ^0.6.0+eol
   path: ^1.9.1
   flutter_dotenv: ^5.2.1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:

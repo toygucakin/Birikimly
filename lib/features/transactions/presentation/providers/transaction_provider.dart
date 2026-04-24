@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taptap/core/database/database.dart';
-import 'package:taptap/core/services/sync_service.dart';
-import 'package:taptap/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/database/database.dart';
+import 'package:birikimly/core/services/sync_service.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/providers/preferences_provider.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -19,7 +20,13 @@ final syncServiceProvider = Provider<SyncService>((ref) {
 
 final transactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
   final db = ref.watch(databaseProvider);
+  final isGuest = ref.watch(guestModeProvider);
   final user = ref.watch(currentUserProvider);
+  
+  if (isGuest) {
+    return db.watchAllTransactions('guest');
+  }
+  
   if (user == null) {
     return Stream.value([]);
   }

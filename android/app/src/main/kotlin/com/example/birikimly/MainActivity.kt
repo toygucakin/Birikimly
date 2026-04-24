@@ -1,4 +1,4 @@
-package com.example.taptap
+package com.example.birikimly
 
 import io.flutter.embedding.android.FlutterActivity
 

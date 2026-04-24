@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:taptap/core/theme/app_colors.dart';
-import 'package:taptap/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/theme/app_colors.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 
 class UpdatePasswordScreen extends ConsumerStatefulWidget {
   const UpdatePasswordScreen({super.key});

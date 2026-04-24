@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taptap/features/auth/presentation/providers/auth_provider.dart';
-import 'package:taptap/features/auth/presentation/screens/auth_screen.dart';
-import 'package:taptap/features/auth/presentation/screens/update_password_screen.dart';
-import 'package:taptap/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/features/auth/presentation/screens/auth_screen.dart';
+import 'package:birikimly/features/auth/presentation/screens/update_password_screen.dart';
+import 'package:birikimly/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:birikimly/core/providers/preferences_provider.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isGuest = ref.watch(guestModeProvider);
+    if (isGuest) {
+      return const DashboardScreen();
+    }
+
     final authState = ref.watch(authStateProvider);
 
     return authState.when(

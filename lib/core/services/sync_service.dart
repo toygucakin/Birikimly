@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
-import 'package:taptap/core/database/database.dart';
-import 'package:taptap/core/services/supabase_service.dart';
+import 'package:birikimly/core/database/database.dart';
+import 'package:birikimly/core/services/supabase_service.dart';
 
 class SyncService {
   final AppDatabase _db;

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:taptap/features/categories/domain/models/category_model.dart';
+import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:uuid/uuid.dart';
 
 class CategoryNotifier extends Notifier<List<CategoryModel>> {
