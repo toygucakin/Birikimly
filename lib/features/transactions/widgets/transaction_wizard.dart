@@ -35,10 +35,6 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     super.initState();
     _amountFocusNode = FocusNode();
     _descriptionFocusNode = FocusNode();
-    // Re-enable post-frame focus request for better sync with bottom sheet animation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _amountFocusNode.requestFocus();
-    });
   }
 
   @override
@@ -121,58 +117,58 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.textSecondary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textSecondary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '${_currentStep + 1} / 4',
-                  style: const TextStyle(color: AppColors.textSecondary),
-                ),
-              ],
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '${_currentStep + 1} / 4',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(
-            height: _currentStep == 0 
-                ? 140 
-                : (_currentStep == 3 ? 340 : (_currentStep == 2 ? 240 : 200)),
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (int step) async {
-                setState(() => _currentStep = step);
-                FocusScope.of(context).unfocus();
-              },
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildAmountStep(),
-                _buildDateStep(),
-                _buildDescriptionStep(),
-                _buildCategoryStep(),
-              ],
+            SizedBox(
+              height: _currentStep == 0 
+                  ? 140 
+                  : (_currentStep == 3 ? 340 : (_currentStep == 2 ? 240 : 200)),
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (int step) async {
+                  setState(() => _currentStep = step);
+                  FocusScope.of(context).unfocus();
+                },
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildAmountStep(),
+                  _buildDateStep(),
+                  _buildDescriptionStep(),
+                  _buildCategoryStep(),
+                ],
+              ),
             ),
-          ),
-          _buildNavigation(),
-        ],
+            _buildNavigation(),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildAmountStep() {
     return Padding(
@@ -180,27 +176,26 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            const Text(
-              'Miktarı Girin',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          const Text(
+            'Miktarı Girin',
+            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            focusNode: _amountFocusNode,
+            controller: _amountController,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            inputFormatters: [ThousandsFormatter()],
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.primary),
+            decoration: const InputDecoration(
+              prefixText: '₺ ',
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
             ),
-            const SizedBox(height: 8),
-            TextField(
-              focusNode: _amountFocusNode,
-              controller: _amountController,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              inputFormatters: [ThousandsFormatter()],
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.primary),
-              decoration: const InputDecoration(
-                prefixText: '₺ ',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -211,12 +206,12 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            const Text(
-              'İşlem Tarihi',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
+          const Text(
+            'İşlem Tarihi',
+            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
             onTap: _openDatePicker,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -240,9 +235,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           ),
         ],
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildDescriptionStep() {
     return Padding(
@@ -250,39 +244,39 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-            const Text(
-              'Açıklama Ekleyin',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 24),
-            TextField(
-              focusNode: _descriptionFocusNode,
-              controller: _descriptionController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: 'Harcama veya gelir detayı...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+          const Text(
+            'Açıklama Ekleyin',
+            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            focusNode: _descriptionFocusNode,
+            controller: _descriptionController,
+            maxLines: 2,
+            decoration: InputDecoration(
+              hintText: 'Harcama veya gelir detayı...',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-// Opens the date picker automatically for the date step
-Future<void> _openDatePicker() async {
-  final date = await showDatePicker(
-    context: context,
-    initialDate: _selectedDate,
-    firstDate: DateTime(2026, 1, 1),
-    lastDate: DateTime.now().add(const Duration(days: 365)),
-  );
-  if (date != null) {
-    setState(() => _selectedDate = date);
+
+  Future<void> _openDatePicker() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2026, 1, 1),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (date != null) {
+      setState(() => _selectedDate = date);
+    }
   }
-}
+
   Widget _buildCategoryStep() {
     final allCategories = ref.watch(categoryProvider);
     final categories = allCategories.where((c) => c.isIncome == widget.isIncome).toList();
