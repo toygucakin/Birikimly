@@ -54,14 +54,13 @@ class TransactionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.description.isEmpty
-                      ? categoryName
-                      : transaction.description,
+                  categoryName,
                   style: const TextStyle(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Row(
                   children: [
                     Text(
@@ -71,6 +70,22 @@ class TransactionItem extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
+                    if (transaction.description.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      const Text('•', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          transaction.description,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ],
