@@ -34,6 +34,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     super.initState();
     _amountFocusNode = FocusNode();
     _descriptionFocusNode = FocusNode();
+    // Re-enable post-frame focus request for better sync with bottom sheet animation
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _amountFocusNode.requestFocus();
     });
@@ -107,11 +108,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         if (didPop) FocusScope.of(context).unfocus();
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.fastOutSlowIn,
         clipBehavior: Clip.antiAlias,
         height: (MediaQuery.of(context).size.height * 
-                (_currentStep == 0 ? 0.4 : (_currentStep == 3 ? 0.65 : 0.5))) + 
+                (_currentStep == 0 ? 0.42 : (_currentStep == 3 ? 0.65 : 0.5))) + 
                 MediaQuery.of(context).viewInsets.bottom,
       decoration: const BoxDecoration(
         color: AppColors.background,
