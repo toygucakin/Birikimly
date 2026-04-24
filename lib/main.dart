@@ -7,6 +7,7 @@ import 'package:birikimly/core/theme/app_theme.dart';
 import 'package:birikimly/features/auth/presentation/screens/auth_gate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/core/providers/theme_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,15 +34,19 @@ Future<void> main() async {
   );
 }
 
-class BirikimlyApp extends StatelessWidget {
+class BirikimlyApp extends ConsumerWidget {
   const BirikimlyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeProvider);
+
     return MaterialApp(
       title: 'Birikimly',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: AppTheme.lightTheme, // Assuming lightTheme exists or will be added
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       home: const AuthGate(),
     );
   }
