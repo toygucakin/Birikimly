@@ -39,11 +39,6 @@ class BirikimlyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Force hide keyboard on app startup / hot restart
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      FocusManager.instance.primaryFocus?.unfocus();
-    });
-
     final themeMode = ref.watch(themeProvider);
 
     return MaterialApp(

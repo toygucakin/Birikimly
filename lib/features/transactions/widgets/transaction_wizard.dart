@@ -35,6 +35,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     super.initState();
     _amountFocusNode = FocusNode();
     _descriptionFocusNode = FocusNode();
+    // Re-enable post-frame focus request for better sync with bottom sheet animation
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _amountFocusNode.requestFocus();
+    });
   }
 
   @override
@@ -105,72 +109,69 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
       },
-      child: Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textSecondary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      '${_currentStep + 1} / 4',
-                      style: const TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 10),
-              // Use a constrained box or something to keep steps height consistent if needed
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.5,
-                ),
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (int step) async {
-                    setState(() => _currentStep = step);
-                    FocusScope.of(context).unfocus();
-                  },
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildAmountStep(),
-                    _buildDateStep(),
-                    _buildDescriptionStep(),
-                    _buildCategoryStep(),
-                  ],
-                ),
-              ),
-              _buildNavigation(),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.fastOutSlowIn,
+        clipBehavior: Clip.antiAlias,
+        height: (MediaQuery.of(context).size.height * 
+                (_currentStep == 0 ? 0.42 : (_currentStep == 3 ? 0.65 : 0.5))) + 
+                MediaQuery.of(context).viewInsets.bottom,
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-    );
-  }
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.textSecondary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  '${_currentStep + 1} / 4',
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (int step) async {
+                setState(() => _currentStep = step);
+                // Close any open keyboard
+                FocusScope.of(context).unfocus();
+              },
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildAmountStep(),
+                _buildDateStep(),
+                _buildDescriptionStep(),
+                _buildCategoryStep(),
+              ],
+            ),
+          ),
+          _buildNavigation(),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildAmountStep() {
     return SingleChildScrollView(
@@ -188,7 +189,6 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             TextField(
               focusNode: _amountFocusNode,
               controller: _amountController,
-              autofocus: true,
               keyboardType: TextInputType.number,
               inputFormatters: [ThousandsFormatter()],
               textAlign: TextAlign.center,
@@ -355,11 +355,7 @@ Future<void> _openDatePicker() async {
 
   Widget _buildNavigation() {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        bottom: 24 + MediaQuery.of(context).viewInsets.bottom,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       child: Row(
         children: [
           if (_currentStep > 0)
