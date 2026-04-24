@@ -41,13 +41,16 @@ class BirikimlyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
 
-    return MaterialApp(
-      title: 'Birikimly',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme, // Assuming lightTheme exists or will be added
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      home: const AuthGate(),
+    return GestureDetector(
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+      child: MaterialApp(
+        title: 'Birikimly',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        home: const AuthGate(),
+      ),
     );
   }
 }

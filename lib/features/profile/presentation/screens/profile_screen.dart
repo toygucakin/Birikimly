@@ -193,6 +193,7 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        alignment: Alignment.topCenter,
         title: const Text('İsmini Değiştir'),
         content: TextField(
           controller: controller,
@@ -349,6 +350,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          alignment: Alignment.topCenter,
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: const Text('Kategoriyi Düzenle'),
@@ -450,6 +452,7 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        alignment: Alignment.topCenter,
         title: const Text('Kategoriyi Sil'),
         content: Text('${cat.name} kategorisini silmek istediğinize emin misiniz?'),
         actions: [
@@ -476,6 +479,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          alignment: Alignment.topCenter,
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
@@ -577,6 +581,7 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        alignment: Alignment.topCenter,
         title: const Text('Çıkış Yap'),
         content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
         actions: [
