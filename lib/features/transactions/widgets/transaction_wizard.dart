@@ -8,6 +8,7 @@ import 'package:birikimly/features/categories/presentation/providers/category_pr
 import 'package:birikimly/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/core/utils/currency_utils.dart';
 
 class TransactionWizard extends ConsumerStatefulWidget {
   final bool isIncome;
