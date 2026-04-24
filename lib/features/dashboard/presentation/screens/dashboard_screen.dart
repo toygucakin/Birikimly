@@ -37,8 +37,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       context: context,
       barrierDismissible: true,
       builder: (context) => Dialog(
+        alignment: Alignment.topCenter,
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
         child: TransactionWizard(isIncome: isIncome),
       ),
     );

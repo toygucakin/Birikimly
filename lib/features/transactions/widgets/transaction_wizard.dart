@@ -148,14 +148,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
           SizedBox(
-            height: _currentStep == 0 ? 160 : (_currentStep == 3 ? 380 : 250),
+            height: _currentStep == 0 
+                ? 140 
+                : (_currentStep == 3 ? 350 : (_currentStep == 2 ? 300 : 220)),
             child: PageView(
               controller: _pageController,
               onPageChanged: (int step) async {
                 setState(() => _currentStep = step);
-                // Close any open keyboard
                 FocusScope.of(context).unfocus();
               },
               physics: const NeverScrollableScrollPhysics(),
@@ -211,7 +211,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -250,7 +250,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
 
   Widget _buildDescriptionStep() {
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: SingleChildScrollView(
         reverse: true,
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
