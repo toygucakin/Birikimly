@@ -11,11 +11,15 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final categories = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
     final customName = ref.watch(userNameProvider);
     final user = ref.watch(currentUserProvider);
 
     String displayName = isGuest ? customName : (user?.email?.split('@').first ?? 'Kullanıcı');
+
+    final incomeCategories = categories.where((c) => c.isIncome).toList();
+    final expenseCategories = categories.where((c) => !c.isIncome).toList();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -74,6 +78,79 @@ class ProfileScreen extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 32),
+
+            // Income Categories
+            _buildCategorySection(
+              context,
+              ref,
+              title: 'Gelir Kategorileri',
+              categories: incomeCategories,
+              isIncome: true,
+            ),
+            const SizedBox(height: 24),
+
+            // Expense Categories
+            _buildCategorySection(
+              context,
+              ref,
+              title: 'Gider Kategorileri',
+              categories: expenseCategories,
+              isIncome: false,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySection(
+    BuildContext context,
+    WidgetRef ref, {
+    required String title,
+    required List<CategoryModel> categories,
+    required bool isIncome,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            IconButton(
+              icon: const Icon(Icons.add_circle, color: AppColors.primary),
+              onPressed: () => _showAddCategoryDialog(context, ref, isIncome),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...categories.map((cat) => _buildCategoryTile(context, ref, cat)),
+      ],
+    );
+  }
+
+  Widget _buildCategoryTile(BuildContext context, WidgetRef ref, CategoryModel cat) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        leading: Icon(cat.icon, color: cat.color),
+        title: Text(cat.name),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, size: 20),
+              onPressed: () => _showRenameDialog(context, ref, cat),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.expense),
+              onPressed: () => _showDeleteConfirm(context, ref, cat),
+            ),
           ],
         ),
       ),
@@ -101,6 +178,86 @@ class ProfileScreen extends ConsumerWidget {
               Navigator.pop(context);
             },
             child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRenameDialog(BuildContext context, WidgetRef ref, CategoryModel cat) {
+    final controller = TextEditingController(text: cat.name);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Kategoriyi Düzenle'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'Kategori adı'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          TextButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                ref.read(categoryProvider.notifier).updateCategory(cat.id, controller.text.trim());
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirm(BuildContext context, WidgetRef ref, CategoryModel cat) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Kategoriyi Sil'),
+        content: Text('${cat.name} kategorisini silmek istediğinize emin misiniz?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          TextButton(
+            onPressed: () {
+              ref.read(categoryProvider.notifier).removeCategory(cat.id);
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAddCategoryDialog(BuildContext context, WidgetRef ref, bool isIncome) {
+    String name = '';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
+        content: TextField(
+          onChanged: (v) => name = v,
+          decoration: const InputDecoration(hintText: 'Kategori adı'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          TextButton(
+            onPressed: () {
+              if (name.trim().isNotEmpty) {
+                ref.read(categoryProvider.notifier).addCategory(
+                  name.trim(),
+                  isIncome ? Icons.trending_up : Icons.category,
+                  isIncome ? Colors.teal : Colors.blueGrey,
+                  isIncome,
+                );
+              }
+              Navigator.pop(context);
+            },
+            child: const Text('Ekle'),
           ),
         ],
       ),
