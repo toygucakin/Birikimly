@@ -114,6 +114,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         decoration: BoxDecoration(
           color: AppColors.background,
           borderRadius: BorderRadius.circular(30),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -137,7 +138,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             ),
             SizedBox(
               height: _currentStep == 0 
-                  ? 120 
+                  ? 150 
                   : (_currentStep == 3 ? 300 : (_currentStep == 2 ? 180 : 180)),
               child: PageView(
                 controller: _pageController,
@@ -179,9 +180,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             keyboardType: TextInputType.number,
             inputFormatters: [ThousandsFormatter()],
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: AppColors.primary),
+            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
             decoration: const InputDecoration(
               prefixText: '₺ ',
+              prefixStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
