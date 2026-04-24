@@ -90,7 +90,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     final entry = TransactionsCompanion(
       userId: drift.Value(userId),
       amount: drift.Value(amount),
-      category: drift.Value(category.name),
+      category: drift.Value(category.id),
       description: drift.Value(_descriptionController.text),
       date: drift.Value(_selectedDate),
       isIncome: drift.Value(widget.isIncome),

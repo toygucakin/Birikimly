@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/features/transactions/presentation/providers/transaction_provider.dart';
+import 'package:birikimly/features/reports/presentation/screens/month_detail_analysis_screen.dart';
 
 class FinancialHistoryScreen extends ConsumerWidget {
   const FinancialHistoryScreen({super.key});
@@ -34,7 +35,20 @@ class FinancialHistoryScreen extends ConsumerWidget {
             itemCount: groupedData.length,
             itemBuilder: (context, index) {
               final data = groupedData[index];
-              return _buildMonthCard(data);
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MonthDetailAnalysisScreen(
+                        month: data.month,
+                        monthlyTransactions: data.transactions,
+                      ),
+                    ),
+                  );
+                },
+                child: _buildMonthCard(data),
+              );
             },
           );
         },
@@ -70,6 +84,7 @@ class FinancialHistoryScreen extends ConsumerWidget {
         month: current,
         income: income,
         expense: expense,
+        transactions: monthTransactions,
       ));
 
       current = DateTime(current.year, current.month - 1);
@@ -189,10 +204,12 @@ class _MonthData {
   final DateTime month;
   final double income;
   final double expense;
+  final List<dynamic> transactions;
 
   _MonthData({
     required this.month,
     required this.income,
     required this.expense,
+    required this.transactions,
   });
 }
