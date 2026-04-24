@@ -8,6 +8,7 @@ class TransactionItem extends StatelessWidget {
   final Transaction transaction;
   final IconData categoryIcon;
   final Color categoryColor;
+  final String categoryName;
   final VoidCallback? onDelete;
   final Function(double)? onEdit;
 
@@ -16,6 +17,7 @@ class TransactionItem extends StatelessWidget {
     required this.transaction,
     required this.categoryIcon,
     required this.categoryColor,
+    required this.categoryName,
     this.onDelete,
     this.onEdit,
   });
@@ -49,7 +51,7 @@ class TransactionItem extends StatelessWidget {
               children: [
                 Text(
                   transaction.description.isEmpty
-                      ? transaction.category
+                      ? categoryName
                       : transaction.description,
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
@@ -74,50 +76,46 @@ class TransactionItem extends StatelessWidget {
               ],
             ),
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '${transaction.isIncome ? '+' : '-'}${CurrencyUtils.format(transaction.amount)}',
-                style: TextStyle(
-                  color: transaction.isIncome ? AppColors.income : AppColors.expense,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+          const SizedBox(width: 8),
+          Text(
+            '${transaction.isIncome ? '+' : '-'}${CurrencyUtils.format(transaction.amount)}',
+            style: TextStyle(
+              color: transaction.isIncome ? AppColors.income : AppColors.expense,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
+            onSelected: (value) {
+              if (value == 'edit') {
+                _showEditAmountDialog(context);
+              } else if (value == 'delete') {
+                _showDeleteConfirm(context);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 18),
+                    SizedBox(width: 8),
+                    Text('Düzenle'),
+                  ],
                 ),
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onSelected: (value) {
-                  if (value == 'edit') {
-                    _showEditAmountDialog(context);
-                  } else if (value == 'delete') {
-                    _showDeleteConfirm(context);
-                  }
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        Icon(Icons.edit, size: 18),
-                        SizedBox(width: 8),
-                        Text('Düzenle'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 18, color: AppColors.expense),
-                        SizedBox(width: 8),
-                        Text('Sil', style: TextStyle(color: AppColors.expense)),
-                      ],
-                    ),
-                  ),
-                ],
+              const PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete, size: 18, color: AppColors.expense),
+                    SizedBox(width: 8),
+                    Text('Sil', style: TextStyle(color: AppColors.expense)),
+                  ],
+                ),
               ),
             ],
           ),

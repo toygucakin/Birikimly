@@ -166,6 +166,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           transaction: tx,
                           categoryIcon: category.icon,
                           categoryColor: category.color,
+                          categoryName: category.name,
                           onEdit: (newAmount) {
                             ref.read(transactionNotifierProvider.notifier)
                                .updateTransactionAmount(tx, newAmount);
