@@ -22,6 +22,9 @@ migrate_working_dir/
 .env*
 !.env.example
 TAPTAP.md
+Birikimly.ipa
+Payload/
+docs/IOS_CI_GUIDE.md
 
 # Flutter/Dart/Pub related
 **/doc/api/
