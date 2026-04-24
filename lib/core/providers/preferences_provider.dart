@@ -29,7 +29,7 @@ class UserNameNotifier extends Notifier<String> {
   @override
   String build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getString(_key) ?? 'Misafir';
+    return prefs.getString(_key) ?? 'Misafir1';
   }
 
   Future<void> setUserName(String value) async {

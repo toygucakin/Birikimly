@@ -16,7 +16,9 @@ class ProfileScreen extends ConsumerWidget {
     final customName = ref.watch(userNameProvider);
     final user = ref.watch(currentUserProvider);
 
-    String displayName = isGuest ? customName : (user?.email?.split('@').first ?? 'Kullanıcı');
+    String displayName = (customName.isNotEmpty && customName != 'Misafir' && customName != 'Misafir1')
+        ? customName
+        : (user?.email?.split('@').first ?? 'Kullanıcı');
 
     final incomeCategories = categories.where((c) => c.isIncome).toList();
     final expenseCategories = categories.where((c) => !c.isIncome).toList();
