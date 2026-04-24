@@ -194,6 +194,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
         title: const Text('İsmini Değiştir'),
         content: TextField(
           controller: controller,
@@ -351,72 +352,75 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           alignment: Alignment.topCenter,
+          insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: const Text('Kategoriyi Düzenle'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
-                          setDialogState(() => selectedIcon = icon);
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: selectedColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                            setDialogState(() => selectedIcon = icon);
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                            ),
+                            child: Icon(selectedIcon, color: selectedColor, size: 32),
                           ),
-                          child: Icon(selectedIcon, color: selectedColor, size: 32),
                         ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => _showColorPicker(context, selectedColor, (color) {
-                          setDialogState(() => selectedColor = color);
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _showColorPicker(context, selectedColor, (color) {
+                            setDialogState(() => selectedColor = color);
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                            ),
+                            child: const Icon(Icons.palette, color: Colors.white, size: 32),
                           ),
-                          child: const Icon(Icons.palette, color: Colors.white, size: 32),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: 'Kategori adı',
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                autofocus: true,
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: 'Kategori adı',
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  autofocus: true,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -453,6 +457,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.only(top: 120, left: 20, right: 20),
         title: const Text('Kategoriyi Sil'),
         content: Text('${cat.name} kategorisini silmek istediğinize emin misiniz?'),
         actions: [
@@ -480,72 +485,75 @@ class ProfileScreen extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           alignment: Alignment.topCenter,
+          insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
           backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Column(
-                    children: [
-                      const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
-                          setDialogState(() => selectedIcon = icon);
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: selectedColor.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Column(
+                      children: [
+                        const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                            setDialogState(() => selectedIcon = icon);
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedColor.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                              border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                            ),
+                            child: Icon(selectedIcon, color: selectedColor, size: 32),
                           ),
-                          child: Icon(selectedIcon, color: selectedColor, size: 32),
                         ),
-                      ),
-                    ],
-                  ),
-                  Column(
-                    children: [
-                      const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                      const SizedBox(height: 8),
-                      InkWell(
-                        onTap: () => _showColorPicker(context, selectedColor, (color) {
-                          setDialogState(() => selectedColor = color);
-                        }),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                      ],
+                    ),
+                    Column(
+                      children: [
+                        const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _showColorPicker(context, selectedColor, (color) {
+                            setDialogState(() => selectedColor = color);
+                          }),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: selectedColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                            ),
+                            child: const Icon(Icons.palette, color: Colors.white, size: 32),
                           ),
-                          child: const Icon(Icons.palette, color: Colors.white, size: 32),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: controller,
-                decoration: InputDecoration(
-                  hintText: 'Kategori adı',
-                  filled: true,
-                  fillColor: AppColors.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
+                      ],
+                    ),
+                  ],
                 ),
-                autofocus: true,
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: 'Kategori adı',
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  autofocus: true,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -582,6 +590,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.only(top: 120, left: 20, right: 20),
         title: const Text('Çıkış Yap'),
         content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
         actions: [
