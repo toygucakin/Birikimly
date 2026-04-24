@@ -74,11 +74,15 @@ class _QuickAddFormState extends ConsumerState<QuickAddForm> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Yeni İşlem (Offline-First)',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              const Expanded(
+                child: Text(
+                  'Yeni İşlem',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
               ),
+              const SizedBox(width: 8),
               ToggleButtons(
+                constraints: const BoxConstraints(minHeight: 40),
                 borderRadius: BorderRadius.circular(12),
                 isSelected: [!_isIncome, _isIncome],
                 onPressed: (index) {
@@ -88,11 +92,11 @@ class _QuickAddFormState extends ConsumerState<QuickAddForm> {
                 },
                 children: const [
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text('Gider'),
                   ),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text('Gelir'),
                   ),
                 ],
