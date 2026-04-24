@@ -79,6 +79,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
 
+            // Expense Categories
             _buildCategorySection(
               context,
               ref,
@@ -180,6 +181,13 @@ class ProfileScreen extends ConsumerWidget {
     Icons.health_and_safety, Icons.savings, Icons.receipt_long,
   ];
 
+  static const List<Color> _curatedColors = [
+    Colors.blue, Colors.indigo, Colors.deepPurple, Colors.pink,
+    Colors.red, Colors.deepOrange, Colors.orange, Colors.amber,
+    Colors.teal, Colors.cyan, Colors.green, Colors.lightGreen,
+    Colors.lime, Colors.blueGrey, Colors.brown,
+  ];
+
   void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
     final controller = TextEditingController(text: currentName);
     showDialog(
@@ -207,7 +215,70 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showIconPicker(BuildContext context, IconData currentIcon, Function(IconData) onSelected) {
+  void _showColorPicker(BuildContext context, Color currentColor, Function(Color) onSelected) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text('Renk Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            SizedBox(
+              height: 200,
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 5,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: _curatedColors.length,
+                itemBuilder: (context, index) {
+                  final color = _curatedColors[index];
+                  final isSelected = color.value == currentColor.value;
+                  return InkWell(
+                    onTap: () {
+                      onSelected(color);
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(50),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+                        boxShadow: isSelected ? [
+                          BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 2)
+                        ] : null,
+                      ),
+                      child: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showIconPicker(BuildContext context, Color themeColor, IconData currentIcon, Function(IconData) onSelected) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -251,13 +322,13 @@ class ProfileScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(12),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+                        color: isSelected ? themeColor.withValues(alpha: 0.1) : Colors.transparent,
                         border: Border.all(
-                          color: isSelected ? AppColors.primary : Colors.grey.withValues(alpha: 0.2),
+                          color: isSelected ? themeColor : Colors.grey.withValues(alpha: 0.2),
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textPrimary),
+                      child: Icon(icon, color: isSelected ? themeColor : AppColors.textPrimary),
                     ),
                   );
                 },
@@ -272,49 +343,101 @@ class ProfileScreen extends ConsumerWidget {
   void _showRenameDialog(BuildContext context, WidgetRef ref, CategoryModel cat) {
     final controller = TextEditingController(text: cat.name);
     IconData selectedIcon = cat.icon;
+    Color selectedColor = cat.color;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: const Text('Kategoriyi Düzenle'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              InkWell(
-                onTap: () => _showIconPicker(context, selectedIcon, (icon) {
-                  setDialogState(() => selectedIcon = icon);
-                }),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cat.color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                          setDialogState(() => selectedIcon = icon);
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                          ),
+                          child: Icon(selectedIcon, color: selectedColor, size: 32),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Icon(selectedIcon, color: cat.color, size: 40),
-                ),
+                  Column(
+                    children: [
+                      const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showColorPicker(context, selectedColor, (color) {
+                          setDialogState(() => selectedColor = color);
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                          ),
+                          child: const Icon(Icons.palette, color: Colors.white, size: 32),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(hintText: 'Kategori adı'),
+                decoration: InputDecoration(
+                  hintText: 'Kategori adı',
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
                 autofocus: true,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
                   ref.read(categoryProvider.notifier).updateCategory(
                     cat.id, 
                     name: controller.text.trim(),
                     icon: selectedIcon,
+                    color: selectedColor,
                   );
                 }
                 Navigator.pop(context);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               child: const Text('Kaydet'),
             ),
           ],
@@ -347,51 +470,101 @@ class ProfileScreen extends ConsumerWidget {
   void _showAddCategoryDialog(BuildContext context, WidgetRef ref, bool isIncome) {
     final controller = TextEditingController();
     IconData selectedIcon = isIncome ? Icons.trending_up : Icons.category;
-    final color = isIncome ? Colors.teal : Colors.blueGrey;
+    Color selectedColor = isIncome ? Colors.teal : Colors.blueGrey;
 
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              InkWell(
-                onTap: () => _showIconPicker(context, selectedIcon, (icon) {
-                  setDialogState(() => selectedIcon = icon);
-                }),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Column(
+                    children: [
+                      const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                          setDialogState(() => selectedIcon = icon);
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedColor.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                          ),
+                          child: Icon(selectedIcon, color: selectedColor, size: 32),
+                        ),
+                      ),
+                    ],
                   ),
-                  child: Icon(selectedIcon, color: color, size: 40),
-                ),
+                  Column(
+                    children: [
+                      const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () => _showColorPicker(context, selectedColor, (color) {
+                          setDialogState(() => selectedColor = color);
+                        }),
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: selectedColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                          ),
+                          child: const Icon(Icons.palette, color: Colors.white, size: 32),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               TextField(
                 controller: controller,
-                decoration: const InputDecoration(hintText: 'Kategori adı'),
+                decoration: InputDecoration(
+                  hintText: 'Kategori adı',
+                  filled: true,
+                  fillColor: AppColors.background,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
                 autofocus: true,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
             TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+            ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
                   ref.read(categoryProvider.notifier).addCategory(
                     controller.text.trim(),
                     selectedIcon,
-                    color,
+                    selectedColor,
                     isIncome,
                   );
                 }
                 Navigator.pop(context);
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               child: const Text('Ekle'),
             ),
           ],
@@ -399,6 +572,7 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+
   void _showLogoutConfirm(BuildContext context, WidgetRef ref, bool isGuest) {
     showDialog(
       context: context,
@@ -417,8 +591,8 @@ class ProfileScreen extends ConsumerWidget {
               } else {
                 ref.read(authNotifierProvider.notifier).signOut();
               }
-              Navigator.pop(context); // Close dialog
-              Navigator.pop(context); // Go back to Auth Screen (if applicable)
+              Navigator.pop(context); 
+              Navigator.pop(context); 
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.expense),
             child: const Text('Çıkış Yap'),
