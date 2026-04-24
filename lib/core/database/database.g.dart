@@ -58,9 +58,9 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
     'category_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
@@ -165,8 +165,6 @@ class $TransactionsTable extends Transactions
         _categoryIdMeta,
         categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
       );
-    } else if (isInserting) {
-      context.missing(_categoryIdMeta);
     }
     if (data.containsKey('description')) {
       context.handle(
@@ -229,7 +227,7 @@ class $TransactionsTable extends Transactions
       categoryId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}category_id'],
-      )!,
+      ),
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}description'],
@@ -260,7 +258,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final String? remoteId;
   final String userId;
   final double amount;
-  final String categoryId;
+  final String? categoryId;
   final String description;
   final DateTime date;
   final bool isIncome;
@@ -270,7 +268,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     this.remoteId,
     required this.userId,
     required this.amount,
-    required this.categoryId,
+    this.categoryId,
     required this.description,
     required this.date,
     required this.isIncome,
@@ -285,7 +283,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     }
     map['user_id'] = Variable<String>(userId);
     map['amount'] = Variable<double>(amount);
-    map['category_id'] = Variable<String>(categoryId);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
     map['description'] = Variable<String>(description);
     map['date'] = Variable<DateTime>(date);
     map['is_income'] = Variable<bool>(isIncome);
@@ -301,7 +301,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           : Value(remoteId),
       userId: Value(userId),
       amount: Value(amount),
-      categoryId: Value(categoryId),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
       description: Value(description),
       date: Value(date),
       isIncome: Value(isIncome),
@@ -319,7 +321,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       remoteId: serializer.fromJson<String?>(json['remoteId']),
       userId: serializer.fromJson<String>(json['userId']),
       amount: serializer.fromJson<double>(json['amount']),
-      categoryId: serializer.fromJson<String>(json['categoryId']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
       description: serializer.fromJson<String>(json['description']),
       date: serializer.fromJson<DateTime>(json['date']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
@@ -334,7 +336,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'remoteId': serializer.toJson<String?>(remoteId),
       'userId': serializer.toJson<String>(userId),
       'amount': serializer.toJson<double>(amount),
-      'categoryId': serializer.toJson<String>(categoryId),
+      'categoryId': serializer.toJson<String?>(categoryId),
       'description': serializer.toJson<String>(description),
       'date': serializer.toJson<DateTime>(date),
       'isIncome': serializer.toJson<bool>(isIncome),
@@ -347,7 +349,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     Value<String?> remoteId = const Value.absent(),
     String? userId,
     double? amount,
-    String? categoryId,
+    Value<String?> categoryId = const Value.absent(),
     String? description,
     DateTime? date,
     bool? isIncome,
@@ -357,7 +359,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
     userId: userId ?? this.userId,
     amount: amount ?? this.amount,
-    categoryId: categoryId ?? this.categoryId,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
     description: description ?? this.description,
     date: date ?? this.date,
     isIncome: isIncome ?? this.isIncome,
@@ -429,7 +431,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String?> remoteId;
   final Value<String> userId;
   final Value<double> amount;
-  final Value<String> categoryId;
+  final Value<String?> categoryId;
   final Value<String> description;
   final Value<DateTime> date;
   final Value<bool> isIncome;
@@ -450,14 +452,13 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.remoteId = const Value.absent(),
     required String userId,
     required double amount,
-    required String categoryId,
+    this.categoryId = const Value.absent(),
     required String description,
     required DateTime date,
     required bool isIncome,
     this.isSynced = const Value.absent(),
   }) : userId = Value(userId),
        amount = Value(amount),
-       categoryId = Value(categoryId),
        description = Value(description),
        date = Value(date),
        isIncome = Value(isIncome);
@@ -490,7 +491,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<String?>? remoteId,
     Value<String>? userId,
     Value<double>? amount,
-    Value<String>? categoryId,
+    Value<String?>? categoryId,
     Value<String>? description,
     Value<DateTime>? date,
     Value<bool>? isIncome,
@@ -1180,7 +1181,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       Value<String?> remoteId,
       required String userId,
       required double amount,
-      required String categoryId,
+      Value<String?> categoryId,
       required String description,
       required DateTime date,
       required bool isIncome,
@@ -1192,7 +1193,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<String?> remoteId,
       Value<String> userId,
       Value<double> amount,
-      Value<String> categoryId,
+      Value<String?> categoryId,
       Value<String> description,
       Value<DateTime> date,
       Value<bool> isIncome,
@@ -1385,7 +1386,7 @@ class $$TransactionsTableTableManager
                 Value<String?> remoteId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<double> amount = const Value.absent(),
-                Value<String> categoryId = const Value.absent(),
+                Value<String?> categoryId = const Value.absent(),
                 Value<String> description = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<bool> isIncome = const Value.absent(),
@@ -1407,7 +1408,7 @@ class $$TransactionsTableTableManager
                 Value<String?> remoteId = const Value.absent(),
                 required String userId,
                 required double amount,
-                required String categoryId,
+                Value<String?> categoryId = const Value.absent(),
                 required String description,
                 required DateTime date,
                 required bool isIncome,

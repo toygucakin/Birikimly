@@ -13,7 +13,7 @@ class Transactions extends Table {
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   RealColumn get amount => real()();
-  TextColumn get categoryId => text()(); // Changed from 'category' to 'categoryId' for better linking
+  TextColumn get categoryId => text().nullable()(); // Made nullable to fix migration error
   TextColumn get description => text()();
   DateTimeColumn get date => dateTime()();
   BoolColumn get isIncome => boolean()();
