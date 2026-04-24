@@ -6,12 +6,21 @@ import 'package:birikimly/features/auth/presentation/providers/auth_provider.dar
 import 'package:birikimly/features/dashboard/presentation/widgets/summary_card.dart';
 import 'package:birikimly/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_item.dart';
-import 'package:birikimly/features/transactions/widgets/quick_add_form.dart';
-
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
+
+  void _showTransactionWizard(BuildContext context, bool isIncome) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => TransactionWizard(isIncome: isIncome),
+    );
+  }
 
   void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
     final controller = TextEditingController(text: currentName);
@@ -190,20 +199,31 @@ class DashboardScreen extends ConsumerWidget {
           error: (err, stack) => Center(child: Text('Hata: $err')),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: AppColors.background,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-            ),
-            builder: (context) => const QuickAddForm(),
-          );
-        },
-        label: const Text('İşlem Ekle'),
-        icon: const Icon(Icons.add),
+      floatingActionButton: SpeedDial(
+        icon: Icons.add,
+        activeIcon: Icons.close,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        overlayColor: Colors.black,
+        overlayOpacity: 0.5,
+        spacing: 12,
+        spaceBetweenChildren: 12,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.add_circle_outline),
+            backgroundColor: AppColors.income,
+            foregroundColor: Colors.white,
+            label: 'Gelir Ekle',
+            onTap: () => _showTransactionWizard(context, true),
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.remove_circle_outline),
+            backgroundColor: AppColors.expense,
+            foregroundColor: Colors.white,
+            label: 'Gider Ekle',
+            onTap: () => _showTransactionWizard(context, false),
+          ),
+        ],
       ),
     );
   }
