@@ -46,7 +46,10 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<Transaction>> watchAllTransactions(String userId) {
     return (select(transactions)
       ..where((t) => t.userId.equals(userId))
-      ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)]))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+      ]))
       .watch();
   }
 

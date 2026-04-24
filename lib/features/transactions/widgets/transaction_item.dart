@@ -71,10 +71,6 @@ class TransactionItem extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
-                    if (!transaction.isSynced) ...[
-                      const SizedBox(width: 8),
-                      const Icon(Icons.sync_problem, size: 12, color: Colors.orange),
-                    ],
                   ],
                 ),
               ],
