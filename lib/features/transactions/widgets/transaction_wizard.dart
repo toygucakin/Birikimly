@@ -149,7 +149,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             ),
           ),
           const SizedBox(height: 10),
-          Expanded(
+          SizedBox(
+            height: _currentStep == 0 ? 160 : (_currentStep == 3 ? 380 : 250),
             child: PageView(
               controller: _pageController,
               onPageChanged: (int step) async {
@@ -177,7 +178,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     return SingleChildScrollView(
       physics: const NeverScrollableScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
