@@ -109,18 +109,16 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.fastOutSlowIn,
+      child: Container(
         clipBehavior: Clip.antiAlias,
-        height: (MediaQuery.of(context).size.height * 
-                (_currentStep == 0 ? 0.42 : (_currentStep == 3 ? 0.65 : 0.5))) + 
-                MediaQuery.of(context).viewInsets.bottom,
+        height: MediaQuery.of(context).size.height * 0.85,
       decoration: const BoxDecoration(
         color: AppColors.background,
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      child: Column(
+      child: Padding(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Column(
         children: [
           const SizedBox(height: 12),
           Container(
@@ -172,6 +170,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           _buildNavigation(),
         ],
       ),
+    ),
     ),
   );
 }
