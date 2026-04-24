@@ -8,7 +8,6 @@ class CategoryNotifier extends Notifier<List<CategoryModel>> {
   List<CategoryModel> build() => _defaultCategories;
 
   static final List<CategoryModel> _defaultCategories = [
-  static final List<CategoryModel> _defaultCategories = [
     // --- Legacy Categories (IDs 1-7 preserved for data compatibility) ---
     CategoryModel(id: '1', name: 'Gıda', icon: Icons.fastfood, color: Colors.orangeAccent, isIncome: false),
     CategoryModel(id: '2', name: 'Ulaşım', icon: Icons.directions_car, color: Colors.blue, isIncome: false),
