@@ -9,6 +9,7 @@ import 'package:birikimly/features/transactions/widgets/transaction_item.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
+import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -81,17 +82,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         child: transactionsAsync.when(
           data: (transactions) => CustomScrollView(
             slivers: [
-              SliverPadding(
-                padding: const EdgeInsets.all(20),
-                sliver: SliverToBoxAdapter(
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           GestureDetector(
-                            onTap: () => _showEditNameDialog(context, ref, displayName),
+                            onTap: () => _showEditNameDialog(context, ref, customName),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -142,11 +142,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ],
                       ),
                       const SizedBox(height: 30),
-                      SummaryCard(
-                        totalBalance: notifier.calculateBalance(transactions),
-                        income: notifier.calculateIncome(transactions),
-                        expense: notifier.calculateExpense(transactions),
-                      ),
+                      // Aylık Net Durum Card
+                      () {
+                        final now = DateTime.now();
+                        final currentMonthTransactions = transactions.where((t) => 
+                          t.date.year == now.year && t.date.month == now.month).toList();
+                        
+                        return SummaryCard(
+                          totalBalance: notifier.calculateBalance(currentMonthTransactions),
+                          income: notifier.calculateIncome(currentMonthTransactions),
+                          expense: notifier.calculateExpense(currentMonthTransactions),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const FinancialHistoryScreen()),
+                            );
+                          },
+                        );
+                      }(),
                       const SizedBox(height: 40),
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -156,13 +169,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Tümünü Gör',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],

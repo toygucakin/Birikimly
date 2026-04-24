@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
@@ -9,6 +10,9 @@ import 'package:birikimly/core/providers/preferences_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize date formatting
+  await initializeDateFormatting('tr_TR', null);
   
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
