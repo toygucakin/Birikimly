@@ -1,22 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/core/database/database.dart';
-import 'package:birikimly/core/services/sync_service.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
-
-final databaseProvider = Provider<AppDatabase>((ref) {
-  final db = AppDatabase();
-  ref.onDispose(() => db.close());
-  return db;
-});
-
-final syncServiceProvider = Provider<SyncService>((ref) {
-  final db = ref.watch(databaseProvider);
-  final service = SyncService(db);
-  service.start();
-  ref.onDispose(() => service.stop());
-  return service;
-});
 
 final transactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
   final db = ref.watch(databaseProvider);
@@ -35,27 +20,27 @@ final transactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
 
 class TransactionNotifier extends Notifier<void> {
   @override
-  void build() {}
+  void build() {
+    // Start sync service when this provider is used
+    ref.read(syncServiceProvider).start();
+  }
 
   Future<void> addTransaction(TransactionsCompanion entry) async {
     final db = ref.read(databaseProvider);
     await db.insertTransaction(entry);
-    // Manual trigger for sync if online
-    ref.read(syncServiceProvider).syncTransactions();
+    ref.read(syncServiceProvider).syncAll();
   }
 
   Future<void> updateTransactionAmount(Transaction transaction, double newAmount) async {
     final db = ref.read(databaseProvider);
     await db.updateTransaction(transaction.copyWith(amount: newAmount, isSynced: false));
-    ref.read(syncServiceProvider).syncTransactions();
+    ref.read(syncServiceProvider).syncAll();
   }
 
   Future<void> deleteTransaction(Transaction transaction) async {
     final db = ref.read(databaseProvider);
     await db.deleteTransaction(transaction);
-    // Note: In a real app, you might want to mark as deleted for remote sync
-    // but for now we just delete locally.
-    ref.read(syncServiceProvider).syncTransactions();
+    ref.read(syncServiceProvider).syncAll();
   }
 
   double calculateBalance(List<Transaction> transactions) {

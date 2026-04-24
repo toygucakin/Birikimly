@@ -9,21 +9,34 @@ part 'database.g.dart';
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get remoteId => text().nullable()();
-  TextColumn get userId => text()(); // Added for Auth
+  TextColumn get userId => text()();
   RealColumn get amount => real()();
-  TextColumn get category => text()();
+  TextColumn get categoryId => text()(); // Changed from 'category' to 'categoryId' for better linking
   TextColumn get description => text()();
   DateTimeColumn get date => dateTime()();
   BoolColumn get isIncome => boolean()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Transactions])
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text()(); // The unique ID used in the app
+  TextColumn get remoteId => text().nullable()();
+  TextColumn get userId => text()();
+  TextColumn get name => text()();
+  IntColumn get iconCode => integer()();
+  IntColumn get colorValue => integer()();
+  BoolColumn get isIncome => boolean()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+}
+
+@DriftDatabase(tables: [Transactions, Categories])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -35,11 +48,15 @@ class AppDatabase extends _$AppDatabase {
         if (from < 2) {
           await m.addColumn(transactions, transactions.userId);
         }
+        if (from < 3) {
+          await m.createTable(categories);
+          await m.addColumn(transactions, transactions.categoryId);
+        }
       },
     );
   }
 
-  // CRUD Operations
+  // Transaction CRUD
   Future<List<Transaction>> getAllTransactions(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId))).get();
   
@@ -66,7 +83,32 @@ class AppDatabase extends _$AppDatabase {
     (select(transactions)
       ..where((t) => t.isSynced.equals(false) & t.userId.equals(userId)))
       .get();
+
+  // Category CRUD
+  Future<List<Category>> getAllCategories(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();
+
+  Future<int> insertCategory(CategoriesCompanion entry) => 
+    into(categories).insert(entry);
+
+  Future updateCategoryRecord(Category entry) => 
+    update(categories).replace(entry);
+
+  Future deleteCategoryRecord(Category entry) => 
+    update(categories).replace(entry.copyWith(isDeleted: true, isSynced: false));
+
+  Future<List<Category>> getUnsyncedCategories(String userId) => 
+    (select(categories)
+      ..where((c) => c.isSynced.equals(false) & c.userId.equals(userId)))
+      .get();
 }
+
+final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
+
+final syncServiceProvider = Provider<SyncService>((ref) {
+  final db = ref.watch(databaseProvider);
+  return SyncService(db);
+});
 
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
