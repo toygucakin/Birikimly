@@ -315,7 +315,6 @@ Future<void> _openDatePicker() async {
                 return GestureDetector(
                   onTap: () {
                     setState(() => _selectedCategoryId = category.id);
-                    _submit(); // Final step
                   },
                   child: Container(
                     decoration: BoxDecoration(
@@ -355,8 +354,6 @@ Future<void> _openDatePicker() async {
   }
 
   Widget _buildNavigation() {
-    if (_currentStep == 3) return const SizedBox.shrink(); // Last step handles submission
-
     return Padding(
       padding: EdgeInsets.only(
         left: 24,
@@ -384,17 +381,27 @@ Future<void> _openDatePicker() async {
             child: ElevatedButton(
               onPressed: () {
                 if (_currentStep == 0 && _amountController.text.isEmpty) return;
-                _nextStep();
+                if (_currentStep == 3) {
+                  if (_selectedCategoryId == null) return;
+                  _submit();
+                } else {
+                  _nextStep();
+                }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: _currentStep == 3 && _selectedCategoryId == null
+                    ? Colors.grey
+                    : AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text('Devam Et', style: TextStyle(fontWeight: FontWeight.bold)),
+              child: Text(
+                _currentStep == 3 ? 'Onayla ve Kaydet' : 'Devam Et',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
             ),
           ),
         ],
