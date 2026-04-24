@@ -151,7 +151,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           SizedBox(
             height: _currentStep == 0 
                 ? 140 
-                : (_currentStep == 3 ? 350 : (_currentStep == 2 ? 300 : 220)),
+                : (_currentStep == 3 ? 340 : (_currentStep == 2 ? 240 : 200)),
             child: PageView(
               controller: _pageController,
               onPageChanged: (int step) async {
@@ -175,13 +175,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
 }
 
   Widget _buildAmountStep() {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
             const Text(
               'Miktarı Girin',
               style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
@@ -208,13 +206,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   }
 
   Widget _buildDateStep() {
-    return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
             const Text(
               'İşlem Tarihi',
               style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
@@ -250,13 +246,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
 
   Widget _buildDescriptionStep() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: SingleChildScrollView(
-        reverse: true,
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
             const Text(
               'Açıklama Ekleyin',
               style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
@@ -265,7 +258,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             TextField(
               focusNode: _descriptionFocusNode,
               controller: _descriptionController,
-              maxLines: 4,
+              maxLines: 2,
               decoration: InputDecoration(
                 hintText: 'Harcama veya gelir detayı...',
                 border: OutlineInputBorder(
