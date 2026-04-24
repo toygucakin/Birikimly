@@ -35,10 +35,6 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     super.initState();
     _amountFocusNode = FocusNode();
     _descriptionFocusNode = FocusNode();
-    // Re-enable post-frame focus request for better sync with bottom sheet animation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _amountFocusNode.requestFocus();
-    });
   }
 
   @override
@@ -109,71 +105,72 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
       },
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
       child: Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.textSecondary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(2),
-            ),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textSecondary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
                 ),
-                Text(
-                  '${_currentStep + 1} / 4',
-                  style: const TextStyle(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${_currentStep + 1} / 4',
+                      style: const TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 10),
+              // Use a constrained box or something to keep steps height consistent if needed
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.5,
+                ),
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (int step) async {
+                    setState(() => _currentStep = step);
+                    FocusScope.of(context).unfocus();
+                  },
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildAmountStep(),
+                    _buildDateStep(),
+                    _buildDescriptionStep(),
+                    _buildCategoryStep(),
+                  ],
+                ),
+              ),
+              _buildNavigation(),
+              const SizedBox(height: 20),
+            ],
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (int step) async {
-                setState(() => _currentStep = step);
-                // Close any open keyboard
-                FocusScope.of(context).unfocus();
-                if (step == 1) {
-                  // Otomatik takvim açılışı kaldırıldı. Kullanıcı tıklayarak açacak.
-                }
-              },
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildAmountStep(),
-                _buildDateStep(),
-                _buildDescriptionStep(),
-                _buildCategoryStep(),
-              ],
-            ),
-          ),
-          _buildNavigation(),
-        ],
+        ),
       ),
-    ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildAmountStep() {
     return SingleChildScrollView(
@@ -191,6 +188,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             TextField(
               focusNode: _amountFocusNode,
               controller: _amountController,
+              autofocus: true,
               keyboardType: TextInputType.number,
               inputFormatters: [ThousandsFormatter()],
               textAlign: TextAlign.center,
