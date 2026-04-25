@@ -20,7 +20,6 @@ class SyncService {
       }
     });
     
-    // Uygulama açılışında auth'un oturmasının beklemesi için kısa bir gecikme
     Future.delayed(const Duration(seconds: 2), () {
       syncAll();
     });
@@ -47,13 +46,8 @@ class SyncService {
       _isSyncing = true;
       print('SyncService: [START] Full sync for user: ${user.id}');
       
-      // 0. Temizlik
       await _cleanupLocalDuplicates(user.id);
-      
-      // 1. Kategoriler
       await syncCategories();
-      
-      // 2. İşlemler
       await syncTransactions();
       
       print('SyncService: [SUCCESS] Sync session finished.');
@@ -106,7 +100,9 @@ class SyncService {
       if (unsynced.isNotEmpty) {
         print('SyncService: Pushing ${unsynced.length} unsynced categories to cloud.');
         for (final cat in unsynced) {
+          // GÜNCELLEME: upsert içine remoteId'yi de ekliyoruz ve uuid üzerinden çakışmayı yönetiyoruz
           final response = await SupabaseService.client.from('categories').upsert({
+            if (cat.remoteId != null) 'id': int.parse(cat.remoteId!),
             'uuid': cat.uuid,
             'name': cat.name,
             'icon_code': cat.iconCode,
@@ -114,7 +110,7 @@ class SyncService {
             'is_income': cat.isIncome,
             'is_deleted': cat.isDeleted,
             'user_id': user.id,
-          }).select().single();
+          }, onConflict: 'uuid').select().single();
 
           await _db.updateCategoryRecord(cat.copyWith(
             remoteId: Value(response['id'].toString()),
@@ -147,7 +143,7 @@ class SyncService {
         if (rc['is_deleted'] == true) continue;
 
         final rcName = (rc['name'] ?? '').toString().toLowerCase().trim();
-        if (rcName.isEmpty) continue; // Boş isimli verileri pas geç
+        if (rcName.isEmpty) continue;
 
         final rcIsIncome = rc['is_income'] as bool;
         final rcUuid = rc['uuid']?.toString() ?? '';
