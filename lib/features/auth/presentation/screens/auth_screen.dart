@@ -84,7 +84,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text(
-                  'TapTap',
+                  'Birikimly',
                   style: TextStyle(
                     fontSize: 48,
                     fontWeight: FontWeight.bold,
