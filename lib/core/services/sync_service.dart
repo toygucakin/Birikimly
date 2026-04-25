@@ -100,9 +100,24 @@ class SyncService {
       if (unsynced.isNotEmpty) {
         print('SyncService: Pushing ${unsynced.length} unsynced categories to cloud.');
         for (final cat in unsynced) {
-          // GÜNCELLEME: upsert içine remoteId'yi de ekliyoruz ve uuid üzerinden çakışmayı yönetiyoruz
+          String? remoteIdToUse = cat.remoteId;
+
+          // Eğer remoteId yoksa, Supabase'de bu UUID ile zaten bir kayıt var mı diye kontrol et
+          // Bu, UUID kısıtlaması olmadığı için mükerrerliği önlemenin tek yolu
+          if (remoteIdToUse == null) {
+            final existing = await SupabaseService.client
+                .from('categories')
+                .select('id')
+                .eq('uuid', cat.uuid)
+                .maybeSingle();
+            
+            if (existing != null) {
+              remoteIdToUse = existing['id'].toString();
+            }
+          }
+
           final response = await SupabaseService.client.from('categories').upsert({
-            if (cat.remoteId != null) 'id': int.parse(cat.remoteId!),
+            if (remoteIdToUse != null) 'id': int.parse(remoteIdToUse),
             'uuid': cat.uuid,
             'name': cat.name,
             'icon_code': cat.iconCode,
@@ -110,7 +125,7 @@ class SyncService {
             'is_income': cat.isIncome,
             'is_deleted': cat.isDeleted,
             'user_id': user.id,
-          }, onConflict: 'uuid').select().single();
+          }).select().single();
 
           await _db.updateCategoryRecord(cat.copyWith(
             remoteId: Value(response['id'].toString()),
@@ -149,7 +164,6 @@ class SyncService {
         final rcUuid = rc['uuid']?.toString() ?? '';
         final key = '${rcName}_$rcIsIncome';
 
-        // Hem UUID hem isim bazlı kontrol
         if (existingUuids.contains(rcUuid)) continue;
         if (existingKeys.contains(key)) continue;
 
