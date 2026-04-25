@@ -4,12 +4,18 @@ import 'package:birikimly/features/profile/presentation/screens/profile_screen.d
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+import 'package:birikimly/core/database/database.dart';
 
 class MainScreen extends ConsumerWidget {
   const MainScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Start sync service when main screen is built (user is logged in)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(syncServiceProvider).start();
+    });
+
     final pageController = ref.watch(mainPageControllerProvider);
 
     return Scaffold(

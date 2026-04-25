@@ -10,7 +10,6 @@ import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
-import 'package:birikimly/features/profile/presentation/screens/profile_screen.dart';
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:intl/intl.dart';
@@ -158,33 +157,42 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
 
   @override
   Widget build(BuildContext context) {
-    final transactionsAsync = ref.watch(transactionStreamProvider);
+    final transactionsAsync = ref.watch(recentTransactionsProvider);
     final notifier = ref.watch(transactionNotifierProvider.notifier);
-    final categories = ref.watch(categoryProvider);
+    final categoriesAsync = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
     final customName = ref.watch(userNameProvider);
     final user = ref.watch(currentUserProvider);
 
-    String displayName = isGuest
+    final metaName = user?.userMetadata?['display_name']?.toString();
+    
+    final displayName = isGuest
         ? customName
-        : (customName.isNotEmpty && customName != 'Misafir')
-            ? customName
-            : (user?.email?.split('@').first ?? 'Kullanıcı');
+        : (metaName != null && metaName.isNotEmpty)
+            ? metaName
+            : (customName.isNotEmpty && customName != 'Misafir')
+                ? customName
+                : (user?.email?.split('@').first ?? 'Kullanıcı');
 
     return Scaffold(
       body: SafeArea(
-        child: transactionsAsync.when(
-          data: (transactions) => CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
+        child: categoriesAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Kategoriler yüklenemedi: $err')),
+          data: (categories) => transactionsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('İşlemler yüklenemedi: $err')),
+            data: (transactions) => CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
@@ -203,108 +211,105 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                 ),
                               ],
                             ),
-                          // Profile Button on Right
-                          Container(
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(12),
+                            Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: IconButton(
+                                icon: const Icon(Icons.account_circle_outlined, size: 28),
+                                onPressed: () {
+                                  widget.pageController.animateToPage(
+                                    1,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                              ),
                             ),
-                            child: IconButton(
-                              icon: const Icon(Icons.account_circle_outlined, size: 28),
-                              onPressed: () {
-                                widget.pageController.animateToPage(
-                                  1,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeInOut,
-                                );
-                              },
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                        () {
+                          final now = DateTime.now();
+                          final currentMonthTransactions = transactions.where((t) => 
+                            t.date.year == now.year && t.date.month == now.month).toList();
+                          
+                          return SummaryCard(
+                            totalBalance: notifier.calculateBalance(currentMonthTransactions),
+                            income: notifier.calculateIncome(currentMonthTransactions),
+                            expense: notifier.calculateExpense(currentMonthTransactions),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const FinancialHistoryScreen()),
+                              );
+                            },
+                          );
+                        }(),
+                        const SizedBox(height: 40),
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Son İşlemler',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 30),
-                      // Aylık Net Durum Card
-                      () {
-                        final now = DateTime.now();
-                        final currentMonthTransactions = transactions.where((t) => 
-                          t.date.year == now.year && t.date.month == now.month).toList();
-                        
-                        return SummaryCard(
-                          totalBalance: notifier.calculateBalance(currentMonthTransactions),
-                          income: notifier.calculateIncome(currentMonthTransactions),
-                          expense: notifier.calculateExpense(currentMonthTransactions),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const FinancialHistoryScreen()),
-                            );
-                          },
-                        );
-                      }(),
-                      const SizedBox(height: 40),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Son İşlemler',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-              ),
-              if (transactions.isEmpty)
-                const SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: Center(
-                    child: Text(
-                      'Henüz işlem eklenmemiş.',
-                      style: TextStyle(color: AppColors.textSecondary),
-                    ),
-                  ),
-                )
-              else
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final tx = transactions[index];
-                        final txCategory = categories.firstWhere(
-                          (c) => c.id == tx.categoryId || c.name == tx.categoryId,
-                          orElse: () => categories.first,
-                        );
-                        return TransactionItem(
-                          transaction: tx,
-                          categoryIcon: txCategory.icon,
-                          categoryColor: txCategory.color,
-                          categoryName: txCategory.name,
-                          onTap: () => _showTransactionDetail(context, tx, txCategory),
-                          onEdit: (newAmount) {
-                            ref.read(transactionNotifierProvider.notifier)
-                               .updateTransactionAmount(tx, newAmount);
-                          },
-                          onDelete: () {
-                            ref.read(transactionNotifierProvider.notifier)
-                               .deleteTransaction(tx);
-                          },
-                        );
-                      },
-                      childCount: transactions.length,
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                      ],
                     ),
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
-            ],
+                if (transactions.isEmpty)
+                  const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Text(
+                        'Henüz işlem eklenmemiş.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final tx = transactions[index];
+                          final txCategory = categories.firstWhere(
+                            (c) => c.id == tx.categoryId || c.name == tx.categoryId,
+                            orElse: () => categories.first,
+                          );
+                          return TransactionItem(
+                            transaction: tx,
+                            categoryIcon: txCategory.icon,
+                            categoryColor: txCategory.color,
+                            categoryName: txCategory.name,
+                            onTap: () => _showTransactionDetail(context, tx, txCategory),
+                            onEdit: (newAmount) {
+                              ref.read(transactionNotifierProvider.notifier)
+                                 .updateTransactionAmount(tx, newAmount);
+                            },
+                            onDelete: () {
+                              ref.read(transactionNotifierProvider.notifier)
+                                 .deleteTransaction(tx);
+                            },
+                          );
+                        },
+                        childCount: transactions.length,
+                      ),
+                    ),
+                  ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            ),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Hata: $err')),
         ),
       ),
       floatingActionButton: SpeedDial(
@@ -336,4 +341,3 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
     );
   }
 }
-

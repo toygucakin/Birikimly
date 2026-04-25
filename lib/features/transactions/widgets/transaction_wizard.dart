@@ -75,8 +75,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     final amount = double.tryParse(amountString);
     if (amount == null || _selectedCategoryId == null) return;
 
-    final categories = ref.read(categoryProvider);
-    final category = categories.firstWhere((c) => c.id == _selectedCategoryId);
+    final categoriesAsync = ref.read(categoryProvider);
+    final categories = categoriesAsync.asData?.value;
+    if (categories == null) return;
+    
+    final category = categories.firstWhere(
+      (c) => c.id == _selectedCategoryId,
+      orElse: () => categories.first,
+    );
 
     final isGuest = ref.read(guestModeProvider);
     final user = ref.read(currentUserProvider);
@@ -271,71 +277,97 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   }
 
   Widget _buildCategoryStep() {
-    final allCategories = ref.watch(categoryProvider);
-    final categories = allCategories.where((c) => c.isIncome == widget.isIncome).toList();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            const Text(
-              'Kategori Seçin ve Kaydedin',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 20),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 1.1,
-              ),
-              itemCount: categories.length,
-              itemBuilder: (context, index) {
-                final category = categories[index];
-                final isSelected = _selectedCategoryId == category.id;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() => _selectedCategoryId = category.id);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? category.color.withValues(alpha: 0.2)
-                          : AppColors.surface,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isSelected
-                          ? Border.all(color: category.color, width: 2)
-                          : null,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(category.icon,
-                            color: isSelected ? category.color : Colors.grey, size: 24),
-                        const SizedBox(height: 4),
-                        Text(
-                          category.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected ? category.color : Colors.grey,
+    final categoriesAsync = ref.watch(categoryProvider);
+
+    return categoriesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, s) => Center(child: Text('Kategoriler Hatası: $e')),
+      data: (allCategories) {
+        final categories = allCategories.where((c) => c.isIncome == widget.isIncome).toList();
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                const Text(
+                  'Kategori Seçin ve Kaydedin',
+                  style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 20),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemCount: categories.length,
+                  itemBuilder: (context, index) {
+                    final cat = categories[index];
+                    final isSelected = _selectedCategoryId == cat.id;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedCategoryId = cat.id),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected ? cat.color.withValues(alpha: 0.1) : AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? cat.color : Colors.transparent,
+                            width: 2,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                      ],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(cat.icon, color: isSelected ? cat.color : AppColors.textSecondary, size: 32),
+                            const SizedBox(height: 8),
+                            Text(
+                              cat.name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? cat.color : AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _selectedCategoryId == null ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'İşlemi Kaydet',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
-                );
-              },
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
+
+
 
   Widget _buildNavigation() {
     return Padding(

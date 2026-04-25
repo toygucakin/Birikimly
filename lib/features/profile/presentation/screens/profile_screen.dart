@@ -18,114 +18,124 @@ class ProfileScreen extends ConsumerWidget {
     final customName = ref.watch(userNameProvider);
     final user = ref.watch(currentUserProvider);
 
+    final metaName = user?.userMetadata?['display_name']?.toString();
+    
     String displayName = isGuest
         ? customName
-        : (customName.isNotEmpty && customName != 'Misafir')
-            ? customName
-            : (user?.email?.split('@').first ?? 'Kullanıcı');
+        : (metaName != null && metaName.isNotEmpty)
+            ? metaName
+            : (customName.isNotEmpty && customName != 'Misafir')
+                ? customName
+                : (user?.email?.split('@').first ?? 'Kullanıcı');
 
-    final incomeCategories = categories.where((c) => c.isIncome).toList();
-    final expenseCategories = categories.where((c) => !c.isIncome).toList();
+    return categories.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => Scaffold(body: Center(child: Text('Hata: $e'))),
+      data: (categoriesList) {
+        final incomeCategories = categoriesList.where((c) => c.isIncome).toList();
+        final expenseCategories = categoriesList.where((c) => !c.isIncome).toList();
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Profil'),
-        leading: Navigator.of(context).canPop()
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => pageController.animateToPage(
-                  0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                ),
-              ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // User Avatar & Name
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                children: [
-                  const CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppColors.primary,
-                    child: Icon(Icons.person, size: 40, color: Colors.white),
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            title: const Text('Profil'),
+            leading: Navigator.of(context).canPop()
+                ? null
+                : IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => pageController.animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // User Avatar & Name
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Column(
                     children: [
-                      Text(
-                        displayName,
-                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      const CircleAvatar(
+                        radius: 40,
+                        backgroundColor: AppColors.primary,
+                        child: Icon(Icons.person, size: 40, color: Colors.white),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 20),
-                        onPressed: () => _showEditNameDialog(context, ref, customName),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.edit, size: 20),
+                            onPressed: () => _showEditNameDialog(context, ref, displayName),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        isGuest ? 'Misafir Modu' : (user?.email ?? ''),
+                        style: const TextStyle(color: AppColors.textSecondary),
                       ),
                     ],
                   ),
-                  Text(
-                    isGuest ? 'Misafir Modu' : (user?.email ?? ''),
-                    style: const TextStyle(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Income Categories
-            _buildCategorySection(
-              context,
-              ref,
-              title: 'Gelir Kategorileri',
-              categories: incomeCategories,
-              isIncome: true,
-            ),
-            const SizedBox(height: 24),
-
-            // Expense Categories
-            _buildCategorySection(
-              context,
-              ref,
-              title: 'Gider Kategorileri',
-              categories: expenseCategories,
-              isIncome: false,
-            ),
-            const SizedBox(height: 48),
-
-            // Logout Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _showLogoutConfirm(context, ref, isGuest),
-                icon: const Icon(Icons.logout),
-                label: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.expense.withValues(alpha: 0.1),
-                  foregroundColor: AppColors.expense,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: AppColors.expense, width: 1.5),
-                  ),
-                  elevation: 0,
                 ),
-              ),
+                const SizedBox(height: 32),
+
+                // Income Categories
+                _buildCategorySection(
+                  context,
+                  ref,
+                  title: 'Gelir Kategorileri',
+                  categories: incomeCategories,
+                  isIncome: true,
+                ),
+                const SizedBox(height: 24),
+
+                // Expense Categories
+                _buildCategorySection(
+                  context,
+                  ref,
+                  title: 'Gider Kategorileri',
+                  categories: expenseCategories,
+                  isIncome: false,
+                ),
+                const SizedBox(height: 48),
+
+                // Logout Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => _showLogoutConfirm(context, ref, isGuest),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Çıkış Yap', style: TextStyle(fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.expense.withValues(alpha: 0.1),
+                      foregroundColor: AppColors.expense,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: const BorderSide(color: AppColors.expense, width: 1.5),
+                      ),
+                      elevation: 0,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -223,8 +233,10 @@ class ProfileScreen extends ConsumerWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
           TextButton(
             onPressed: () {
-              if (controller.text.trim().isNotEmpty) {
-                ref.read(userNameProvider.notifier).setUserName(controller.text.trim());
+              final newName = controller.text.trim();
+              if (newName.isNotEmpty) {
+                ref.read(userNameProvider.notifier).setUserName(newName);
+                ref.read(authNotifierProvider.notifier).updateDisplayName(newName);
               }
               Navigator.pop(context);
             },
@@ -592,10 +604,10 @@ class ProfileScreen extends ConsumerWidget {
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
                   ref.read(categoryProvider.notifier).addCategory(
-                    controller.text.trim(),
-                    selectedIcon,
-                    selectedColor,
-                    isIncome,
+                    name: controller.text.trim(),
+                    icon: selectedIcon,
+                    color: selectedColor,
+                    isIncome: isIncome,
                   );
                 }
                 Navigator.pop(context);

@@ -18,6 +18,21 @@ final transactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
   return db.watchAllTransactions(user.id);
 });
 
+final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final isGuest = ref.watch(guestModeProvider);
+  final user = ref.watch(currentUserProvider);
+  
+  if (isGuest) {
+    return db.watchAllTransactions('guest', limitCount: 30);
+  }
+  
+  if (user == null) {
+    return Stream.value([]);
+  }
+  return db.watchAllTransactions(user.id, limitCount: 30);
+});
+
 class TransactionNotifier extends Notifier<void> {
   @override
   void build() {

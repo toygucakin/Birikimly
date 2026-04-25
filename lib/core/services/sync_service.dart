@@ -7,12 +7,15 @@ import 'package:birikimly/core/services/supabase_service.dart';
 class SyncService {
   final AppDatabase _db;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  bool _isSyncing = false;
 
   SyncService(this._db);
 
   void start() {
+    print('SyncService: Starting...');
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((results) {
       if (results.any((result) => result != ConnectivityResult.none)) {
+        print('SyncService: Network detected, running sync...');
         syncAll();
       }
     });
@@ -21,12 +24,63 @@ class SyncService {
   }
 
   void stop() {
+    print('SyncService: Stopping...');
     _connectivitySubscription?.cancel();
   }
 
   Future<void> syncAll() async {
-    await syncCategories();
-    await syncTransactions();
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user == null) {
+        print('SyncService: No active user, skipping sync.');
+        return;
+      }
+      
+      print('SyncService: Running full sync for ${user.id}...');
+      
+      // 0. KRİTİK: Mevcut yerel mükerrerleri temizle
+      await _cleanupLocalDuplicates(user.id);
+      
+      await syncCategories();
+      await syncTransactions();
+      print('SyncService: Sync finished.');
+    } catch (e) {
+      print('SyncService: Sync failed: $e');
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  /// Mevcut veritabanındaki aynı isimli mükerrer kategorileri temizler.
+  Future<void> _cleanupLocalDuplicates(String userId) async {
+    try {
+      final allCats = await _db.getAllCategories(userId);
+      final seenKeys = <String, Category>{};
+      final idsToDelete = <int>[];
+
+      for (final cat in allCats) {
+        final key = '${cat.name.toLowerCase().trim()}_${cat.isIncome}';
+        if (seenKeys.containsKey(key)) {
+          // Bu isimde zaten bir tane tuttuk, bunu silebiliriz
+          idsToDelete.add(cat.id);
+        } else {
+          seenKeys[key] = cat;
+        }
+      }
+
+      if (idsToDelete.isNotEmpty) {
+        print('SyncService: Cleaning up ${idsToDelete.length} local local duplicates...');
+        // Drift üzerinden toplu silme işlemi (is_deleted: true değil, direkt DB'den kaldırma)
+        for (final id in idsToDelete) {
+          await (_db.delete(_db.categories)..where((t) => t.id.equals(id))).go();
+        }
+      }
+    } catch (e) {
+      print('SyncService: Local cleanup error: $e');
+    }
   }
 
   Future<void> syncCategories() async {
@@ -52,7 +106,7 @@ class SyncService {
           isSynced: true,
         ));
       } catch (e) {
-        print('Category sync push failed: $e');
+        print('SyncService: Category push error (${cat.name}): $e');
       }
     }
 
@@ -63,25 +117,46 @@ class SyncService {
           .select()
           .eq('user_id', user.id);
 
-      for (final rc in remoteCats) {
-        final localCats = await _db.getAllCategories(user.id);
-        final exists = localCats.any((c) => c.uuid == rc['uuid']);
+      if (remoteCats.isEmpty) return;
+      print('SyncService: Pulled ${remoteCats.length} remote categories.');
 
-        if (!exists && rc['is_deleted'] == false) {
-          await _db.insertCategory(CategoriesCompanion.insert(
-            uuid: rc['uuid'],
-            userId: user.id,
-            name: rc['name'],
-            iconCode: rc['icon_code'],
-            colorValue: (rc['color_value'] as int).toSigned(32),
-            isIncome: rc['is_income'],
-            isSynced: const Value(true),
-            remoteId: Value(rc['id'].toString()),
-          ));
+      // Mevcut yerel kategorileri çekelim
+      final localCats = await _db.getAllCategories(user.id);
+      final existingKeys = localCats.map((c) => 
+        '${c.name.toLowerCase().trim()}_${c.isIncome}'
+      ).toSet();
+      final existingUuids = localCats.map((c) => c.uuid).toSet();
+
+      for (final rc in remoteCats) {
+        if (rc['is_deleted'] == true) continue;
+
+        final rcName = rc['name'].toString().toLowerCase().trim();
+        final rcIsIncome = rc['is_income'] as bool;
+        final rcUuid = rc['uuid'].toString();
+        final key = '${rcName}_$rcIsIncome';
+
+        // Hem UUID hem isim bazlı kontrol
+        if (existingUuids.contains(rcUuid) || existingKeys.contains(key)) {
+          continue;
         }
+
+        print('SyncService: Restoring unique category $rcName');
+        await _db.insertCategory(CategoriesCompanion.insert(
+          uuid: rcUuid,
+          userId: user.id,
+          name: rc['name'],
+          iconCode: rc['icon_code'],
+          colorValue: (rc['color_value'] as int).toSigned(32),
+          isIncome: rcIsIncome,
+          isSynced: const Value(true),
+          remoteId: Value(rc['id'].toString()),
+        ));
+
+        existingKeys.add(key);
+        existingUuids.add(rcUuid);
       }
     } catch (e) {
-      print('Category sync pull failed: $e');
+      print('SyncService: Category pull error: $e');
     }
   }
 
@@ -94,13 +169,13 @@ class SyncService {
     for (final tx in unsynced) {
       try {
         final response = await SupabaseService.client.from('transactions').upsert({
-          'id': tx.remoteId != null ? int.tryParse(tx.remoteId!) : null,
+          if (tx.remoteId != null) 'id': int.parse(tx.remoteId!),
+          'user_id': user.id,
           'amount': tx.amount,
           'category_id': tx.categoryId,
           'description': tx.description,
-          'date': tx.date.toIso8601String(),
+          'transaction_date': tx.date.toIso8601String(),
           'is_income': tx.isIncome,
-          'user_id': user.id,
         }).select().single();
 
         await _db.updateTransaction(tx.copyWith(
@@ -108,7 +183,7 @@ class SyncService {
           isSynced: true,
         ));
       } catch (e) {
-        print('Transaction sync push failed indices: $e');
+        print('SyncService: Transaction push error: $e');
       }
     }
 
@@ -119,26 +194,31 @@ class SyncService {
           .select()
           .eq('user_id', user.id);
 
-      final localTxs = await _db.getAllTransactions(user.id);
-      
-      for (final rt in remoteTxs) {
-        final exists = localTxs.any((t) => t.remoteId == rt['id'].toString());
+      if (remoteTxs.isEmpty) return;
+      print('SyncService: Pulled ${remoteTxs.length} remote transactions.');
 
-        if (!exists) {
-          await _db.insertTransaction(TransactionsCompanion.insert(
-            remoteId: Value(rt['id'].toString()),
-            userId: user.id,
-            amount: (rt['amount'] as num).toDouble(),
-            categoryId: rt['category_id'],
-            description: rt['description'],
-            date: DateTime.parse(rt['date']),
-            isIncome: rt['is_income'],
-            isSynced: const Value(true),
-          ));
-        }
+      final localTxs = await _db.getAllTransactions(user.id);
+      final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
+
+      for (final rt in remoteTxs) {
+        final rId = rt['id'].toString();
+        if (existingRemoteIds.contains(rId)) continue;
+
+        await _db.insertTransaction(TransactionsCompanion.insert(
+          remoteId: Value(rId),
+          userId: user.id,
+          amount: (rt['amount'] as num).toDouble(),
+          categoryId: Value(rt['category_id']),
+          description: rt['description'] ?? '',
+          date: DateTime.parse(rt['transaction_date']),
+          isIncome: rt['is_income'],
+          isSynced: const Value(true),
+        ));
+        
+        existingRemoteIds.add(rId);
       }
     } catch (e) {
-      print('Transaction sync pull failed: $e');
+      print('SyncService: Transaction pull error: $e');
     }
   }
 }

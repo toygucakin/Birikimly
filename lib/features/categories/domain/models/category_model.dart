@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:birikimly/core/database/database.dart' as db;
 
 class CategoryModel {
   final String id;
@@ -14,4 +15,14 @@ class CategoryModel {
     required this.color,
     this.isIncome = false,
   });
+
+  factory CategoryModel.fromDb(db.Category record) {
+    return CategoryModel(
+      id: record.uuid,
+      name: record.name,
+      icon: IconData(record.iconCode, fontFamily: 'MaterialIcons'),
+      color: Color(record.colorValue),
+      isIncome: record.isIncome,
+    );
+  }
 }

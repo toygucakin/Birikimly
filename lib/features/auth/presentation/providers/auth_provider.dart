@@ -86,6 +86,16 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
       state = AsyncValue.error(e, st);
     }
   }
+
+  Future<void> updateDisplayName(String name) async {
+    try {
+      await SupabaseService.client.auth.updateUser(
+        UserAttributes(data: {'display_name': name}),
+      );
+    } catch (e) {
+      print('Failed to update display name: $e');
+    }
+  }
 }
 
 final authNotifierProvider = NotifierProvider<AuthNotifier, AsyncValue<void>>(AuthNotifier.new);

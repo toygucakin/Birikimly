@@ -65,14 +65,18 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Transaction>> getAllTransactions(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId))).get();
   
-  Stream<List<Transaction>> watchAllTransactions(String userId) {
-    return (select(transactions)
+  Stream<List<Transaction>> watchAllTransactions(String userId, {int? limitCount}) {
+    final query = select(transactions)
       ..where((t) => t.userId.equals(userId))
       ..orderBy([
-        (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
         (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
-      ]))
-      .watch();
+      ]);
+    
+    if (limitCount != null) {
+      query.limit(limitCount);
+    }
+    
+    return query.watch();
   }
 
   Future<int> insertTransaction(TransactionsCompanion entry) => 
@@ -92,6 +96,9 @@ class AppDatabase extends _$AppDatabase {
   // Category CRUD
   Future<List<Category>> getAllCategories(String userId) => 
     (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();
+  
+  Stream<List<Category>> watchAllCategories(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).watch();
 
   Future<int> insertCategory(CategoriesCompanion entry) => 
     into(categories).insert(entry);

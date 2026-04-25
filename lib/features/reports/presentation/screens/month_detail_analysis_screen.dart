@@ -19,52 +19,58 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categories = ref.watch(categoryProvider);
-    
-    final incomeAnalysis = _getCategoryAnalysis(
-      monthlyTransactions.where((t) => t.isIncome).toList(),
-      categories,
-    );
-    
-    final expenseAnalysis = _getCategoryAnalysis(
-      monthlyTransactions.where((t) => !t.isIncome).toList(),
-      categories,
-    );
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(
-          DateFormat('MMMM yyyy', 'tr_TR').format(month),
-          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionHeader('En Çok Gelir Getiren 5 Kategori'),
-            if (incomeAnalysis.isEmpty)
-              _buildEmptyState('Bu ay gelir kaydı bulunmuyor.')
-            else
-              ...incomeAnalysis.take(5).map((data) => _buildAnalysisCard(data, AppColors.income)),
-            
-            const SizedBox(height: 32),
-            
-            _buildSectionHeader('En Çok Harcanan 5 Kategori'),
-            if (expenseAnalysis.isEmpty)
-              _buildEmptyState('Bu ay gider kaydı bulunmuyor.')
-            else
-              ...expenseAnalysis.take(5).map((data) => _buildAnalysisCard(data, AppColors.expense)),
-          ],
-        ),
-      ),
+    return categories.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, s) => Scaffold(body: Center(child: Text('Hata: $e'))),
+      data: (categoriesList) {
+        final incomeAnalysis = _getCategoryAnalysis(
+          monthlyTransactions.where((t) => t.isIncome).toList(),
+          categoriesList,
+        );
+        
+        final expenseAnalysis = _getCategoryAnalysis(
+          monthlyTransactions.where((t) => !t.isIncome).toList(),
+          categoriesList,
+        );
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            title: Text(
+              DateFormat('MMMM yyyy', 'tr_TR').format(month),
+              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+            ),
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionHeader('En Çok Gelir Getiren 5 Kategori'),
+                if (incomeAnalysis.isEmpty)
+                  _buildEmptyState('Bu ay gelir kaydı bulunmuyor.')
+                else
+                  ...incomeAnalysis.take(5).map((data) => _buildAnalysisCard(data, AppColors.income)),
+                
+                const SizedBox(height: 32),
+                
+                _buildSectionHeader('En Çok Harcanan 5 Kategori'),
+                if (expenseAnalysis.isEmpty)
+                  _buildEmptyState('Bu ay gider kaydı bulunmuyor.')
+                else
+                  ...expenseAnalysis.take(5).map((data) => _buildAnalysisCard(data, AppColors.expense)),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
