@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -118,9 +119,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
+                    obscuringCharacter: '•',
+                    textAlignVertical: TextAlignVertical.center,
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 16,
+                      height: 1.0,
+                      letterSpacing: 2.0,
+                      color: AppColors.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       labelText: 'Şifre',
                       prefixIcon: const Icon(Icons.lock_outline),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off : Icons.visibility,
