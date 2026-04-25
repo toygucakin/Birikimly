@@ -102,8 +102,6 @@ class SyncService {
         for (final cat in unsynced) {
           String? remoteIdToUse = cat.remoteId;
 
-          // Eğer remoteId yoksa, Supabase'de bu UUID ile zaten bir kayıt var mı diye kontrol et
-          // Bu, UUID kısıtlaması olmadığı için mükerrerliği önlemenin tek yolu
           if (remoteIdToUse == null) {
             final existing = await SupabaseService.client
                 .from('categories')
@@ -139,12 +137,14 @@ class SyncService {
 
     // 2. Pull remote changes
     try {
-      final remoteCats = await SupabaseService.client
+      // GÜNCELLEME: Verileri çekerken ID'ye göre büyükten küçüğe sıralıyoruz (En yeni veriyi önce almak için)
+      final List<dynamic> remoteCats = await SupabaseService.client
           .from('categories')
           .select()
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .order('id', ascending: false);
 
-      print('SyncService: Remote check - Found ${remoteCats.length} categories on Supabase.');
+      print('SyncService: Remote check - Found ${remoteCats.length} categories on Supabase (Sorted by newest).');
       if (remoteCats.isEmpty) return;
 
       final localCats = await _db.getAllCategories(user.id);
@@ -164,10 +164,11 @@ class SyncService {
         final rcUuid = rc['uuid']?.toString() ?? '';
         final key = '${rcName}_$rcIsIncome';
 
+        // Hem UUID hem isim bazlı kontrol (İlk gelen en yenidir, sonrakiler pas geçilir)
         if (existingUuids.contains(rcUuid)) continue;
         if (existingKeys.contains(key)) continue;
 
-        print('SyncService: [PULL] Restoring unique category: ${rc['name']}');
+        print('SyncService: [PULL] Restoring unique newest category: ${rc['name']}');
         await _db.insertCategory(CategoriesCompanion.insert(
           uuid: rcUuid,
           userId: user.id,
@@ -183,7 +184,7 @@ class SyncService {
         existingUuids.add(rcUuid);
         restoredCount++;
       }
-      if (restoredCount > 0) print('SyncService: Restored $restoredCount categories from cloud.');
+      if (restoredCount > 0) print('SyncService: Restored $restoredCount unique categories (newest versions).');
     } catch (e) {
       print('SyncService: Category pull failed: $e');
     }
@@ -226,7 +227,8 @@ class SyncService {
       final remoteTxs = await SupabaseService.client
           .from('transactions')
           .select()
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .order('id', ascending: false);
 
       print('SyncService: Remote check - Found ${remoteTxs.length} transactions on Supabase.');
       if (remoteTxs.isEmpty) return;
