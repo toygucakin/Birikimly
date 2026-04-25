@@ -282,16 +282,40 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final tx = transactions[index];
-                          final txCategory = categories.firstWhere(
-                            (c) => c.id == tx.categoryId || c.name == tx.categoryId,
-                            orElse: () => categories.first,
+                          
+                          // ÇOK DAHA AGRESİF KATEGORİ EŞLEŞTİRME
+                          CategoryModel? txCategory;
+                          
+                          // 1. Durum: UUID üzerinden tam eşleşme
+                          txCategory = categories.cast<CategoryModel?>().firstWhere(
+                            (c) => c?.id == tx.categoryId,
+                            orElse: () => null,
                           );
+
+                          // 2. Durum: İsim üzerinden eşleşme (UUID değişmiş olabilir)
+                          if (txCategory == null) {
+                            txCategory = categories.cast<CategoryModel?>().firstWhere(
+                              (c) => c?.name.toLowerCase().trim() == tx.categoryId?.toLowerCase().trim(),
+                              orElse: () => null,
+                            );
+                          }
+
+                          final displayCategory = txCategory ?? CategoryModel(
+                            id: 'unknown',
+                            name: (tx.categoryId != null && tx.categoryId!.isNotEmpty) 
+                                ? tx.categoryId! 
+                                : 'Bilinmeyen',
+                            icon: Icons.help_outline,
+                            color: Colors.grey,
+                            isIncome: tx.isIncome,
+                          );
+
                           return TransactionItem(
                             transaction: tx,
-                            categoryIcon: txCategory.icon,
-                            categoryColor: txCategory.color,
-                            categoryName: txCategory.name,
-                            onTap: () => _showTransactionDetail(context, tx, txCategory),
+                            categoryIcon: displayCategory.icon,
+                            categoryColor: displayCategory.color,
+                            categoryName: displayCategory.name,
+                            onTap: () => _showTransactionDetail(context, tx, displayCategory),
                             onEdit: (newAmount) {
                               ref.read(transactionNotifierProvider.notifier)
                                  .updateTransactionAmount(tx, newAmount);

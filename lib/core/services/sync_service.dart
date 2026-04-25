@@ -81,7 +81,6 @@ class SyncService {
         for (final id in idsToDelete) {
           await (_db.delete(_db.categories)..where((t) => t.id.equals(id))).go();
         }
-        print('SyncService: Local cleanup completed.');
       }
     } catch (e) {
       print('SyncService: Local cleanup encountered an error: $e');
@@ -94,11 +93,11 @@ class SyncService {
 
     print('SyncService: Syncing categories...');
 
-    // 1. Push local changes
+    // 1. Push
     try {
       final unsynced = await _db.getUnsyncedCategories(user.id);
       if (unsynced.isNotEmpty) {
-        print('SyncService: Pushing ${unsynced.length} unsynced categories to cloud.');
+        print('SyncService: Pushing ${unsynced.length} changes to cloud.');
         for (final cat in unsynced) {
           String? remoteIdToUse = cat.remoteId;
 
@@ -135,23 +134,24 @@ class SyncService {
       print('SyncService: Category push failed: $e');
     }
 
-    // 2. Pull remote changes
+    // 2. Pull
     try {
-      // GÜNCELLEME: Verileri çekerken ID'ye göre büyükten küçüğe sıralıyoruz (En yeni veriyi önce almak için)
       final List<dynamic> remoteCats = await SupabaseService.client
           .from('categories')
           .select()
           .eq('user_id', user.id)
           .order('id', ascending: false);
 
-      print('SyncService: Remote check - Found ${remoteCats.length} categories on Supabase (Sorted by newest).');
       if (remoteCats.isEmpty) return;
 
-      final localCats = await _db.getAllCategories(user.id);
-      final existingKeys = localCats.map((c) => 
+      final allLocalCats = await (
+        _db.select(_db.categories)..where((c) => c.userId.equals(user.id))
+      ).get();
+
+      final existingKeys = allLocalCats.map((c) => 
         '${c.name.toLowerCase().trim()}_${c.isIncome}'
       ).toSet();
-      final existingUuids = localCats.map((c) => c.uuid).toSet();
+      final existingUuids = allLocalCats.map((c) => c.uuid).toSet();
 
       int restoredCount = 0;
       for (final rc in remoteCats) {
@@ -164,9 +164,9 @@ class SyncService {
         final rcUuid = rc['uuid']?.toString() ?? '';
         final key = '${rcName}_$rcIsIncome';
 
-        // Hem UUID hem isim bazlı kontrol (İlk gelen en yenidir, sonrakiler pas geçilir)
-        if (existingUuids.contains(rcUuid)) continue;
-        if (existingKeys.contains(key)) continue;
+        if (existingUuids.contains(rcUuid) || existingKeys.contains(key)) {
+          continue;
+        }
 
         print('SyncService: [PULL] Restoring unique newest category: ${rc['name']}');
         await _db.insertCategory(CategoriesCompanion.insert(
@@ -184,7 +184,7 @@ class SyncService {
         existingUuids.add(rcUuid);
         restoredCount++;
       }
-      if (restoredCount > 0) print('SyncService: Restored $restoredCount unique categories (newest versions).');
+      if (restoredCount > 0) print('SyncService: Restored $restoredCount unique categories.');
     } catch (e) {
       print('SyncService: Category pull failed: $e');
     }
@@ -230,7 +230,6 @@ class SyncService {
           .eq('user_id', user.id)
           .order('id', ascending: false);
 
-      print('SyncService: Remote check - Found ${remoteTxs.length} transactions on Supabase.');
       if (remoteTxs.isEmpty) return;
 
       final localTxs = await _db.getAllTransactions(user.id);
