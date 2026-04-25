@@ -153,9 +153,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final customName = ref.watch(userNameProvider);
     final user = ref.watch(currentUserProvider);
 
-    String displayName = (customName.isNotEmpty && customName != 'Misafir' && customName != 'Misafir1')
+    String displayName = isGuest
         ? customName
-        : (user?.email?.split('@').first ?? 'Kullanıcı');
+        : (customName.isNotEmpty && customName != 'Misafir')
+            ? customName
+            : (user?.email?.split('@').first ?? 'Kullanıcı');
 
     return Scaffold(
       body: SafeArea(

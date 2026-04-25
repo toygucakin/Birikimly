@@ -13,7 +13,8 @@ class Transactions extends Table {
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   RealColumn get amount => real()();
-  TextColumn get categoryId => text().nullable()(); // Made nullable to fix migration error
+  // Using .named('category') to fall back to the old column name while keeping the new logic
+  TextColumn get categoryId => text().nullable().named('category')(); 
   TextColumn get description => text()();
   DateTimeColumn get date => dateTime()();
   BoolColumn get isIncome => boolean()();
@@ -22,7 +23,7 @@ class Transactions extends Table {
 
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text()(); // The unique ID used in the app
+  TextColumn get uuid => text()(); 
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   TextColumn get name => text()();
@@ -38,7 +39,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 8; // Version 8: Backward compatibility bridge
 
   @override
   MigrationStrategy get migration {
@@ -47,19 +48,15 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        if (from < 2) {
-          await m.addColumn(transactions, transactions.userId);
-        }
+        // v8: Cleanup and ensure compatibility
         if (from < 3) {
-          await m.createTable(categories);
-          await m.addColumn(transactions, transactions.categoryId);
-          // Data recovery: Copy legacy category names to the new categoryId column
-          try {
-            await customStatement('UPDATE transactions SET category_id = category WHERE category_id IS NULL');
-          } catch (e) {
-            print('Migration data recovery skipped or failed: $e');
-          }
+          try { await m.createTable(categories); } catch (_) {}
         }
+        if (from < 2) {
+          try { await m.addColumn(transactions, transactions.userId); } catch (_) {}
+        }
+        
+        // No more ALTER TABLE needed since we're using the old column name 'category'
       },
     );
   }

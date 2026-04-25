@@ -200,7 +200,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Clear any existing Supabase session before entering guest mode
+                    await ref.read(authNotifierProvider.notifier).signOut();
                     ref.read(guestModeProvider.notifier).setGuestMode(true);
                   },
                   child: const Text(

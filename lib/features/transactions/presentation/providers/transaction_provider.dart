@@ -26,9 +26,14 @@ class TransactionNotifier extends Notifier<void> {
   }
 
   Future<void> addTransaction(TransactionsCompanion entry) async {
-    final db = ref.read(databaseProvider);
-    await db.insertTransaction(entry);
-    ref.read(syncServiceProvider).syncAll();
+    try {
+      final db = ref.read(databaseProvider);
+      await db.insertTransaction(entry);
+      ref.read(syncServiceProvider).syncAll();
+    } catch (e) {
+      // ignore: avoid_print
+      print('CRITICAL: Transaction add failed: $e');
+    }
   }
 
   Future<void> updateTransactionAmount(Transaction transaction, double newAmount) async {

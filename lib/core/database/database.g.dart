@@ -56,7 +56,7 @@ class $TransactionsTable extends Transactions
   );
   @override
   late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
-    'category_id',
+    'category',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -160,10 +160,10 @@ class $TransactionsTable extends Transactions
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
-    if (data.containsKey('category_id')) {
+    if (data.containsKey('category')) {
       context.handle(
         _categoryIdMeta,
-        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+        categoryId.isAcceptableOrUnknown(data['category']!, _categoryIdMeta),
       );
     }
     if (data.containsKey('description')) {
@@ -226,7 +226,7 @@ class $TransactionsTable extends Transactions
       )!,
       categoryId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}category_id'],
+        data['${effectivePrefix}category'],
       ),
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -284,7 +284,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['user_id'] = Variable<String>(userId);
     map['amount'] = Variable<double>(amount);
     if (!nullToAbsent || categoryId != null) {
-      map['category_id'] = Variable<String>(categoryId);
+      map['category'] = Variable<String>(categoryId);
     }
     map['description'] = Variable<String>(description);
     map['date'] = Variable<DateTime>(date);
@@ -478,7 +478,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (remoteId != null) 'remote_id': remoteId,
       if (userId != null) 'user_id': userId,
       if (amount != null) 'amount': amount,
-      if (categoryId != null) 'category_id': categoryId,
+      if (categoryId != null) 'category': categoryId,
       if (description != null) 'description': description,
       if (date != null) 'date': date,
       if (isIncome != null) 'is_income': isIncome,
@@ -526,7 +526,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       map['amount'] = Variable<double>(amount.value);
     }
     if (categoryId.present) {
-      map['category_id'] = Variable<String>(categoryId.value);
+      map['category'] = Variable<String>(categoryId.value);
     }
     if (description.present) {
       map['description'] = Variable<String>(description.value);

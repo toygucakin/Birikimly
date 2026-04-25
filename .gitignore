@@ -21,6 +21,8 @@ migrate_working_dir/
 .vscode/
 .env*
 !.env.example
+*.sqlite
+*.db
 TAPTAP.md
 Birikimly.ipa
 Payload/
