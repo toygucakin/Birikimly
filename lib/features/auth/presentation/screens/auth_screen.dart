@@ -94,7 +94,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Finansal Özgürlüğe Hoş Geldin',
+                  'Gelir-Gider Dengeni Koru',
                   style: TextStyle(
                     fontSize: 16,
                     color: AppColors.textSecondary.withValues(alpha: 0.8),
