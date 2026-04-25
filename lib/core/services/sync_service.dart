@@ -73,7 +73,7 @@ class SyncService {
             userId: user.id,
             name: rc['name'],
             iconCode: rc['icon_code'],
-            colorValue: Value((rc['color_value'] as int).toSigned(32)),
+            colorValue: (rc['color_value'] as int).toSigned(32),
             isIncome: rc['is_income'],
             isSynced: const Value(true),
             remoteId: Value(rc['id'].toString()),
