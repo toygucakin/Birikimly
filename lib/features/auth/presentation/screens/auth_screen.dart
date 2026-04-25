@@ -65,10 +65,32 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     ref.listen<AsyncValue<void>>(authNotifierProvider, (previous, next) {
       next.whenOrNull(
         error: (error, stackTrace) {
-          final message = error is AuthException ? error.message : error.toString();
+          String message = 'Bir hata oluştu. Lütfen tekrar deneyin.';
+          
+          if (error is AuthException) {
+            final loginError = error.message.toLowerCase();
+            if (loginError.contains('invalid login credentials')) {
+              message = 'E-posta adresi veya şifre hatalı.';
+            } else if (loginError.contains('email not confirmed')) {
+              message = 'Lütfen önce e-posta adresinizi doğrulayın.';
+            } else if (loginError.contains('user not found')) {
+              message = 'Kullanıcı bulunamadı. Lütfen kayıt olun.';
+            } else if (loginError.contains('too many requests')) {
+              message = 'Çok fazla istek gönderildi. Lütfen biraz bekleyin.';
+            } else if (loginError.contains('over verification limit')) {
+              message = 'Doğrulama sınırı aşıldı. Lütfen daha sonra tekrar deneyin.';
+            } else if (loginError.contains('invalid format')) {
+              message = 'E-posta formatı geçersiz.';
+            } else {
+              message = error.message; // Fallback to original if unknown
+            }
+          }
+
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(message),
             backgroundColor: AppColors.expense,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ));
         },
       );

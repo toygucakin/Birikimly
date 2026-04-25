@@ -638,7 +638,6 @@ class ProfileScreen extends ConsumerWidget {
                 ref.read(authNotifierProvider.notifier).signOut();
               }
               Navigator.pop(context); 
-              Navigator.pop(context); 
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.expense),
             child: const Text('Çıkış Yap'),

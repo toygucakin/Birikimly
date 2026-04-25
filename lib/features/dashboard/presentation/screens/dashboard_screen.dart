@@ -184,13 +184,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          GestureDetector(
-                            onTap: () => widget.pageController.animateToPage(
-                              1,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeInOut,
-                            ),
-                            child: Column(
+                          Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const Text(
@@ -209,7 +203,6 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                 ),
                               ],
                             ),
-                          ),
                           // Profile Button on Right
                           Container(
                             decoration: BoxDecoration(
