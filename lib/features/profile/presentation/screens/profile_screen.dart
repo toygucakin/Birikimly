@@ -5,12 +5,14 @@ import 'package:birikimly/features/auth/presentation/providers/auth_provider.dar
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pageController = ref.watch(mainPageControllerProvider);
     final categories = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
     final customName = ref.watch(userNameProvider);
@@ -29,6 +31,16 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Profil'),
+        leading: Navigator.of(context).canPop()
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                ),
+              ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

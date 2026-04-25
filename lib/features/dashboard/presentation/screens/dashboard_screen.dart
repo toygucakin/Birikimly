@@ -15,15 +15,27 @@ import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:intl/intl.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
+import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
 
-class DashboardScreen extends ConsumerStatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pageController = ref.watch(mainPageControllerProvider);
+    return _DashboardScreenContent(pageController: pageController);
+  }
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+class _DashboardScreenContent extends ConsumerStatefulWidget {
+  final PageController pageController;
+  const _DashboardScreenContent({required this.pageController});
+
+  @override
+  ConsumerState<_DashboardScreenContent> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
   @override
   void initState() {
     super.initState();
@@ -173,9 +185,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                            onTap: () => widget.pageController.animateToPage(
+                              1,
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,9 +219,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             child: IconButton(
                               icon: const Icon(Icons.account_circle_outlined, size: 28),
                               onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                                widget.pageController.animateToPage(
+                                  1,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
                                 );
                               },
                             ),

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/features/auth/presentation/screens/auth_screen.dart';
 import 'package:birikimly/features/auth/presentation/screens/update_password_screen.dart';
-import 'package:birikimly/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:birikimly/features/main/presentation/screens/main_screen.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 
 class AuthGate extends ConsumerWidget {
@@ -13,7 +13,7 @@ class AuthGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isGuest = ref.watch(guestModeProvider);
     if (isGuest) {
-      return const DashboardScreen();
+      return const MainScreen();
     }
 
     final authState = ref.watch(authStateProvider);
@@ -25,7 +25,7 @@ class AuthGate extends ConsumerWidget {
           if (isAwaitingPassword) {
             return const UpdatePasswordScreen();
           }
-          return const DashboardScreen();
+          return const MainScreen();
         }
         return const AuthScreen();
       },
