@@ -49,6 +49,7 @@ class SyncService {
       await _cleanupLocalDuplicates(user.id);
       await syncCategories();
       await syncTransactions();
+      await _normalizeTransactionCategories(user.id);
       
       print('SyncService: [SUCCESS] Sync session finished.');
     } catch (e, st) {
@@ -79,6 +80,14 @@ class SyncService {
       if (idsToDelete.isNotEmpty) {
         print('SyncService: Found ${idsToDelete.length} local duplicates. Cleaning up...');
         for (final id in idsToDelete) {
+          final toDelete = allCats.firstWhere((c) => c.id == id);
+          final key = '${toDelete.name.toLowerCase().trim()}_${toDelete.isIncome}';
+          final kept = seenKeys[key]!;
+
+          // ÖNEMLİ: Bu kategoriyi kullanan işlemleri güncelle
+          await (_db.update(_db.transactions)..where((t) => t.categoryId.equals(toDelete.uuid)))
+              .write(TransactionsCompanion(categoryId: Value(kept.uuid)));
+
           await (_db.delete(_db.categories)..where((t) => t.id.equals(id))).go();
         }
       }
@@ -202,8 +211,24 @@ class SyncService {
       if (unsynced.isNotEmpty) {
         print('SyncService: Pushing ${unsynced.length} transactions to cloud.');
         for (final tx in unsynced) {
+          String? remoteIdToUse = tx.remoteId;
+
+          // UUID ile bulut kontrolü yapalım (Duplicate önlemek için)
+          if (remoteIdToUse == null && tx.uuid.isNotEmpty) {
+            final existing = await SupabaseService.client
+                .from('transactions')
+                .select('id')
+                .eq('uuid', tx.uuid)
+                .maybeSingle();
+            
+            if (existing != null) {
+              remoteIdToUse = existing['id'].toString();
+            }
+          }
+
           final response = await SupabaseService.client.from('transactions').upsert({
-            if (tx.remoteId != null) 'id': int.parse(tx.remoteId!),
+            if (remoteIdToUse != null) 'id': int.parse(remoteIdToUse),
+            'uuid': tx.uuid,
             'user_id': user.id,
             'amount': tx.amount,
             'category_id': tx.categoryId,
@@ -234,17 +259,25 @@ class SyncService {
 
       final localTxs = await _db.getAllTransactions(user.id);
       final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
+      final existingUuids = localTxs.map((t) => t.uuid).toSet();
 
       int restoredCount = 0;
       for (final rt in remoteTxs) {
         final rId = rt['id'].toString();
-        if (existingRemoteIds.contains(rId)) continue;
+        final rUuid = rt['uuid']?.toString() ?? '';
 
+        if (existingRemoteIds.contains(rId)) continue;
+        if (rUuid.isNotEmpty && existingUuids.contains(rUuid)) continue;
+
+        final remoteCatId = (rt['category_id'] ?? rt['category'] ?? rt['categoryId'] ?? '').toString();
+        print('SyncService: [PULL] Restoring transaction: ${rt['description']} (Resolved Cat: $remoteCatId)');
+        
         await _db.insertTransaction(TransactionsCompanion.insert(
           remoteId: Value(rId),
+          uuid: Value(rUuid),
           userId: user.id,
           amount: (rt['amount'] as num? ?? 0.0).toDouble(),
-          categoryId: Value(rt['category_id']?.toString() ?? ''),
+          categoryId: Value(remoteCatId),
           description: rt['description'] ?? '',
           date: DateTime.parse(rt['transaction_date'] ?? DateTime.now().toIso8601String()),
           isIncome: rt['is_income'] ?? false,
@@ -252,11 +285,43 @@ class SyncService {
         ));
         
         existingRemoteIds.add(rId);
+        if (rUuid.isNotEmpty) existingUuids.add(rUuid);
         restoredCount++;
       }
       if (restoredCount > 0) print('SyncService: Restored $restoredCount transactions from cloud.');
     } catch (e) {
       print('SyncService: Transaction pull failed: $e');
+    }
+  }
+  Future<void> _normalizeTransactionCategories(String userId) async {
+    try {
+      final txs = await _db.getAllTransactions(userId);
+      final cats = await _db.getAllCategories(userId);
+
+      for (final tx in txs) {
+        final rawId = tx.categoryId ?? '';
+        if (rawId.isEmpty) continue;
+
+        // 1. Durum: ID 'temp_' ile başlıyorsa 'def_'e çevir
+        if (rawId.startsWith('temp_')) {
+          final newId = rawId.replaceFirst('temp_', 'def_');
+          if (cats.any((c) => c.uuid == newId)) {
+            await _db.updateTransaction(tx.copyWith(categoryId: Value(newId), isSynced: false));
+          }
+        } 
+        // 2. Durum: ID bir isim ise (Eski versiyonlarda isim kaydedilmiş olabilir)
+        else if (!rawId.contains('-') && !rawId.startsWith('def_')) {
+          final matchedCat = cats.cast<Category?>().firstWhere(
+            (c) => c?.name.toLowerCase().trim() == rawId.toLowerCase().trim(),
+            orElse: () => null,
+          );
+          if (matchedCat != null) {
+            await _db.updateTransaction(tx.copyWith(categoryId: Value(matchedCat.uuid), isSynced: false));
+          }
+        }
+      }
+    } catch (e) {
+      print('SyncService: Normalization failed: $e');
     }
   }
 }

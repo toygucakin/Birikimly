@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:uuid/uuid.dart';
+import 'package:drift/drift.dart' as drift;
 
 final transactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
   final db = ref.watch(databaseProvider);
@@ -36,14 +38,18 @@ final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
 class TransactionNotifier extends Notifier<void> {
   @override
   void build() {
-    // Start sync service when this provider is used
     ref.read(syncServiceProvider).start();
   }
 
   Future<void> addTransaction(TransactionsCompanion entry) async {
     try {
       final db = ref.read(databaseProvider);
-      await db.insertTransaction(entry);
+      
+      // UUID üretimini ve atanmasını sağlıyoruz
+      final uuid = const Uuid().v4();
+      final finalEntry = entry.copyWith(uuid: drift.Value(uuid));
+      
+      await db.insertTransaction(finalEntry);
       ref.read(syncServiceProvider).syncAll();
     } catch (e) {
       // ignore: avoid_print

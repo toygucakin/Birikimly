@@ -22,6 +22,16 @@ class $TransactionsTable extends Transactions
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _remoteIdMeta = const VerificationMeta(
     'remoteId',
   );
@@ -114,6 +124,7 @@ class $TransactionsTable extends Transactions
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     remoteId,
     userId,
     amount,
@@ -137,6 +148,12 @@ class $TransactionsTable extends Transactions
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
     }
     if (data.containsKey('remote_id')) {
       context.handle(
@@ -212,6 +229,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
       remoteId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}remote_id'],
@@ -255,6 +276,7 @@ class $TransactionsTable extends Transactions
 
 class Transaction extends DataClass implements Insertable<Transaction> {
   final int id;
+  final String uuid;
   final String? remoteId;
   final String userId;
   final double amount;
@@ -265,6 +287,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final bool isSynced;
   const Transaction({
     required this.id,
+    required this.uuid,
     this.remoteId,
     required this.userId,
     required this.amount,
@@ -278,6 +301,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     if (!nullToAbsent || remoteId != null) {
       map['remote_id'] = Variable<String>(remoteId);
     }
@@ -296,6 +320,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   TransactionsCompanion toCompanion(bool nullToAbsent) {
     return TransactionsCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       remoteId: remoteId == null && nullToAbsent
           ? const Value.absent()
           : Value(remoteId),
@@ -318,6 +343,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Transaction(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       remoteId: serializer.fromJson<String?>(json['remoteId']),
       userId: serializer.fromJson<String>(json['userId']),
       amount: serializer.fromJson<double>(json['amount']),
@@ -333,6 +359,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'remoteId': serializer.toJson<String?>(remoteId),
       'userId': serializer.toJson<String>(userId),
       'amount': serializer.toJson<double>(amount),
@@ -346,6 +373,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
 
   Transaction copyWith({
     int? id,
+    String? uuid,
     Value<String?> remoteId = const Value.absent(),
     String? userId,
     double? amount,
@@ -356,6 +384,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     bool? isSynced,
   }) => Transaction(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     remoteId: remoteId.present ? remoteId.value : this.remoteId,
     userId: userId ?? this.userId,
     amount: amount ?? this.amount,
@@ -368,6 +397,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       remoteId: data.remoteId.present ? data.remoteId.value : this.remoteId,
       userId: data.userId.present ? data.userId.value : this.userId,
       amount: data.amount.present ? data.amount.value : this.amount,
@@ -387,6 +417,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   String toString() {
     return (StringBuffer('Transaction(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('remoteId: $remoteId, ')
           ..write('userId: $userId, ')
           ..write('amount: $amount, ')
@@ -402,6 +433,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   @override
   int get hashCode => Object.hash(
     id,
+    uuid,
     remoteId,
     userId,
     amount,
@@ -416,6 +448,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       identical(this, other) ||
       (other is Transaction &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.remoteId == this.remoteId &&
           other.userId == this.userId &&
           other.amount == this.amount &&
@@ -428,6 +461,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String?> remoteId;
   final Value<String> userId;
   final Value<double> amount;
@@ -438,6 +472,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<bool> isSynced;
   const TransactionsCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.remoteId = const Value.absent(),
     this.userId = const Value.absent(),
     this.amount = const Value.absent(),
@@ -449,6 +484,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.remoteId = const Value.absent(),
     required String userId,
     required double amount,
@@ -464,6 +500,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
        isIncome = Value(isIncome);
   static Insertable<Transaction> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? remoteId,
     Expression<String>? userId,
     Expression<double>? amount,
@@ -475,6 +512,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (remoteId != null) 'remote_id': remoteId,
       if (userId != null) 'user_id': userId,
       if (amount != null) 'amount': amount,
@@ -488,6 +526,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
 
   TransactionsCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<String?>? remoteId,
     Value<String>? userId,
     Value<double>? amount,
@@ -499,6 +538,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       remoteId: remoteId ?? this.remoteId,
       userId: userId ?? this.userId,
       amount: amount ?? this.amount,
@@ -515,6 +555,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (remoteId.present) {
       map['remote_id'] = Variable<String>(remoteId.value);
@@ -547,6 +590,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   String toString() {
     return (StringBuffer('TransactionsCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('remoteId: $remoteId, ')
           ..write('userId: $userId, ')
           ..write('amount: $amount, ')
@@ -1178,6 +1222,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$TransactionsTableCreateCompanionBuilder =
     TransactionsCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String?> remoteId,
       required String userId,
       required double amount,
@@ -1190,6 +1235,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String?> remoteId,
       Value<String> userId,
       Value<double> amount,
@@ -1211,6 +1257,11 @@ class $$TransactionsTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1269,6 +1320,11 @@ class $$TransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get remoteId => $composableBuilder(
     column: $table.remoteId,
     builder: (column) => ColumnOrderings(column),
@@ -1321,6 +1377,9 @@ class $$TransactionsTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get remoteId =>
       $composableBuilder(column: $table.remoteId, builder: (column) => column);
@@ -1383,6 +1442,7 @@ class $$TransactionsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
                 Value<double> amount = const Value.absent(),
@@ -1393,6 +1453,7 @@ class $$TransactionsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
+                uuid: uuid,
                 remoteId: remoteId,
                 userId: userId,
                 amount: amount,
@@ -1405,6 +1466,7 @@ class $$TransactionsTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String?> remoteId = const Value.absent(),
                 required String userId,
                 required double amount,
@@ -1415,6 +1477,7 @@ class $$TransactionsTableTableManager
                 Value<bool> isSynced = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
+                uuid: uuid,
                 remoteId: remoteId,
                 userId: userId,
                 amount: amount,

@@ -10,10 +10,10 @@ part 'database.g.dart';
 
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text().withDefault(const Constant(''))(); // Sürüm 9 ile eklendi
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   RealColumn get amount => real()();
-  // Using .named('category') to fall back to the old column name while keeping the new logic
   TextColumn get categoryId => text().nullable().named('category')(); 
   TextColumn get description => text()();
   DateTimeColumn get date => dateTime()();
@@ -39,38 +39,48 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 8; // Version 8: Backward compatibility bridge
+  int get schemaVersion => 9; // Sürüm 9'a yükseltildi
 
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
-      onCreate: (Migrator m) async {
-        await m.createAll();
+      onUpgrade: (m, from, to) async {
+        if (from < 8) {
+          await m.addColumn(transactions, transactions.categoryId);
+        }
+        if (from < 9) {
+          // Transactions tablosuna uuid kolonu ekleme
+          await m.addColumn(transactions, transactions.uuid);
+        }
       },
-      onUpgrade: (Migrator m, int from, int to) async {
-        // v8: Cleanup and ensure compatibility
-        if (from < 3) {
-          try { await m.createTable(categories); } catch (_) {}
-        }
-        if (from < 2) {
-          try { await m.addColumn(transactions, transactions.userId); } catch (_) {}
-        }
-        
-        // No more ALTER TABLE needed since we're using the old column name 'category'
+      beforeOpen: (details) async {
+        await customStatement('PRAGMA foreign_keys = ON');
       },
     );
   }
 
-  // Transaction CRUD
-  Future<List<Transaction>> getAllTransactions(String userId) => 
-    (select(transactions)..where((t) => t.userId.equals(userId))).get();
+  // Categories Queries
+  Stream<List<Category>> watchAllCategories(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).watch();
+
+  Future<List<Category>> getAllCategories(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();
+
+  Future<int> insertCategory(CategoriesCompanion entry) => into(categories).insert(entry);
   
+  Future<bool> updateCategoryRecord(Category category) => update(categories).replace(category);
+  
+  Future<int> deleteCategoryRecord(Category category) => 
+    (update(categories)..where((t) => t.id.equals(category.id))).write(const CategoriesCompanion(isDeleted: Value(true), isSynced: Value(false)));
+
+  Future<List<Category>> getUnsyncedCategories(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId) & c.isSynced.equals(false))).get();
+
+  // Transactions Queries
   Stream<List<Transaction>> watchAllTransactions(String userId, {int? limitCount}) {
     final query = select(transactions)
       ..where((t) => t.userId.equals(userId))
-      ..orderBy([
-        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
-      ]);
+      ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)]);
     
     if (limitCount != null) {
       query.limit(limitCount);
@@ -79,40 +89,27 @@ class AppDatabase extends _$AppDatabase {
     return query.watch();
   }
 
-  Future<int> insertTransaction(TransactionsCompanion entry) => 
-    into(transactions).insert(entry);
+  Future<List<Transaction>> getAllTransactions(String userId) => 
+    (select(transactions)..where((t) => t.userId.equals(userId))).get();
 
-  Future updateTransaction(Transaction entry) => 
-    update(transactions).replace(entry);
-
-  Future deleteTransaction(Transaction entry) => 
-    delete(transactions).delete(entry);
+  Future<int> insertTransaction(TransactionsCompanion entry) => into(transactions).insert(entry);
+  
+  Future<bool> updateTransaction(Transaction transaction) => 
+    update(transactions).replace(transaction);
+  
+  Future<int> deleteTransaction(Transaction transaction) => 
+    (delete(transactions)..where((t) => t.id.equals(transaction.id))).go();
 
   Future<List<Transaction>> getUnsyncedTransactions(String userId) => 
-    (select(transactions)
-      ..where((t) => t.isSynced.equals(false) & t.userId.equals(userId)))
-      .get();
+    (select(transactions)..where((t) => t.userId.equals(userId) & t.isSynced.equals(false))).get();
+}
 
-  // Category CRUD
-  Future<List<Category>> getAllCategories(String userId) => 
-    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();
-  
-  Stream<List<Category>> watchAllCategories(String userId) => 
-    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).watch();
-
-  Future<int> insertCategory(CategoriesCompanion entry) => 
-    into(categories).insert(entry);
-
-  Future updateCategoryRecord(Category entry) => 
-    update(categories).replace(entry);
-
-  Future deleteCategoryRecord(Category entry) => 
-    update(categories).replace(entry.copyWith(isDeleted: true, isSynced: false));
-
-  Future<List<Category>> getUnsyncedCategories(String userId) => 
-    (select(categories)
-      ..where((c) => c.isSynced.equals(false) & c.userId.equals(userId)))
-      .get();
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dbFolder = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dbFolder.path, 'db.sqlite'));
+    return NativeDatabase(file);
+  });
 }
 
 final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
@@ -121,11 +118,3 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
   return SyncService(db);
 });
-
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'birikimly.sqlite'));
-    return NativeDatabase(file);
-  });
-}

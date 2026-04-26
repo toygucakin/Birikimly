@@ -283,29 +283,59 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                         (context, index) {
                           final tx = transactions[index];
                           
-                          // ÇOK DAHA AGRESİF KATEGORİ EŞLEŞTİRME
+                          // ÜST DÜZEY AKILLI KATEGORİ EŞLEŞTİRME (V4 - ULTRA RESILIENT)
                           CategoryModel? txCategory;
-                          
-                          // 1. Durum: UUID üzerinden tam eşleşme
-                          txCategory = categories.cast<CategoryModel?>().firstWhere(
-                            (c) => c?.id == tx.categoryId,
-                            orElse: () => null,
-                          );
+                          final rawId = tx.categoryId?.trim() ?? '';
 
-                          // 2. Durum: İsim üzerinden eşleşme (UUID değişmiş olabilir)
-                          if (txCategory == null) {
+                          if (rawId.isNotEmpty) {
+                            // 1. Aşama: Tam ID eşleşmesi (UUID veya def_id)
                             txCategory = categories.cast<CategoryModel?>().firstWhere(
-                              (c) => c?.name.toLowerCase().trim() == tx.categoryId?.toLowerCase().trim(),
+                              (c) => c?.id == rawId,
                               orElse: () => null,
                             );
+
+                            // 2. Aşama: Prefix-Agnostic eşleştirme (temp_ vs def_ karmaşasını çözer)
+                            if (txCategory == null) {
+                              final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                              txCategory = categories.cast<CategoryModel?>().firstWhere(
+                                (c) {
+                                  final cid = c?.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                                  return cid == cleanId;
+                                },
+                                orElse: () => null,
+                              );
+                            }
+
+                            // 3. Aşama: İsim üzerinden tam eşleşme (Legacy Name ID'ler için)
+                            if (txCategory == null) {
+                              txCategory = categories.cast<CategoryModel?>().firstWhere(
+                                (c) => c?.name.toLowerCase().trim() == rawId.toLowerCase(),
+                                orElse: () => null,
+                              );
+                            }
+                          }
+
+                          // 4. Aşama: GÖRÜNÜR İSİM OLUŞTURMA (Her şey başarısız olursa ID'den isim üret veya tip göster)
+                          String displayName = tx.isIncome ? 'Genel Gelir' : 'Genel Gider';
+                          if (txCategory != null) {
+                            displayName = txCategory.name;
+                          } else if (rawId.isNotEmpty) {
+                            if (rawId.startsWith('def_') || rawId.startsWith('temp_')) {
+                              // ID'den ismi kurtar: 'def_gıda_&_market' -> 'Gıda & Market'
+                              final parts = rawId.split('_').skip(1).join(' ');
+                              if (parts.isNotEmpty) {
+                                displayName = parts[0].toUpperCase() + parts.substring(1);
+                              }
+                            } else if (!rawId.contains('-') && rawId.length < 20) {
+                              // Eğer UUID değilse ve makul bir uzunluktaysa doğrudan ID'yi göster
+                              displayName = rawId;
+                            }
                           }
 
                           final displayCategory = txCategory ?? CategoryModel(
                             id: 'unknown',
-                            name: (tx.categoryId != null && tx.categoryId!.isNotEmpty) 
-                                ? tx.categoryId! 
-                                : 'Bilinmeyen',
-                            icon: Icons.help_outline,
+                            name: displayName,
+                            icon: tx.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
                             color: Colors.grey,
                             isIncome: tx.isIncome,
                           );
