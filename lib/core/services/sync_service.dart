@@ -111,18 +111,22 @@ class SyncService {
           String? remoteIdToUse = cat.remoteId;
 
           if (remoteIdToUse == null) {
-            final existing = await SupabaseService.client
-                .from('categories')
-                .select('id')
-                .eq('uuid', cat.uuid)
-                .maybeSingle();
-            
-            if (existing != null) {
-              remoteIdToUse = existing['id'].toString();
+            try {
+              final existing = await SupabaseService.client
+                  .from('categories')
+                  .select('id')
+                  .eq('uuid', cat.uuid)
+                  .maybeSingle();
+              
+              if (existing != null) {
+                remoteIdToUse = existing['id'].toString();
+              }
+            } catch (e) {
+              print('SyncService: Category UUID check failed: $e');
             }
           }
 
-          final response = await SupabaseService.client.from('categories').upsert({
+          final data = {
             if (remoteIdToUse != null) 'id': int.parse(remoteIdToUse),
             'uuid': cat.uuid,
             'name': cat.name,
@@ -131,10 +135,25 @@ class SyncService {
             'is_income': cat.isIncome,
             'is_deleted': cat.isDeleted,
             'user_id': user.id,
-          }).select().single();
+          };
+
+          Map<String, dynamic> responseData;
+          try {
+            responseData = await SupabaseService.client.from('categories').upsert(data).select().single();
+          } catch (e) {
+            final errorStr = e.toString().toLowerCase();
+            if (errorStr.contains('uuid') && errorStr.contains('not exist')) {
+              print('SyncService: RETRYING CATEGORY PUSH without uuid column...');
+              data.remove('uuid');
+              responseData = await SupabaseService.client.from('categories').upsert(data).select().single();
+            } else {
+              print('SyncService: Category individual push failed: $e');
+              continue;
+            }
+          }
 
           await _db.updateCategoryRecord(cat.copyWith(
-            remoteId: Value(response['id'].toString()),
+            remoteId: Value(responseData['id'].toString()),
             isSynced: true,
           ));
         }
@@ -215,30 +234,49 @@ class SyncService {
 
           // UUID ile bulut kontrolü yapalım (Duplicate önlemek için)
           if (remoteIdToUse == null && tx.uuid.isNotEmpty) {
-            final existing = await SupabaseService.client
-                .from('transactions')
-                .select('id')
-                .eq('uuid', tx.uuid)
-                .maybeSingle();
-            
-            if (existing != null) {
-              remoteIdToUse = existing['id'].toString();
+            try {
+              final existing = await SupabaseService.client
+                  .from('transactions')
+                  .select('id')
+                  .eq('uuid', tx.uuid)
+                  .maybeSingle();
+              
+              if (existing != null) {
+                remoteIdToUse = existing['id'].toString();
+              }
+            } catch (e) {
+              print('SyncService: UUID check failed (likely column missing): $e');
             }
           }
 
-          final response = await SupabaseService.client.from('transactions').upsert({
+          final data = {
             if (remoteIdToUse != null) 'id': int.parse(remoteIdToUse),
             'uuid': tx.uuid,
             'user_id': user.id,
             'amount': tx.amount,
-            'category_id': tx.categoryId,
+            if (tx.categoryId != null) 'category_id': tx.categoryId,
             'description': tx.description,
             'transaction_date': tx.date.toIso8601String(),
             'is_income': tx.isIncome,
-          }).select().single();
+          };
+
+          Map<String, dynamic> responseData;
+          try {
+            responseData = await SupabaseService.client.from('transactions').upsert(data).select().single();
+          } catch (e) {
+            final errorStr = e.toString().toLowerCase();
+            if (errorStr.contains('uuid') && errorStr.contains('not exist')) {
+              print('SyncService: RETRYING PUSH without uuid column...');
+              data.remove('uuid');
+              responseData = await SupabaseService.client.from('transactions').upsert(data).select().single();
+            } else {
+              print('SyncService: Transaction individual push failed: $e');
+              continue;
+            }
+          }
 
           await _db.updateTransaction(tx.copyWith(
-            remoteId: Value(response['id'].toString()),
+            remoteId: Value(responseData['id'].toString()),
             isSynced: true,
           ));
         }
