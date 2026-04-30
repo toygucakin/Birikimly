@@ -163,6 +163,30 @@ class FinancialHistoryScreen extends ConsumerWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Detaylı analiz için tıklayınız',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.primary),
+              ],
+            ),
+          ),
         ],
       ),
     );

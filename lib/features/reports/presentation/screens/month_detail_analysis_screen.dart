@@ -67,11 +67,143 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
                   _buildEmptyState('Bu ay gider kaydı bulunmuyor.')
                 else
                   ...expenseAnalysis.take(5).map((data) => _buildAnalysisCard(data, AppColors.expense)),
+                const SizedBox(height: 32),
+                
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => _showAllMonthlyTransactions(context, monthlyTransactions, categoriesList),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                    child: const Text('Ay İçerisindeki İşlemler', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
         );
       },
+    );
+  }
+
+  void _showAllMonthlyTransactions(BuildContext context, List<Transaction> transactions, List<CategoryModel> categories) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, scrollController) => Container(
+          padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text('Ay İçerisindeki İşlemler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              Expanded(
+                child: transactions.isEmpty
+                    ? const Center(child: Text('Bu ay işlem bulunmuyor.', style: TextStyle(color: AppColors.textSecondary)))
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: transactions.length,
+                        itemBuilder: (context, index) {
+                          // Sort transactions by date descending inside the builder? No, let's sort them once or assume they are sorted
+                          // The transactions passed here are from the main screen, which are sorted by date descending.
+                          final tx = transactions[index];
+                          
+                          // Match category
+                          CategoryModel? txCategory;
+                          final rawId = tx.categoryId?.trim() ?? '';
+                          if (rawId.isNotEmpty) {
+                            txCategory = categories.cast<CategoryModel?>().firstWhere(
+                              (c) {
+                                final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                                final cid = c?.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                                return cid == cleanId || c?.name.toLowerCase().trim() == rawId.toLowerCase();
+                              },
+                              orElse: () => null,
+                            );
+                          }
+                          
+                          String displayName = tx.isIncome ? 'Genel Gelir' : 'Genel Gider';
+                          if (txCategory != null) {
+                            displayName = txCategory.name;
+                          }
+
+                          final displayCategory = txCategory ?? CategoryModel(
+                            id: 'unknown',
+                            name: displayName,
+                            icon: tx.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                            color: Colors.grey,
+                            isIncome: tx.isIncome,
+                          );
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: displayCategory.color.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(displayCategory.icon, color: displayCategory.color, size: 24),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        displayCategory.name,
+                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        DateFormat('dd MMM yyyy', 'tr_TR').format(tx.date),
+                                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '${tx.isIncome ? '+' : '-'}${CurrencyUtils.format(tx.amount)}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: tx.isIncome ? AppColors.income : AppColors.expense,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
