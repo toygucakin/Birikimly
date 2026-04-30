@@ -307,9 +307,10 @@ class ProfileScreen extends ConsumerWidget {
   void _showColorPicker(BuildContext context, Color currentColor, Function(Color) onSelected) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 24),
         decoration: const BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
@@ -318,48 +319,51 @@ class ProfileScreen extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              width: double.infinity,
+              alignment: Alignment.center,
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
             ),
-            const SizedBox(height: 20),
             const Text('Renk Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                ),
-                itemCount: _curatedColors.length,
-                itemBuilder: (context, index) {
-                  final color = _curatedColors[index];
-                  final isSelected = color.value == currentColor.value;
-                  return InkWell(
-                    onTap: () {
-                      onSelected(color);
-                      Navigator.pop(context);
-                    },
-                    borderRadius: BorderRadius.circular(50),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
-                        boxShadow: isSelected ? [
-                          BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 2)
-                        ] : null,
-                      ),
-                      child: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
-                    ),
-                  );
-                },
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 5,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
               ),
+              itemCount: _curatedColors.length,
+              itemBuilder: (context, index) {
+                final color = _curatedColors[index];
+                final isSelected = color.value == currentColor.value;
+                return InkWell(
+                  onTap: () {
+                    onSelected(color);
+                    Navigator.pop(context);
+                  },
+                  borderRadius: BorderRadius.circular(50),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected ? Border.all(color: Colors.white, width: 3) : null,
+                      boxShadow: isSelected ? [
+                        BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10, spreadRadius: 2)
+                      ] : null,
+                    ),
+                    child: isSelected ? const Icon(Icons.check, color: Colors.white) : null,
+                  ),
+                );
+              },
             ),
           ],
         ),
