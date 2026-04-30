@@ -19,12 +19,32 @@ class MainScreen extends ConsumerWidget {
     final pageController = ref.watch(mainPageControllerProvider);
 
     return Scaffold(
-      body: PageView(
-        controller: pageController,
-        children: const [
-          DashboardScreen(),
-          ProfileScreen(),
-        ],
+      body: ListenableBuilder(
+        listenable: pageController,
+        builder: (context, child) {
+          final isProfile = pageController.hasClients && pageController.page?.round() == 1;
+          return PopScope(
+            canPop: !isProfile,
+            onPopInvoked: (didPop) {
+              if (didPop) return;
+              if (isProfile) {
+                pageController.animateToPage(
+                  0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                );
+              }
+            },
+            child: child!,
+          );
+        },
+        child: PageView(
+          controller: pageController,
+          children: const [
+            DashboardScreen(),
+            ProfileScreen(),
+          ],
+        ),
       ),
     );
   }
