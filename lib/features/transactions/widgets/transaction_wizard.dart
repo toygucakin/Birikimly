@@ -272,7 +272,17 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
     if (date != null) {
-      setState(() => _selectedDate = date);
+      final now = DateTime.now();
+      setState(() {
+        _selectedDate = DateTime(
+          date.year,
+          date.month,
+          date.day,
+          now.hour,
+          now.minute,
+          now.second,
+        );
+      });
     }
   }
 

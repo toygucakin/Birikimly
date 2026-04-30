@@ -86,7 +86,10 @@ class AppDatabase extends _$AppDatabase {
   Stream<List<Transaction>> watchAllTransactions(String userId, {int? limitCount}) {
     final query = select(transactions)
       ..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))
-      ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)]);
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
+        (t) => OrderingTerm(expression: t.id, mode: OrderingMode.desc),
+      ]);
     
     if (limitCount != null) {
       query.limit(limitCount);
