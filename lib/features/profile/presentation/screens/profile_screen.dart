@@ -378,10 +378,14 @@ class ProfileScreen extends ConsumerWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AnimatedSize(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-          child: Container(
+        builder: (context, setState) {
+          // Calculate the exact height the grid needs when fully expanded
+          final screenWidth = MediaQuery.of(context).size.width;
+          final iconWidth = (screenWidth - 48 - (4 * 16)) / 5;
+          final rows = (_availableIcons.length / 5).ceil();
+          final expandedGridHeight = (rows * iconWidth) + ((rows - 1) * 16);
+
+          return Container(
             padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 24),
             decoration: const BoxDecoration(
               color: AppColors.surface,
@@ -415,10 +419,13 @@ class ProfileScreen extends ConsumerWidget {
                 ),
                 const Text('İkon Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 20),
-                SizedBox(
-                  height: isExpanded ? null : 300,
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 700),
+                  curve: Curves.easeInOutQuart,
+                  height: isExpanded ? expandedGridHeight : 330,
                   child: GridView.builder(
-                    shrinkWrap: isExpanded,
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: false,
                     physics: isExpanded ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 5,
@@ -451,8 +458,8 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ],
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
