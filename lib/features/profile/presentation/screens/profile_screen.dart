@@ -368,62 +368,86 @@ class ProfileScreen extends ConsumerWidget {
   }
 
   void _showIconPicker(BuildContext context, Color themeColor, IconData currentIcon, Function(IconData) onSelected) {
+    bool isExpanded = false;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          child: Container(
+            padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 24),
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
             ),
-            const SizedBox(height: 20),
-            const Text('İkon Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 300,
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                ),
-                itemCount: _availableIcons.length,
-                itemBuilder: (context, index) {
-                  final icon = _availableIcons[index];
-                  final isSelected = icon == currentIcon;
-                  return InkWell(
-                    onTap: () {
-                      onSelected(icon);
-                      Navigator.pop(context);
-                    },
-                    borderRadius: BorderRadius.circular(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GestureDetector(
+                  onVerticalDragUpdate: (details) {
+                    if (details.primaryDelta! < -2 && !isExpanded) {
+                      setState(() => isExpanded = true);
+                    } else if (details.primaryDelta! > 2 && isExpanded) {
+                      setState(() => isExpanded = false);
+                    }
+                  },
+                  child: Container(
+                    color: Colors.transparent, // expand hit area
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    width: double.infinity,
+                    alignment: Alignment.center,
                     child: Container(
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
-                        color: isSelected ? themeColor.withValues(alpha: 0.1) : Colors.transparent,
-                        border: Border.all(
-                          color: isSelected ? themeColor : Colors.grey.withValues(alpha: 0.2),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
                       ),
-                      child: Icon(icon, color: isSelected ? themeColor : AppColors.textPrimary),
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+                const Text('İkon Seçin', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: isExpanded ? null : 300,
+                  child: GridView.builder(
+                    shrinkWrap: isExpanded,
+                    physics: isExpanded ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 16,
+                      crossAxisSpacing: 16,
+                    ),
+                    itemCount: _availableIcons.length,
+                    itemBuilder: (context, index) {
+                      final icon = _availableIcons[index];
+                      final isSelected = icon == currentIcon;
+                      return InkWell(
+                        onTap: () {
+                          onSelected(icon);
+                          Navigator.pop(context);
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: isSelected ? themeColor.withValues(alpha: 0.1) : Colors.transparent,
+                            border: Border.all(
+                              color: isSelected ? themeColor : Colors.grey.withValues(alpha: 0.2),
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(icon, color: isSelected ? themeColor : AppColors.textPrimary),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
