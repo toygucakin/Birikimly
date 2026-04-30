@@ -5,10 +5,11 @@ import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
+import 'package:birikimly/core/database/database.dart';
 
 class MonthDetailAnalysisScreen extends ConsumerWidget {
   final DateTime month;
-  final List<dynamic> monthlyTransactions;
+  final List<Transaction> monthlyTransactions;
 
   const MonthDetailAnalysisScreen({
     super.key,
@@ -74,12 +75,13 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
     );
   }
 
-  List<_CategoryStats> _getCategoryAnalysis(List<dynamic> transactions, List<CategoryModel> categories) {
+  List<_CategoryStats> _getCategoryAnalysis(List<Transaction> transactions, List<CategoryModel> categories) {
     if (transactions.isEmpty) return [];
     
     final Map<String, double> categoryTotals = {};
     for (final t in transactions) {
-      categoryTotals[t.category] = (categoryTotals[t.category] ?? 0) + t.amount;
+      final String catId = t.categoryId ?? 'Bilinmeyen';
+      categoryTotals[catId] = (categoryTotals[catId] ?? 0) + t.amount;
     }
 
     final totalAmount = transactions.fold<double>(0, (sum, t) => sum + t.amount);
@@ -98,7 +100,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
         categoryName: category?.name ?? 'Bilinmeyen',
         categoryIcon: category?.icon ?? Icons.category,
         amount: entry.value,
-        percentage: entry.value / totalAmount,
+        percentage: totalAmount == 0 ? 0 : (entry.value / totalAmount),
       );
     }).toList();
 

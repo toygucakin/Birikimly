@@ -5,6 +5,7 @@ import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/features/transactions/presentation/providers/transaction_provider.dart';
 import 'package:birikimly/features/reports/presentation/screens/month_detail_analysis_screen.dart';
+import 'package:birikimly/core/database/database.dart';
 
 class FinancialHistoryScreen extends ConsumerWidget {
   const FinancialHistoryScreen({super.key});
@@ -58,7 +59,7 @@ class FinancialHistoryScreen extends ConsumerWidget {
     );
   }
 
-  List<_MonthData> _groupTransactionsByMonth(List<dynamic> transactions) {
+  List<_MonthData> _groupTransactionsByMonth(List<Transaction> transactions) {
     final List<_MonthData> result = [];
     final now = DateTime.now();
     final start = DateTime(2026, 1);
@@ -204,7 +205,7 @@ class _MonthData {
   final DateTime month;
   final double income;
   final double expense;
-  final List<dynamic> transactions;
+  final List<Transaction> transactions;
 
   _MonthData({
     required this.month,
