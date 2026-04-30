@@ -163,40 +163,89 @@ class ProfileScreen extends ConsumerWidget {
         ReorderableListView(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
+          buildDefaultDragHandles: false,
+          proxyDecorator: (Widget child, int index, Animation<double> animation) {
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (BuildContext context, Widget? child) {
+                final double animValue = Curves.easeInOut.transform(animation.value);
+                return Transform.scale(
+                  scale: 1.0 + (animValue * 0.03),
+                  child: Material(
+                    color: Colors.transparent,
+                    elevation: animValue * 10,
+                    shadowColor: AppColors.primary.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    child: child,
+                  ),
+                );
+              },
+              child: child,
+            );
+          },
           onReorder: (oldIndex, newIndex) {
             ref.read(categoryProvider.notifier).reorderCategories(oldIndex, newIndex, isIncome);
           },
-          children: categories.map((cat) => _buildCategoryTile(context, ref, cat)).toList(),
+          children: categories.asMap().entries.map((entry) => 
+            _buildCategoryTile(context, ref, entry.value, entry.key)
+          ).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildCategoryTile(BuildContext context, WidgetRef ref, CategoryModel cat) {
-    return Container(
+  Widget _buildCategoryTile(BuildContext context, WidgetRef ref, CategoryModel cat, int index) {
+    bool isPressed = false;
+    return StatefulBuilder(
       key: ValueKey(cat.id),
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: ListTile(
-        leading: Icon(cat.icon, color: cat.color),
-        title: Text(cat.name),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: () => _showRenameDialog(context, ref, cat),
+      builder: (context, setState) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: isPressed 
+                ? Border.all(color: AppColors.primary, width: 2) 
+                : Border.all(color: Colors.transparent, width: 2),
+          ),
+          child: ListTile(
+            leading: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Listener(
+                  onPointerDown: (_) => setState(() => isPressed = true),
+                  onPointerUp: (_) => setState(() => isPressed = false),
+                  onPointerCancel: (_) => setState(() => isPressed = false),
+                  child: ReorderableDragStartListener(
+                    index: index,
+                    child: Container(
+                      color: Colors.transparent, // Ensures the touch area is large enough
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: const Icon(Icons.drag_handle, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(cat.icon, color: cat.color),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.expense),
-              onPressed: () => _showDeleteConfirm(context, ref, cat),
+            title: Text(cat.name),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: () => _showRenameDialog(context, ref, cat),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.expense),
+                  onPressed: () => _showDeleteConfirm(context, ref, cat),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
