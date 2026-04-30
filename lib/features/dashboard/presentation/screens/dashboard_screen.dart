@@ -340,7 +340,17 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             isIncome: tx.isIncome,
                           );
 
-                          return TransactionItem(
+                          bool isNewMonth = false;
+                          if (index == 0) {
+                            isNewMonth = true;
+                          } else {
+                            final prevTx = transactions[index - 1];
+                            if (tx.date.month != prevTx.date.month || tx.date.year != prevTx.date.year) {
+                              isNewMonth = true;
+                            }
+                          }
+
+                          final transactionItem = TransactionItem(
                             transaction: tx,
                             categoryIcon: displayCategory.icon,
                             categoryColor: displayCategory.color,
@@ -355,6 +365,34 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                  .deleteTransaction(tx);
                             },
                           );
+
+                          if (isNewMonth) {
+                            // Example format: Nisan 2026
+                            final monthName = DateFormat('MMMM yyyy', 'tr_TR').format(tx.date);
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    top: index == 0 ? 0 : 24, 
+                                    bottom: 12, 
+                                    left: 4
+                                  ),
+                                  child: Text(
+                                    monthName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                                transactionItem,
+                              ],
+                            );
+                          }
+
+                          return transactionItem;
                         },
                         childCount: transactions.length,
                       ),
