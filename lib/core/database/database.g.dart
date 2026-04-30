@@ -121,6 +121,21 @@ class $TransactionsTable extends Transactions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _isDeletedMeta = const VerificationMeta(
+    'isDeleted',
+  );
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+    'is_deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_deleted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -133,6 +148,7 @@ class $TransactionsTable extends Transactions
     date,
     isIncome,
     isSynced,
+    isDeleted,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -216,6 +232,12 @@ class $TransactionsTable extends Transactions
         isSynced.isAcceptableOrUnknown(data['is_synced']!, _isSyncedMeta),
       );
     }
+    if (data.containsKey('is_deleted')) {
+      context.handle(
+        _isDeletedMeta,
+        isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
+      );
+    }
     return context;
   }
 
@@ -265,6 +287,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
       )!,
+      isDeleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_deleted'],
+      )!,
     );
   }
 
@@ -285,6 +311,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final DateTime date;
   final bool isIncome;
   final bool isSynced;
+  final bool isDeleted;
   const Transaction({
     required this.id,
     required this.uuid,
@@ -296,6 +323,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.date,
     required this.isIncome,
     required this.isSynced,
+    required this.isDeleted,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -314,6 +342,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['date'] = Variable<DateTime>(date);
     map['is_income'] = Variable<bool>(isIncome);
     map['is_synced'] = Variable<bool>(isSynced);
+    map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
   }
 
@@ -333,6 +362,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       date: Value(date),
       isIncome: Value(isIncome),
       isSynced: Value(isSynced),
+      isDeleted: Value(isDeleted),
     );
   }
 
@@ -352,6 +382,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       date: serializer.fromJson<DateTime>(json['date']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
   }
   @override
@@ -368,6 +399,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'date': serializer.toJson<DateTime>(date),
       'isIncome': serializer.toJson<bool>(isIncome),
       'isSynced': serializer.toJson<bool>(isSynced),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
     };
   }
 
@@ -382,6 +414,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     DateTime? date,
     bool? isIncome,
     bool? isSynced,
+    bool? isDeleted,
   }) => Transaction(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -393,6 +426,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     date: date ?? this.date,
     isIncome: isIncome ?? this.isIncome,
     isSynced: isSynced ?? this.isSynced,
+    isDeleted: isDeleted ?? this.isDeleted,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -410,6 +444,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       date: data.date.present ? data.date.value : this.date,
       isIncome: data.isIncome.present ? data.isIncome.value : this.isIncome,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
   }
 
@@ -425,7 +460,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
-          ..write('isSynced: $isSynced')
+          ..write('isSynced: $isSynced, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
@@ -442,6 +478,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     date,
     isIncome,
     isSynced,
+    isDeleted,
   );
   @override
   bool operator ==(Object other) =>
@@ -456,7 +493,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.description == this.description &&
           other.date == this.date &&
           other.isIncome == this.isIncome &&
-          other.isSynced == this.isSynced);
+          other.isSynced == this.isSynced &&
+          other.isDeleted == this.isDeleted);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -470,6 +508,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<DateTime> date;
   final Value<bool> isIncome;
   final Value<bool> isSynced;
+  final Value<bool> isDeleted;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -481,6 +520,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.date = const Value.absent(),
     this.isIncome = const Value.absent(),
     this.isSynced = const Value.absent(),
+    this.isDeleted = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -493,6 +533,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required DateTime date,
     required bool isIncome,
     this.isSynced = const Value.absent(),
+    this.isDeleted = const Value.absent(),
   }) : userId = Value(userId),
        amount = Value(amount),
        description = Value(description),
@@ -509,6 +550,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<DateTime>? date,
     Expression<bool>? isIncome,
     Expression<bool>? isSynced,
+    Expression<bool>? isDeleted,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -521,6 +563,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (date != null) 'date': date,
       if (isIncome != null) 'is_income': isIncome,
       if (isSynced != null) 'is_synced': isSynced,
+      if (isDeleted != null) 'is_deleted': isDeleted,
     });
   }
 
@@ -535,6 +578,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<DateTime>? date,
     Value<bool>? isIncome,
     Value<bool>? isSynced,
+    Value<bool>? isDeleted,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -547,6 +591,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       date: date ?? this.date,
       isIncome: isIncome ?? this.isIncome,
       isSynced: isSynced ?? this.isSynced,
+      isDeleted: isDeleted ?? this.isDeleted,
     );
   }
 
@@ -583,6 +628,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
     return map;
   }
 
@@ -598,7 +646,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('description: $description, ')
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
-          ..write('isSynced: $isSynced')
+          ..write('isSynced: $isSynced, ')
+          ..write('isDeleted: $isDeleted')
           ..write(')'))
         .toString();
   }
@@ -1231,6 +1280,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       required DateTime date,
       required bool isIncome,
       Value<bool> isSynced,
+      Value<bool> isDeleted,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -1244,6 +1294,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<DateTime> date,
       Value<bool> isIncome,
       Value<bool> isSynced,
+      Value<bool> isDeleted,
     });
 
 class $$TransactionsTableFilterComposer
@@ -1302,6 +1353,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -1364,6 +1420,11 @@ class $$TransactionsTableOrderingComposer
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+    column: $table.isDeleted,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -1408,6 +1469,9 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager
@@ -1451,6 +1515,7 @@ class $$TransactionsTableTableManager
                 Value<DateTime> date = const Value.absent(),
                 Value<bool> isIncome = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
                 uuid: uuid,
@@ -1462,6 +1527,7 @@ class $$TransactionsTableTableManager
                 date: date,
                 isIncome: isIncome,
                 isSynced: isSynced,
+                isDeleted: isDeleted,
               ),
           createCompanionCallback:
               ({
@@ -1475,6 +1541,7 @@ class $$TransactionsTableTableManager
                 required DateTime date,
                 required bool isIncome,
                 Value<bool> isSynced = const Value.absent(),
+                Value<bool> isDeleted = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -1486,6 +1553,7 @@ class $$TransactionsTableTableManager
                 date: date,
                 isIncome: isIncome,
                 isSynced: isSynced,
+                isDeleted: isDeleted,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

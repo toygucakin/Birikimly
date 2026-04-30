@@ -10,7 +10,7 @@ part 'database.g.dart';
 
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
-  TextColumn get uuid => text().withDefault(const Constant(''))(); // Sürüm 9 ile eklendi
+  TextColumn get uuid => text().withDefault(const Constant(''))();
   TextColumn get remoteId => text().nullable()();
   TextColumn get userId => text()();
   RealColumn get amount => real()();
@@ -19,6 +19,7 @@ class Transactions extends Table {
   DateTimeColumn get date => dateTime()();
   BoolColumn get isIncome => boolean()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 }
 
 class Categories extends Table {
@@ -39,7 +40,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 9; // Sürüm 9'a yükseltildi
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration {
@@ -49,8 +50,10 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(transactions, transactions.categoryId);
         }
         if (from < 9) {
-          // Transactions tablosuna uuid kolonu ekleme
           await m.addColumn(transactions, transactions.uuid);
+        }
+        if (from < 10) {
+          await m.addColumn(transactions, transactions.isDeleted);
         }
       },
       beforeOpen: (details) async {
@@ -66,6 +69,9 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Category>> getAllCategories(String userId) => 
     (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();
 
+  Future<List<Category>> getAllCategoriesRaw(String userId) => 
+    (select(categories)..where((c) => c.userId.equals(userId))).get();
+
   Future<int> insertCategory(CategoriesCompanion entry) => into(categories).insert(entry);
   
   Future<bool> updateCategoryRecord(Category category) => update(categories).replace(category);
@@ -79,7 +85,7 @@ class AppDatabase extends _$AppDatabase {
   // Transactions Queries
   Stream<List<Transaction>> watchAllTransactions(String userId, {int? limitCount}) {
     final query = select(transactions)
-      ..where((t) => t.userId.equals(userId))
+      ..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))
       ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)]);
     
     if (limitCount != null) {
@@ -90,6 +96,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<Transaction>> getAllTransactions(String userId) => 
+    (select(transactions)..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))).get();
+
+  Future<List<Transaction>> getAllTransactionsRaw(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId))).get();
 
   Future<int> insertTransaction(TransactionsCompanion entry) => into(transactions).insert(entry);
@@ -98,7 +107,8 @@ class AppDatabase extends _$AppDatabase {
     update(transactions).replace(transaction);
   
   Future<int> deleteTransaction(Transaction transaction) => 
-    (delete(transactions)..where((t) => t.id.equals(transaction.id))).go();
+    (update(transactions)..where((t) => t.id.equals(transaction.id)))
+        .write(const TransactionsCompanion(isDeleted: Value(true), isSynced: Value(false)));
 
   Future<List<Transaction>> getUnsyncedTransactions(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId) & t.isSynced.equals(false))).get();

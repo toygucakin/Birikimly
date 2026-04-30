@@ -3,6 +3,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:drift/drift.dart';
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SyncService {
   final AppDatabase _db;
@@ -62,7 +63,7 @@ class SyncService {
 
   Future<void> _cleanupLocalDuplicates(String userId) async {
     try {
-      final allCats = await _db.getAllCategories(userId);
+      final allCats = await _db.getAllCategoriesRaw(userId);
       if (allCats.isEmpty) return;
 
       final seenKeys = <String, Category>{};
@@ -96,13 +97,86 @@ class SyncService {
     }
   }
 
+  Future<Map<String, dynamic>> _resilientUpsert(String table, Map<String, dynamic> data) async {
+    Map<String, dynamic> currentData = Map.of(data);
+    const maxRetries = 5;
+    int attempt = 0;
+
+    while (attempt < maxRetries) {
+      try {
+        return await SupabaseService.client.from(table).upsert(currentData).select().single();
+      } catch (e) {
+        attempt++;
+        final errStr = e.toString();
+        
+        final match = RegExp(r"column ['""](\w+)['""]").firstMatch(errStr);
+        if (match != null) {
+          final columnName = match.group(1)!;
+          
+          if (!currentData.containsKey(columnName) && columnName != 'category_id' && columnName != 'transaction_date') {
+             print('SyncService: RESILIENT PUSH ($table): Match "$columnName" not in payload. Trying generic removal...');
+             // If we matched something like 'of' or 'relation', the regex is still too broad or error is different.
+             // We'll throw to avoid infinite loop.
+             rethrow;
+          }
+
+          print('SyncService: RESILIENT PUSH ($table): $columnName unsupported. Replacing or removing...');
+          
+          if (columnName == 'category_id' || columnName == 'category') {
+            final val = currentData.remove('category_id') ?? currentData.remove('category');
+            if (val != null) {
+              final targetKey = columnName == 'category_id' ? 'category' : 'category_id';
+              print('SyncService: Remapping category ID column');
+              currentData[targetKey] = val.toString();
+            }
+          } else if (columnName == 'transaction_date' || columnName == 'date') {
+            final val = currentData.remove('transaction_date') ?? currentData.remove('date');
+            if (val != null) {
+              final targetKey = columnName == 'transaction_date' ? 'date' : 'transaction_date';
+              print('SyncService: Remapping date column');
+              currentData[targetKey] = val;
+            }
+          } else if (columnName == 'uuid') {
+            currentData.remove('uuid');
+          } else if (columnName == 'is_deleted') {
+            currentData.remove('is_deleted');
+          } else {
+            currentData.remove(columnName);
+          }
+          
+          if (currentData.isEmpty) rethrow;
+          continue;
+        } else {
+          print('SyncService: Upsert error for $table: $e');
+          if (e is PostgrestException) {
+            print('SyncService: Error Details: ${e.message} | ${e.details} | ${e.hint}');
+            
+            // If it's a foreign key or constraint error related to category, try stripping it
+            final message = e.message.toLowerCase();
+            final details = e.details?.toString().toLowerCase() ?? '';
+            
+            if ((message.contains('foreign key') || message.contains('constraint')) && 
+                (message.contains('category') || details.contains('category'))) {
+              print('SyncService: RESILIENT PUSH ($table): Category constraint error. Stripping category...');
+              currentData.remove('category_id');
+              currentData.remove('category');
+              attempt++; // Count as an attempt
+              if (currentData.isNotEmpty && attempt < maxRetries) continue;
+            }
+          }
+          rethrow;
+        }
+      }
+    }
+    throw Exception('SyncService: Max retries exceeded for $table push');
+  }
+
   Future<void> syncCategories() async {
     final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
     print('SyncService: Syncing categories...');
 
-    // 1. Push
     try {
       final unsynced = await _db.getUnsyncedCategories(user.id);
       if (unsynced.isNotEmpty) {
@@ -122,7 +196,7 @@ class SyncService {
                 remoteIdToUse = existing['id'].toString();
               }
             } catch (e) {
-              print('SyncService: Category UUID check failed: $e');
+              // Ignore UUID check errors
             }
           }
 
@@ -137,25 +211,15 @@ class SyncService {
             'user_id': user.id,
           };
 
-          Map<String, dynamic> responseData;
           try {
-            responseData = await SupabaseService.client.from('categories').upsert(data).select().single();
+            final responseData = await _resilientUpsert('categories', data);
+            await _db.updateCategoryRecord(cat.copyWith(
+              remoteId: Value(responseData['id'].toString()),
+              isSynced: true,
+            ));
           } catch (e) {
-            final errorStr = e.toString().toLowerCase();
-            if (errorStr.contains('uuid') && errorStr.contains('not exist')) {
-              print('SyncService: RETRYING CATEGORY PUSH without uuid column...');
-              data.remove('uuid');
-              responseData = await SupabaseService.client.from('categories').upsert(data).select().single();
-            } else {
-              print('SyncService: Category individual push failed: $e');
-              continue;
-            }
+            print('SyncService: Category individual push failed: $e');
           }
-
-          await _db.updateCategoryRecord(cat.copyWith(
-            remoteId: Value(responseData['id'].toString()),
-            isSynced: true,
-          ));
         }
       }
     } catch (e) {
@@ -172,9 +236,7 @@ class SyncService {
 
       if (remoteCats.isEmpty) return;
 
-      final allLocalCats = await (
-        _db.select(_db.categories)..where((c) => c.userId.equals(user.id))
-      ).get();
+      final allLocalCats = await _db.getAllCategoriesRaw(user.id);
 
       final existingKeys = allLocalCats.map((c) => 
         '${c.name.toLowerCase().trim()}_${c.isIncome}'
@@ -183,7 +245,8 @@ class SyncService {
 
       int restoredCount = 0;
       for (final rc in remoteCats) {
-        if (rc['is_deleted'] == true) continue;
+        // We Pull even deleted categories to prevent their re-insertion as 'defaults'
+        final isRemoteDeleted = rc['is_deleted'] == true;
 
         final rcName = (rc['name'] ?? '').toString().toLowerCase().trim();
         if (rcName.isEmpty) continue;
@@ -206,6 +269,7 @@ class SyncService {
           isIncome: rcIsIncome,
           isSynced: const Value(true),
           remoteId: Value(rc['id'].toString()),
+          isDeleted: Value(isRemoteDeleted),
         ));
 
         existingKeys.add(key);
@@ -224,7 +288,6 @@ class SyncService {
 
     print('SyncService: Syncing transactions...');
 
-    // 1. Push
     try {
       final unsynced = await _db.getUnsyncedTransactions(user.id);
       if (unsynced.isNotEmpty) {
@@ -232,53 +295,40 @@ class SyncService {
         for (final tx in unsynced) {
           String? remoteIdToUse = tx.remoteId;
 
-          // UUID ile bulut kontrolü yapalım (Duplicate önlemek için)
-          if (remoteIdToUse == null && tx.uuid.isNotEmpty) {
-            try {
-              final existing = await SupabaseService.client
-                  .from('transactions')
-                  .select('id')
-                  .eq('uuid', tx.uuid)
-                  .maybeSingle();
-              
-              if (existing != null) {
-                remoteIdToUse = existing['id'].toString();
+          if (tx.isDeleted) {
+            if (remoteIdToUse != null) {
+              try {
+                await SupabaseService.client
+                    .from('transactions')
+                    .delete()
+                    .eq('id', remoteIdToUse);
+              } catch (e) {
+                print('SyncService: Transaction delete failed: $e');
               }
-            } catch (e) {
-              print('SyncService: UUID check failed (likely column missing): $e');
             }
+            await _db.updateTransaction(tx.copyWith(isSynced: true));
+            continue;
           }
 
           final data = {
-            if (remoteIdToUse != null) 'id': int.parse(remoteIdToUse),
-            'uuid': tx.uuid,
+            if (remoteIdToUse != null) 'id': remoteIdToUse,
             'user_id': user.id,
             'amount': tx.amount,
-            if (tx.categoryId != null) 'category_id': tx.categoryId,
+            'category': tx.categoryId,
             'description': tx.description,
-            'transaction_date': tx.date.toIso8601String(),
+            'date': tx.date.toUtc().toIso8601String(),
             'is_income': tx.isIncome,
           };
 
-          Map<String, dynamic> responseData;
           try {
-            responseData = await SupabaseService.client.from('transactions').upsert(data).select().single();
+            final responseData = await _resilientUpsert('transactions', data);
+            await _db.updateTransaction(tx.copyWith(
+              remoteId: Value(responseData['id'].toString()),
+              isSynced: true,
+            ));
           } catch (e) {
-            final errorStr = e.toString().toLowerCase();
-            if (errorStr.contains('uuid') && errorStr.contains('not exist')) {
-              print('SyncService: RETRYING PUSH without uuid column...');
-              data.remove('uuid');
-              responseData = await SupabaseService.client.from('transactions').upsert(data).select().single();
-            } else {
-              print('SyncService: Transaction individual push failed: $e');
-              continue;
-            }
+            print('SyncService: Transaction individual push failed: $e');
           }
-
-          await _db.updateTransaction(tx.copyWith(
-            remoteId: Value(responseData['id'].toString()),
-            isSynced: true,
-          ));
         }
       }
     } catch (e) {
@@ -295,7 +345,7 @@ class SyncService {
 
       if (remoteTxs.isEmpty) return;
 
-      final localTxs = await _db.getAllTransactions(user.id);
+      final localTxs = await _db.getAllTransactionsRaw(user.id);
       final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
       final existingUuids = localTxs.map((t) => t.uuid).toSet();
 
@@ -303,6 +353,7 @@ class SyncService {
       for (final rt in remoteTxs) {
         final rId = rt['id'].toString();
         final rUuid = rt['uuid']?.toString() ?? '';
+        final isRemoteDeleted = rt['is_deleted'] == true;
 
         if (existingRemoteIds.contains(rId)) continue;
         if (rUuid.isNotEmpty && existingUuids.contains(rUuid)) continue;
@@ -317,9 +368,10 @@ class SyncService {
           amount: (rt['amount'] as num? ?? 0.0).toDouble(),
           categoryId: Value(remoteCatId),
           description: rt['description'] ?? '',
-          date: DateTime.parse(rt['transaction_date'] ?? DateTime.now().toIso8601String()),
+          date: DateTime.parse(rt['transaction_date'] ?? rt['date'] ?? DateTime.now().toIso8601String()).toLocal(),
           isIncome: rt['is_income'] ?? false,
           isSynced: const Value(true),
+          isDeleted: Value(isRemoteDeleted),
         ));
         
         existingRemoteIds.add(rId);
@@ -333,21 +385,43 @@ class SyncService {
   }
   Future<void> _normalizeTransactionCategories(String userId) async {
     try {
-      final txs = await _db.getAllTransactions(userId);
-      final cats = await _db.getAllCategories(userId);
+      final txs = await _db.getAllTransactionsRaw(userId);
+      final cats = await _db.getAllCategoriesRaw(userId);
 
       for (final tx in txs) {
         final rawId = tx.categoryId ?? '';
         if (rawId.isEmpty) continue;
 
-        // 1. Durum: ID 'temp_' ile başlıyorsa 'def_'e çevir
-        if (rawId.startsWith('temp_')) {
-          final newId = rawId.replaceFirst('temp_', 'def_');
+        // 1. Durum: ID 'temp_' veya legacy 'in-'/'ex-' ile başlıyorsa düzelt
+        if (rawId.startsWith('temp_') || rawId.startsWith('in-') || rawId.startsWith('ex-')) {
+          String newId = rawId;
+          if (rawId.startsWith('temp_')) {
+            newId = rawId.replaceFirst('temp_', 'def_');
+          } else if (rawId.startsWith('in-')) {
+            // Legacy in-1, in-2 mapping -> def_...
+            final index = int.tryParse(rawId.split('-').last);
+            if (index != null && index >= 1 && index <= 5) {
+              final names = ['Maaş', 'Yan Gelir', 'Kira Geliri', 'Yatırım Geliri', 'Burs & Harçlık'];
+              newId = 'def_${names[index - 1].toLowerCase().replaceAll(' ', '_')}';
+            }
+          } else if (rawId.startsWith('ex-')) {
+            // Legacy ex-1, ex-2 mapping -> def_...
+            final index = int.tryParse(rawId.split('-').last);
+            final names = [
+              'Gıda & Market', 'Yiyecek & İçecek', 'Ulaşım', 'Kira & Aidat', 'Faturalar',
+              'Abonelikler', 'Kredi Kartı', 'Giyim', 'Alışveriş', 'Dekorasyon',
+              'Spor', 'Eğlence', 'Eğitim', 'Sağlık', 'Yatırım'
+            ];
+            if (index != null && index >= 1 && index <= names.length) {
+              newId = 'def_${names[index - 1].toLowerCase().replaceAll(' ', '_')}';
+            }
+          }
+
           if (cats.any((c) => c.uuid == newId)) {
             await _db.updateTransaction(tx.copyWith(categoryId: Value(newId), isSynced: false));
           }
         } 
-        // 2. Durum: ID bir isim ise (Eski versiyonlarda isim kaydedilmiş olabilir)
+        // 2. Durum: ID bir isim ise
         else if (!rawId.contains('-') && !rawId.startsWith('def_')) {
           final matchedCat = cats.cast<Category?>().firstWhere(
             (c) => c?.name.toLowerCase().trim() == rawId.toLowerCase().trim(),
