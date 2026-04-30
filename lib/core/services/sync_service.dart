@@ -208,6 +208,7 @@ class SyncService {
             'color_value': cat.colorValue.toSigned(32),
             'is_income': cat.isIncome,
             'is_deleted': cat.isDeleted,
+            'order_index': cat.orderIndex,
             'user_id': user.id,
           };
 
@@ -270,6 +271,7 @@ class SyncService {
           isSynced: const Value(true),
           remoteId: Value(rc['id'].toString()),
           isDeleted: Value(isRemoteDeleted),
+          orderIndex: Value(rc['order_index'] as int? ?? 0),
         ));
 
         existingKeys.add(key);

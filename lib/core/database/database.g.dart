@@ -746,6 +746,18 @@ class $CategoriesTable extends Categories
       'CHECK ("is_income" IN (0, 1))',
     ),
   );
+  static const VerificationMeta _orderIndexMeta = const VerificationMeta(
+    'orderIndex',
+  );
+  @override
+  late final GeneratedColumn<int> orderIndex = GeneratedColumn<int>(
+    'order_index',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _isSyncedMeta = const VerificationMeta(
     'isSynced',
   );
@@ -786,6 +798,7 @@ class $CategoriesTable extends Categories
     iconCode,
     colorValue,
     isIncome,
+    orderIndex,
     isSynced,
     isDeleted,
   ];
@@ -858,6 +871,12 @@ class $CategoriesTable extends Categories
     } else if (isInserting) {
       context.missing(_isIncomeMeta);
     }
+    if (data.containsKey('order_index')) {
+      context.handle(
+        _orderIndexMeta,
+        orderIndex.isAcceptableOrUnknown(data['order_index']!, _orderIndexMeta),
+      );
+    }
     if (data.containsKey('is_synced')) {
       context.handle(
         _isSyncedMeta,
@@ -911,6 +930,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.bool,
         data['${effectivePrefix}is_income'],
       )!,
+      orderIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}order_index'],
+      )!,
       isSynced: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
@@ -937,6 +960,7 @@ class Category extends DataClass implements Insertable<Category> {
   final int iconCode;
   final int colorValue;
   final bool isIncome;
+  final int orderIndex;
   final bool isSynced;
   final bool isDeleted;
   const Category({
@@ -948,6 +972,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.iconCode,
     required this.colorValue,
     required this.isIncome,
+    required this.orderIndex,
     required this.isSynced,
     required this.isDeleted,
   });
@@ -964,6 +989,7 @@ class Category extends DataClass implements Insertable<Category> {
     map['icon_code'] = Variable<int>(iconCode);
     map['color_value'] = Variable<int>(colorValue);
     map['is_income'] = Variable<bool>(isIncome);
+    map['order_index'] = Variable<int>(orderIndex);
     map['is_synced'] = Variable<bool>(isSynced);
     map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
@@ -981,6 +1007,7 @@ class Category extends DataClass implements Insertable<Category> {
       iconCode: Value(iconCode),
       colorValue: Value(colorValue),
       isIncome: Value(isIncome),
+      orderIndex: Value(orderIndex),
       isSynced: Value(isSynced),
       isDeleted: Value(isDeleted),
     );
@@ -1000,6 +1027,7 @@ class Category extends DataClass implements Insertable<Category> {
       iconCode: serializer.fromJson<int>(json['iconCode']),
       colorValue: serializer.fromJson<int>(json['colorValue']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
+      orderIndex: serializer.fromJson<int>(json['orderIndex']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
@@ -1016,6 +1044,7 @@ class Category extends DataClass implements Insertable<Category> {
       'iconCode': serializer.toJson<int>(iconCode),
       'colorValue': serializer.toJson<int>(colorValue),
       'isIncome': serializer.toJson<bool>(isIncome),
+      'orderIndex': serializer.toJson<int>(orderIndex),
       'isSynced': serializer.toJson<bool>(isSynced),
       'isDeleted': serializer.toJson<bool>(isDeleted),
     };
@@ -1030,6 +1059,7 @@ class Category extends DataClass implements Insertable<Category> {
     int? iconCode,
     int? colorValue,
     bool? isIncome,
+    int? orderIndex,
     bool? isSynced,
     bool? isDeleted,
   }) => Category(
@@ -1041,6 +1071,7 @@ class Category extends DataClass implements Insertable<Category> {
     iconCode: iconCode ?? this.iconCode,
     colorValue: colorValue ?? this.colorValue,
     isIncome: isIncome ?? this.isIncome,
+    orderIndex: orderIndex ?? this.orderIndex,
     isSynced: isSynced ?? this.isSynced,
     isDeleted: isDeleted ?? this.isDeleted,
   );
@@ -1056,6 +1087,9 @@ class Category extends DataClass implements Insertable<Category> {
           ? data.colorValue.value
           : this.colorValue,
       isIncome: data.isIncome.present ? data.isIncome.value : this.isIncome,
+      orderIndex: data.orderIndex.present
+          ? data.orderIndex.value
+          : this.orderIndex,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
@@ -1072,6 +1106,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('iconCode: $iconCode, ')
           ..write('colorValue: $colorValue, ')
           ..write('isIncome: $isIncome, ')
+          ..write('orderIndex: $orderIndex, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted')
           ..write(')'))
@@ -1088,6 +1123,7 @@ class Category extends DataClass implements Insertable<Category> {
     iconCode,
     colorValue,
     isIncome,
+    orderIndex,
     isSynced,
     isDeleted,
   );
@@ -1103,6 +1139,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.iconCode == this.iconCode &&
           other.colorValue == this.colorValue &&
           other.isIncome == this.isIncome &&
+          other.orderIndex == this.orderIndex &&
           other.isSynced == this.isSynced &&
           other.isDeleted == this.isDeleted);
 }
@@ -1116,6 +1153,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<int> iconCode;
   final Value<int> colorValue;
   final Value<bool> isIncome;
+  final Value<int> orderIndex;
   final Value<bool> isSynced;
   final Value<bool> isDeleted;
   const CategoriesCompanion({
@@ -1127,6 +1165,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.iconCode = const Value.absent(),
     this.colorValue = const Value.absent(),
     this.isIncome = const Value.absent(),
+    this.orderIndex = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
   });
@@ -1139,6 +1178,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     required int iconCode,
     required int colorValue,
     required bool isIncome,
+    this.orderIndex = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
   }) : uuid = Value(uuid),
@@ -1156,6 +1196,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<int>? iconCode,
     Expression<int>? colorValue,
     Expression<bool>? isIncome,
+    Expression<int>? orderIndex,
     Expression<bool>? isSynced,
     Expression<bool>? isDeleted,
   }) {
@@ -1168,6 +1209,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (iconCode != null) 'icon_code': iconCode,
       if (colorValue != null) 'color_value': colorValue,
       if (isIncome != null) 'is_income': isIncome,
+      if (orderIndex != null) 'order_index': orderIndex,
       if (isSynced != null) 'is_synced': isSynced,
       if (isDeleted != null) 'is_deleted': isDeleted,
     });
@@ -1182,6 +1224,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<int>? iconCode,
     Value<int>? colorValue,
     Value<bool>? isIncome,
+    Value<int>? orderIndex,
     Value<bool>? isSynced,
     Value<bool>? isDeleted,
   }) {
@@ -1194,6 +1237,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       iconCode: iconCode ?? this.iconCode,
       colorValue: colorValue ?? this.colorValue,
       isIncome: isIncome ?? this.isIncome,
+      orderIndex: orderIndex ?? this.orderIndex,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
     );
@@ -1226,6 +1270,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (isIncome.present) {
       map['is_income'] = Variable<bool>(isIncome.value);
     }
+    if (orderIndex.present) {
+      map['order_index'] = Variable<int>(orderIndex.value);
+    }
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
@@ -1246,6 +1293,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('iconCode: $iconCode, ')
           ..write('colorValue: $colorValue, ')
           ..write('isIncome: $isIncome, ')
+          ..write('orderIndex: $orderIndex, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted')
           ..write(')'))
@@ -1590,6 +1638,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       required int iconCode,
       required int colorValue,
       required bool isIncome,
+      Value<int> orderIndex,
       Value<bool> isSynced,
       Value<bool> isDeleted,
     });
@@ -1603,6 +1652,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<int> iconCode,
       Value<int> colorValue,
       Value<bool> isIncome,
+      Value<int> orderIndex,
       Value<bool> isSynced,
       Value<bool> isDeleted,
     });
@@ -1653,6 +1703,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<bool> get isIncome => $composableBuilder(
     column: $table.isIncome,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1716,6 +1771,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
@@ -1762,6 +1822,11 @@ class $$CategoriesTableAnnotationComposer
   GeneratedColumn<bool> get isIncome =>
       $composableBuilder(column: $table.isIncome, builder: (column) => column);
 
+  GeneratedColumn<int> get orderIndex => $composableBuilder(
+    column: $table.orderIndex,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
 
@@ -1805,6 +1870,7 @@ class $$CategoriesTableTableManager
                 Value<int> iconCode = const Value.absent(),
                 Value<int> colorValue = const Value.absent(),
                 Value<bool> isIncome = const Value.absent(),
+                Value<int> orderIndex = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
               }) => CategoriesCompanion(
@@ -1816,6 +1882,7 @@ class $$CategoriesTableTableManager
                 iconCode: iconCode,
                 colorValue: colorValue,
                 isIncome: isIncome,
+                orderIndex: orderIndex,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
               ),
@@ -1829,6 +1896,7 @@ class $$CategoriesTableTableManager
                 required int iconCode,
                 required int colorValue,
                 required bool isIncome,
+                Value<int> orderIndex = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
               }) => CategoriesCompanion.insert(
@@ -1840,6 +1908,7 @@ class $$CategoriesTableTableManager
                 iconCode: iconCode,
                 colorValue: colorValue,
                 isIncome: isIncome,
+                orderIndex: orderIndex,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
               ),

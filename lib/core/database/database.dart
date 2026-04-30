@@ -31,6 +31,7 @@ class Categories extends Table {
   IntColumn get iconCode => integer()();
   IntColumn get colorValue => integer()();
   BoolColumn get isIncome => boolean()();
+  IntColumn get orderIndex => integer().withDefault(const Constant(0))();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 }
@@ -40,7 +41,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration {
@@ -54,6 +55,10 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 10) {
           await m.addColumn(transactions, transactions.isDeleted);
+          await m.addColumn(categories, categories.isDeleted);
+        }
+        if (from < 11) {
+          await m.addColumn(categories, categories.orderIndex);
         }
       },
       beforeOpen: (details) async {
@@ -63,8 +68,12 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // Categories Queries
-  Stream<List<Category>> watchAllCategories(String userId) => 
-    (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).watch();
+  Stream<List<Category>> watchAllCategories(String userId) {
+    return (select(categories)
+      ..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))
+      ..orderBy([(c) => OrderingTerm(expression: c.orderIndex, mode: OrderingMode.asc)])
+    ).watch();
+  }
 
   Future<List<Category>> getAllCategories(String userId) => 
     (select(categories)..where((c) => c.userId.equals(userId) & c.isDeleted.equals(false))).get();

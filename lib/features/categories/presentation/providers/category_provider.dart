@@ -116,6 +116,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
           iconCode: (def['icon'] as IconData).codePoint,
           colorValue: (def['color'] as Color).value,
           isIncome: def['income'] as bool,
+          orderIndex: drift.Value(_staticDefaults.indexOf(def)),
           isSynced: drift.Value(!isGuest),
         ));
       }
@@ -148,6 +149,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
       iconCode: icon.codePoint,
       colorValue: color.value,
       isIncome: isIncome,
+      orderIndex: const drift.Value(999), // Will fall to the bottom of the list
       isSynced: const drift.Value(false),
     ));
 
@@ -191,6 +193,38 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
     final record = dbList.firstWhere((c) => c.uuid == id);
 
     await db.deleteCategoryRecord(record);
+
+    if (!isGuest) {
+      ref.read(syncServiceProvider).syncAll();
+    }
+  }
+
+  Future<void> reorderCategories(int oldIndex, int newIndex, bool isIncome) async {
+    final user = ref.read(currentUserProvider);
+    final isGuest = ref.read(guestModeProvider);
+    if (user == null && !isGuest) return;
+
+    final currentUserId = isGuest ? 'guest' : user!.id;
+    final db = ref.read(databaseProvider);
+    
+    final allCats = await db.getAllCategories(currentUserId);
+    final filteredCats = allCats.where((c) => c.isIncome == isIncome).toList();
+    
+    filteredCats.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+    
+    final item = filteredCats.removeAt(oldIndex);
+    filteredCats.insert(newIndex, item);
+
+    for (int i = 0; i < filteredCats.length; i++) {
+      final cat = filteredCats[i];
+      if (cat.orderIndex != i) {
+        await db.updateCategoryRecord(cat.copyWith(orderIndex: i, isSynced: false));
+      }
+    }
 
     if (!isGuest) {
       ref.read(syncServiceProvider).syncAll();

@@ -160,13 +160,21 @@ class ProfileScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 12),
-        ...categories.map((cat) => _buildCategoryTile(context, ref, cat)),
+        ReorderableListView(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          onReorder: (oldIndex, newIndex) {
+            ref.read(categoryProvider.notifier).reorderCategories(oldIndex, newIndex, isIncome);
+          },
+          children: categories.map((cat) => _buildCategoryTile(context, ref, cat)).toList(),
+        ),
       ],
     );
   }
 
   Widget _buildCategoryTile(BuildContext context, WidgetRef ref, CategoryModel cat) {
     return Container(
+      key: ValueKey(cat.id),
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: AppColors.surface,

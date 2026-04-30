@@ -7,6 +7,7 @@ class CategoryModel {
   final IconData icon;
   final Color color;
   final bool isIncome;
+  final int orderIndex;
 
   CategoryModel({
     required this.id,
@@ -14,6 +15,7 @@ class CategoryModel {
     required this.icon,
     required this.color,
     this.isIncome = false,
+    this.orderIndex = 0,
   });
 
   factory CategoryModel.fromDb(db.Category record) {
@@ -23,6 +25,7 @@ class CategoryModel {
       icon: IconData(record.iconCode, fontFamily: 'MaterialIcons'),
       color: Color(record.colorValue),
       isIncome: record.isIncome,
+      orderIndex: record.orderIndex,
     );
   }
 }
