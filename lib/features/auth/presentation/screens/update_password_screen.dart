@@ -13,24 +13,38 @@ class UpdatePasswordScreen extends ConsumerStatefulWidget {
 
 class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   void _submit() {
+    FocusScope.of(context).unfocus(); // Klavyeyi kapat
     final password = _passwordController.text.trim();
-    if (password.length >= 6) {
-      ref.read(authNotifierProvider.notifier).updateUserPassword(password);
-    } else {
+    final confirmPassword = _confirmPasswordController.text.trim();
+
+    if (password.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Şifre en az 6 karakter olmalıdır.'),
         backgroundColor: AppColors.expense,
       ));
+      return;
     }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Şifreler eşleşmiyor. Lütfen kontrol edin.'),
+        backgroundColor: AppColors.expense,
+      ));
+      return;
+    }
+
+    ref.read(authNotifierProvider.notifier).updateUserPassword(password);
   }
 
   @override
@@ -94,6 +108,18 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
                       });
                     },
                   ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Şifreyi Onayla',
+                  prefixIcon: const Icon(Icons.lock_outline),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

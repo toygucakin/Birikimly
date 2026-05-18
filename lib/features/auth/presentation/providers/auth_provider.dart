@@ -32,9 +32,11 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
       await SupabaseService.client.auth.signInWithPassword(
         email: email,
         password: password,
-      );
+      ).timeout(const Duration(seconds: 10));
       state = const AsyncValue.data(null);
     } catch (e, st) {
+      print('SignIn Error: $e');
+      print(st);
       state = AsyncValue.error(e, st);
     }
   }
@@ -42,9 +44,11 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
   Future<void> sendOtp(String email) async {
     state = const AsyncValue.loading();
     try {
-      await SupabaseService.client.auth.signInWithOtp(email: email);
+      await SupabaseService.client.auth.signInWithOtp(email: email).timeout(const Duration(seconds: 10));
       state = const AsyncValue.data(null);
     } catch (e, st) {
+      print('SendOtp Error: $e');
+      print(st);
       state = AsyncValue.error(e, st);
     }
   }
@@ -60,6 +64,37 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
       ref.read(awaitingPasswordProvider.notifier).set(true);
       state = const AsyncValue.data(null);
     } catch (e, st) {
+      print('VerifyOtp Error: $e');
+      print(st);
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> sendPasswordResetOtp(String email) async {
+    state = const AsyncValue.loading();
+    try {
+      await SupabaseService.client.auth.resetPasswordForEmail(email).timeout(const Duration(seconds: 10));
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      print('SendPasswordResetOtp Error: $e');
+      print(st);
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> verifyPasswordResetOtp(String email, String token) async {
+    state = const AsyncValue.loading();
+    try {
+      await SupabaseService.client.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.recovery,
+      );
+      ref.read(awaitingPasswordProvider.notifier).set(true);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      print('VerifyPasswordResetOtp Error: $e');
+      print(st);
       state = AsyncValue.error(e, st);
     }
   }
@@ -80,7 +115,7 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
   Future<void> signOut() async {
     state = const AsyncValue.loading();
     try {
-      await SupabaseService.client.auth.signOut();
+      await SupabaseService.client.auth.signOut().timeout(const Duration(seconds: 10));
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

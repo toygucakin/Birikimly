@@ -13,11 +13,13 @@ class AuthScreen extends ConsumerStatefulWidget {
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
+enum AuthMode { login, register, forgotPassword }
+
 class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController(); // Used for login
   final _otpController = TextEditingController(); // Used for OTP
-  bool _isLogin = true;
+  AuthMode _authMode = AuthMode.login;
   bool _isOtpSent = false;
   bool _obscurePassword = true;
 
@@ -30,18 +32,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   }
 
   void _submit() {
+    FocusScope.of(context).unfocus(); // Klavyeyi kapat
     final email = _emailController.text.trim();
     if (email.isEmpty) return;
 
-    if (_isLogin) {
+    if (_authMode == AuthMode.login) {
       final password = _passwordController.text.trim();
       if (password.isEmpty) return;
       ref.read(authNotifierProvider.notifier).signInWithEmail(email, password);
-    } else {
+    } else if (_authMode == AuthMode.register) {
       if (!_isOtpSent) {
         // Step 1: Send OTP
         ref.read(authNotifierProvider.notifier).sendOtp(email).then((_) {
-          // If no error, set OTP sent to true
           if (!ref.read(authNotifierProvider).hasError) {
             setState(() {
               _isOtpSent = true;
@@ -53,6 +55,20 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         final otp = _otpController.text.trim();
         if (otp.isEmpty) return;
         ref.read(authNotifierProvider.notifier).verifyOtp(email, otp);
+      }
+    } else if (_authMode == AuthMode.forgotPassword) {
+      if (!_isOtpSent) {
+        ref.read(authNotifierProvider.notifier).sendPasswordResetOtp(email).then((_) {
+          if (!ref.read(authNotifierProvider).hasError) {
+            setState(() {
+              _isOtpSent = true;
+            });
+          }
+        });
+      } else {
+        final otp = _otpController.text.trim();
+        if (otp.isEmpty) return;
+        ref.read(authNotifierProvider.notifier).verifyPasswordResetOtp(email, otp);
       }
     }
   }
@@ -96,7 +112,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       );
     });
 
-    return Scaffold(
+    return PopScope(
+      canPop: _authMode == AuthMode.login && !_isOtpSent,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        setState(() {
+          if (_isOtpSent) {
+            _isOtpSent = false;
+          } else {
+            _authMode = AuthMode.login;
+          }
+        });
+      },
+      child: Scaffold(
+        appBar: (_authMode != AuthMode.login || _isOtpSent)
+            ? AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                  onPressed: () {
+                    setState(() {
+                      if (_isOtpSent) {
+                        _isOtpSent = false;
+                      } else {
+                        _authMode = AuthMode.login;
+                      }
+                    });
+                  },
+                ),
+              )
+            : null,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -124,7 +170,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
-                if (_isLogin || !_isOtpSent)
+                if (_authMode == AuthMode.login || !_isOtpSent)
                   TextField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -136,7 +182,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                   ),
-                if (_isLogin) ...[
+                if (_authMode == AuthMode.login) ...[
                   const SizedBox(height: 16),
                   TextField(
                     controller: _passwordController,
@@ -169,12 +215,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        FocusScope.of(context).unfocus(); // Klavyeyi kapat
+                        setState(() {
+                          _authMode = AuthMode.forgotPassword;
+                          _isOtpSent = false;
+                        });
+                      },
+                      child: const Text(
+                        'Şifremi Unuttum',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
-                if (!_isLogin && _isOtpSent) ...[
+                if (_authMode != AuthMode.login && _isOtpSent) ...[
                   const SizedBox(height: 16),
                   TextField(
                     controller: _otpController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: false, signed: false),
                     decoration: InputDecoration(
                       labelText: 'Doğrulama Kodu (6 Hane)',
                       prefixIcon: const Icon(Icons.key),
@@ -184,7 +249,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 32),
+                const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: authState.isLoading ? null : _submit,
                   style: ElevatedButton.styleFrom(
@@ -205,8 +270,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           ),
                         )
                       : Text(
-                          _isLogin 
-                              ? 'Giriş Yap' 
+                          _authMode == AuthMode.login
+                              ? 'Giriş Yap'
                               : (_isOtpSent ? 'Doğrula' : 'Kod Gönder'),
                           style: const TextStyle(
                             fontSize: 18,
@@ -217,13 +282,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () {
+                    FocusScope.of(context).unfocus(); // Klavyeyi kapat
                     setState(() {
-                      _isLogin = !_isLogin;
+                      if (_authMode == AuthMode.login) {
+                        _authMode = AuthMode.register;
+                      } else {
+                        _authMode = AuthMode.login;
+                      }
                       _isOtpSent = false;
                     });
                   },
                   child: Text(
-                    _isLogin
+                    _authMode == AuthMode.login
                         ? 'Hesabın yok mu? Kayıt Ol'
                         : 'Zaten hesabın var mı? Giriş Yap',
                     style: const TextStyle(
@@ -233,6 +303,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    FocusScope.of(context).unfocus(); // Klavyeyi kapat
                     // Clear any existing Supabase session before entering guest mode
                     await ref.read(authNotifierProvider.notifier).signOut();
                     ref.read(guestModeProvider.notifier).setGuestMode(true);
@@ -249,6 +320,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ),
         ),
       ),
-    );
+      ), // Scaffold
+    ); // PopScope
   }
 }
