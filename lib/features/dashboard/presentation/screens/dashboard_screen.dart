@@ -10,6 +10,7 @@ import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/features/reports/presentation/screens/financial_history_screen.dart';
+import 'package:birikimly/features/transactions/presentation/screens/recurring_transactions_screen.dart' as birikimly_rt_screen;
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:intl/intl.dart';
@@ -248,15 +249,28 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                           );
                         }(),
                         const SizedBox(height: 40),
-                        const Row(
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'Son İşlemler',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
                               ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const birikimly_rt_screen.RecurringTransactionsScreen()),
+                                );
+                              },
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              child: const Text('Düzenli İşlemler'),
                             ),
                           ],
                         ),

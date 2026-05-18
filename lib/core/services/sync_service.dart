@@ -50,7 +50,8 @@ class SyncService {
       await _cleanupLocalDuplicates(user.id);
       await syncCategories();
       await syncTransactions();
-      await _normalizeTransactionCategories(user.id);
+      await syncRecurringTransactions();
+    await _normalizeTransactionCategories(user.id);
       
       print('SyncService: [SUCCESS] Sync session finished.');
     } catch (e, st) {
@@ -284,8 +285,81 @@ class SyncService {
     }
   }
 
-  Future<void> syncTransactions() async {
+  Future<void> syncRecurringTransactions() async {
     final user = SupabaseService.client.auth.currentUser;
+    if (user == null) return;
+
+    print('SyncService: Syncing recurring transactions...');
+    try {
+      final unsynced = await _db.getUnsyncedRecurringTransactions(user.id);
+      if (unsynced.isNotEmpty) {
+        print('SyncService: Pushing ${unsynced.length} recurring transactions to cloud.');
+        for (final rt in unsynced) {
+          String? remoteIdToUse = rt.remoteId;
+          final data = {
+            if (remoteIdToUse != null) 'id': remoteIdToUse,
+            'user_id': user.id,
+            'amount': rt.amount,
+            'category_id': rt.categoryId,
+            'description': rt.description,
+            'start_date': rt.startDate.toUtc().toIso8601String(),
+            'next_execution_date': rt.nextExecutionDate.toUtc().toIso8601String(),
+            'is_income': rt.isIncome,
+            'is_deleted': rt.isDeleted,
+          };
+          try {
+            final responseData = await _resilientUpsert('recurring_transactions', data);
+            await _db.updateRecurringTransaction(rt.copyWith(
+              remoteId: Value(responseData['id'].toString()),
+              isSynced: true,
+            ));
+          } catch (e) {
+            print('SyncService: Recurring transaction push failed: $e');
+          }
+        }
+      }
+
+      // Pull from server
+      final remoteTxs = await SupabaseService.client
+          .from('recurring_transactions')
+          .select()
+          .eq('user_id', user.id)
+          .order('id', ascending: false);
+
+      if (remoteTxs.isNotEmpty) {
+        final localTxs = await _db.getAllRecurringTransactionsRaw(user.id);
+        final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
+        final existingUuids = localTxs.map((t) => t.uuid).toSet();
+        int restored = 0;
+        for (final rt in remoteTxs) {
+          final rId = rt['id'].toString();
+          final rUuid = rt['uuid']?.toString() ?? '';
+          if (existingRemoteIds.contains(rId) || (rUuid.isNotEmpty && existingUuids.contains(rUuid))) continue;
+          final data = RecurringTransactionsCompanion(
+            uuid: Value(rUuid),
+            remoteId: Value(rId),
+            userId: Value(user.id),
+            amount: Value((rt['amount'] as num).toDouble()),
+            categoryId: Value(rt['category_id']?.toString()),
+            description: Value(rt['description'] ?? ''),
+            startDate: Value(DateTime.parse(rt['start_date'] ?? DateTime.now().toIso8601String()).toLocal()),
+            nextExecutionDate: Value(DateTime.parse(rt['next_execution_date'] ?? DateTime.now().toIso8601String()).toLocal()),
+            isIncome: Value(rt['is_income'] ?? false),
+            isSynced: const Value(true),
+            isDeleted: Value(rt['is_deleted'] ?? false),
+          );
+          await _db.insertRecurringTransaction(data);
+          restored++;
+        }
+        if (restored > 0) print('SyncService: Restored $restored recurring transactions from cloud.');
+      }
+    } catch (e) {
+      print('SyncService: Recurring transaction sync failed: $e');
+    }
+  }
+
+Future<void> syncTransactions() async {
+final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
     print('SyncService: Syncing transactions...');

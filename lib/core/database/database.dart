@@ -36,12 +36,27 @@ class Categories extends Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Transactions, Categories])
+class RecurringTransactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text().withDefault(const Constant(''))();
+  TextColumn get remoteId => text().nullable()();
+  TextColumn get userId => text()();
+  RealColumn get amount => real()();
+  TextColumn get categoryId => text().nullable().named('category')(); 
+  TextColumn get description => text()();
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get nextExecutionDate => dateTime()();
+  BoolColumn get isIncome => boolean()();
+  BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+}
+
+@DriftDatabase(tables: [Transactions, Categories, RecurringTransactions])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration {
@@ -59,6 +74,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 11) {
           await m.addColumn(categories, categories.orderIndex);
+        }
+        if (from < 12) {
+          await m.createTable(recurringTransactions);
         }
       },
       beforeOpen: (details) async {
@@ -124,6 +142,33 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<Transaction>> getUnsyncedTransactions(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId) & t.isSynced.equals(false))).get();
+
+  // Recurring Transactions Queries
+  Stream<List<RecurringTransaction>> watchAllRecurringTransactions(String userId) {
+    return (select(recurringTransactions)
+      ..where((rt) => rt.userId.equals(userId) & rt.isDeleted.equals(false))
+      ..orderBy([(rt) => OrderingTerm(expression: rt.nextExecutionDate, mode: OrderingMode.asc)])
+    ).watch();
+  }
+
+  Future<List<RecurringTransaction>> getAllRecurringTransactions(String userId) => 
+    (select(recurringTransactions)..where((rt) => rt.userId.equals(userId) & rt.isDeleted.equals(false))).get();
+
+  Future<List<RecurringTransaction>> getAllRecurringTransactionsRaw(String userId) => 
+    (select(recurringTransactions)..where((rt) => rt.userId.equals(userId))).get();
+
+  Future<int> insertRecurringTransaction(RecurringTransactionsCompanion entry) => 
+    into(recurringTransactions).insert(entry);
+  
+  Future<bool> updateRecurringTransaction(RecurringTransaction rt) => 
+    update(recurringTransactions).replace(rt);
+  
+  Future<int> deleteRecurringTransaction(RecurringTransaction rt) => 
+    (update(recurringTransactions)..where((t) => t.id.equals(rt.id)))
+        .write(const RecurringTransactionsCompanion(isDeleted: Value(true), isSynced: Value(false)));
+
+  Future<List<RecurringTransaction>> getUnsyncedRecurringTransactions(String userId) => 
+    (select(recurringTransactions)..where((rt) => rt.userId.equals(userId) & rt.isSynced.equals(false))).get();
 }
 
 LazyDatabase _openConnection() {

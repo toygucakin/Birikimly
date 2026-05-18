@@ -35,6 +35,21 @@ final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   return db.watchAllTransactions(user.id, limitCount: 20);
 });
 
+final recurringTransactionStreamProvider = StreamProvider<List<RecurringTransaction>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final isGuest = ref.watch(guestModeProvider);
+  final user = ref.watch(currentUserProvider);
+  
+  if (isGuest) {
+    return db.watchAllRecurringTransactions('guest');
+  }
+  
+  if (user == null) {
+    return Stream.value([]);
+  }
+  return db.watchAllRecurringTransactions(user.id);
+});
+
 class TransactionNotifier extends Notifier<void> {
   @override
   void build() {
@@ -66,6 +81,37 @@ class TransactionNotifier extends Notifier<void> {
   Future<void> deleteTransaction(Transaction transaction) async {
     final db = ref.read(databaseProvider);
     await db.deleteTransaction(transaction);
+    ref.read(syncServiceProvider).syncAll();
+  }
+
+  Future<void> addRecurringTransaction(RecurringTransactionsCompanion entry) async {
+    try {
+      final db = ref.read(databaseProvider);
+      final uuid = const Uuid().v4();
+      final finalEntry = entry.copyWith(uuid: drift.Value(uuid));
+      
+      await db.insertRecurringTransaction(finalEntry);
+      ref.read(syncServiceProvider).syncAll();
+    } catch (e) {
+      print('CRITICAL: Recurring Transaction add failed: $e');
+    }
+  }
+
+  Future<void> updateRecurringTransactionAmount(RecurringTransaction rt, double newAmount) async {
+    final db = ref.read(databaseProvider);
+    await db.updateRecurringTransaction(rt.copyWith(amount: newAmount, isSynced: false));
+    ref.read(syncServiceProvider).syncAll();
+  }
+
+  Future<void> updateRecurringTransactionName(RecurringTransaction rt, String newName) async {
+    final db = ref.read(databaseProvider);
+    await db.updateRecurringTransaction(rt.copyWith(description: newName, isSynced: false));
+    ref.read(syncServiceProvider).syncAll();
+  }
+
+  Future<void> deleteRecurringTransaction(RecurringTransaction rt) async {
+    final db = ref.read(databaseProvider);
+    await db.deleteRecurringTransaction(rt);
     ref.read(syncServiceProvider).syncAll();
   }
 

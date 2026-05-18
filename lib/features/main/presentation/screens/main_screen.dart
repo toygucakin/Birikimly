@@ -5,6 +5,9 @@ import 'package:birikimly/features/profile/presentation/screens/profile_screen.d
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
 import 'package:birikimly/core/database/database.dart';
+import 'package:birikimly/core/services/recurring_transaction_service.dart';
+import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 
 class MainScreen extends ConsumerWidget {
   const MainScreen({super.key});
@@ -12,7 +15,13 @@ class MainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Start sync service when main screen is built (user is logged in)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final user = ref.read(currentUserProvider);
+      final isGuest = ref.read(guestModeProvider);
+      if (user != null || isGuest) {
+        final userId = isGuest ? 'guest' : user!.id;
+        await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
+      }
       ref.read(syncServiceProvider).start();
     });
 

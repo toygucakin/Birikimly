@@ -21,6 +21,7 @@ class TransactionWizard extends ConsumerStatefulWidget {
 class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
+  bool _isRecurring = false;
 
   // Form State
   final _amountController = TextEditingController();
@@ -91,22 +92,63 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     
     final userId = isGuest ? 'guest' : user!.id;
 
-    final entry = TransactionsCompanion(
-      userId: drift.Value(userId),
-      amount: drift.Value(amount),
-      categoryId: drift.Value(category.id),
-      description: drift.Value(_descriptionController.text),
-      date: drift.Value(_selectedDate),
-      isIncome: drift.Value(widget.isIncome),
-      isSynced: const drift.Value(false),
-    );
+    if (_isRecurring) {
+      final now = DateTime.now();
+      // Ensure the selected date is not in the past months
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      if (_selectedDate.isBefore(startOfMonth)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Düzenli işlemler yalnızca bulunduğumuz ay ve gelecek aylar için eklenebilir.'),
+            backgroundColor: AppColors.expense,
+          ),
+        );
+        return;
+      }
 
-    ref.read(transactionNotifierProvider.notifier).addTransaction(entry);
+      final rtEntry = RecurringTransactionsCompanion(
+        userId: drift.Value(userId),
+        amount: drift.Value(amount),
+        categoryId: drift.Value(category.id),
+        description: drift.Value(_descriptionController.text),
+        startDate: drift.Value(_selectedDate),
+        nextExecutionDate: drift.Value(_selectedDate),
+        isIncome: drift.Value(widget.isIncome),
+        isSynced: const drift.Value(false),
+      );
+      ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
+    } else {
+      final entry = TransactionsCompanion(
+        userId: drift.Value(userId),
+        amount: drift.Value(amount),
+        categoryId: drift.Value(category.id),
+        description: drift.Value(_descriptionController.text),
+        date: drift.Value(_selectedDate),
+        isIncome: drift.Value(widget.isIncome),
+        isSynced: const drift.Value(false),
+      );
+      ref.read(transactionNotifierProvider.notifier).addTransaction(entry);
+    }
+
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Dynamically calculate the category step height based on category count and screen size
+    final categoriesAsync = ref.watch(categoryProvider);
+    final categoriesCount = categoriesAsync.when(
+      data: (all) => all.where((c) => c.isIncome == widget.isIncome).length,
+      loading: () => 4,
+      error: (_, __) => 4,
+    );
+    final rows = (categoriesCount / 4).ceil();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final gridWidth = (screenWidth - 40) - 32; // Dialog inset padding (40) + Step padding (32)
+    final itemHeight = (gridWidth - 30) / 4; // 4 columns, 10px spacing
+    final gridHeight = (rows * itemHeight) + ((rows - 1) * 10);
+    final double categoryStepHeight = (16 + 22 + 12 + gridHeight + 16).clamp(130.0, 360.0);
+
     return PopScope(
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) FocusScope.of(context).unfocus();
@@ -115,7 +157,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         clipBehavior: Clip.antiAlias,
         width: double.infinity,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.7,
+          maxHeight: MediaQuery.of(context).size.height * 0.65,
         ),
         decoration: BoxDecoration(
           color: AppColors.background,
@@ -145,7 +187,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              height: _currentStep == 3 ? 300 : 180,
+              height: _currentStep == 3 ? categoryStepHeight : 130,
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
@@ -174,11 +216,75 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
-            'Miktarı Girin',
-            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Miktarı Girin',
+                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Düzenli',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          backgroundColor: AppColors.background,
+                          title: const Row(
+                            children: [
+                              Icon(Icons.info_outline, color: AppColors.primary),
+                              SizedBox(width: 8),
+                              Text(
+                                'Düzenli İşlem Nedir?',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          content: const Text(
+                            'Bu seçeneği aktif ettiğinizde; girdiğiniz tutar, kategori ve açıklama, her ay seçtiğiniz işlem gününde otomatik olarak eklenir.\n\nGeçmiş tarihler için düzenli işlem oluşturulamaz.',
+                            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Anladım', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: Icon(
+                        Icons.info_outline,
+                        size: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: _isRecurring,
+                      activeColor: AppColors.primary,
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      onChanged: (val) => setState(() => _isRecurring = val),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           TextField(
             focusNode: _amountFocusNode,
             controller: _amountController,
@@ -303,15 +409,15 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   'Kategori Seçin ve Kaydedin',
                   style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.9,
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.0,
                   ),
                   itemCount: categories.length,
                   itemBuilder: (context, index) {
@@ -322,7 +428,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                       child: Container(
                         decoration: BoxDecoration(
                           color: isSelected ? cat.color.withValues(alpha: 0.1) : AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: isSelected ? cat.color : Colors.transparent,
                             width: 2,
@@ -331,12 +437,12 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(cat.icon, color: isSelected ? cat.color : AppColors.textSecondary, size: 32),
-                            const SizedBox(height: 8),
+                            Icon(cat.icon, color: isSelected ? cat.color : AppColors.textSecondary, size: 22),
+                            const SizedBox(height: 4),
                             Text(
                               cat.name,
                               style: TextStyle(
-                                fontSize: 13,
+                                fontSize: 10,
                                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                 color: isSelected ? cat.color : AppColors.textSecondary,
                               ),
@@ -350,25 +456,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                     );
                   },
                 ),
-                const SizedBox(height: 32),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _selectedCategoryId == null ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'İşlemi Kaydet',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
               ],
             ),
           ),
