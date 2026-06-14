@@ -214,12 +214,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   }
 
   Widget _buildAmountStep() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
@@ -334,8 +336,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ),
               ),
             ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
