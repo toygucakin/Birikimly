@@ -7,6 +7,11 @@ import 'package:birikimly/features/categories/domain/models/category_model.dart'
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:intl/intl.dart';
+
+String _formatLimit(double val) {
+  return NumberFormat('#,##0', 'en_US').format(val).replaceAll(',', '.');
+}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -112,7 +117,7 @@ class ProfileScreen extends ConsumerWidget {
                               const SizedBox(width: 8),
                               Text(
                                 monthlyLimit != null 
-                                    ? 'Aylık Limit: ${monthlyLimit.toStringAsFixed(0)} ₺'
+                                    ? 'Aylık Limit: ${_formatLimit(monthlyLimit)} ₺'
                                     : 'Aylık Limit Belirle',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -204,8 +209,8 @@ class ProfileScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
-                      'Toplam Limit: ${totalCategoryLimit.toStringAsFixed(0)} ₺' + 
-                      (monthlyLimit != null ? ' / ${monthlyLimit.toStringAsFixed(0)} ₺' : ''),
+                      'Toplam Limit: ${_formatLimit(totalCategoryLimit)} ₺' + 
+                      (monthlyLimit != null ? ' / ${_formatLimit(monthlyLimit)} ₺' : ''),
                       style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
@@ -290,7 +295,7 @@ class ProfileScreen extends ConsumerWidget {
             title: Text(cat.name),
             subtitle: (cat.maxLimit != null && !cat.isIncome)
                 ? Text(
-                    'Limit: ${cat.maxLimit!.toStringAsFixed(0)} ₺',
+                    'Limit: ${_formatLimit(cat.maxLimit!)} ₺',
                     style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                   )
                 : null,
