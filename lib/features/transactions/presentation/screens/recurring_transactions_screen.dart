@@ -80,58 +80,148 @@ class RecurringTransactionsScreen extends ConsumerWidget {
   }
 
   Widget _buildRecurringItem(BuildContext context, WidgetRef ref, RecurringTransaction rt, CategoryModel category) {
+    final today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
+    final daysLeft = execDate.difference(today).inDays;
+    
+    String daysLeftText;
+    if (daysLeft == 0) {
+      daysLeftText = 'Bugün';
+    } else if (daysLeft == 1) {
+      daysLeftText = 'Yarın';
+    } else if (daysLeft > 1) {
+      daysLeftText = '$daysLeft gün sonra';
+    } else {
+      daysLeftText = 'Geçti';
+    }
+
+    String freqText;
+    switch(rt.frequency) {
+      case 'weekly': freqText = 'Haftalık'; break;
+      case 'yearly': freqText = 'Yıllık'; break;
+      case 'monthly': 
+      default: freqText = 'Aylık'; break;
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: rt.isActive ? AppColors.surface : AppColors.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: rt.isActive ? 0.2 : 0.05)),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: category.color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(category.icon, color: category.color),
-        ),
-        title: Text(
-          rt.description.isNotEmpty ? rt.description : category.name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 4),
-            Text(
-              'Sonraki İşlem: ${DateFormat('dd MMMM yyyy', 'tr_TR').format(rt.nextExecutionDate)}',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+            leading: Opacity(
+              opacity: rt.isActive ? 1.0 : 0.5,
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: category.color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(category.icon, color: category.color),
+              ),
             ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    rt.description.isNotEmpty ? rt.description : category.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 16,
+                      color: rt.isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    freqText,
+                    style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, size: 12, color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)),
+                  const SizedBox(width: 4),
+                  Text(
+                    DateFormat('dd MMMM', 'tr_TR').format(rt.nextExecutionDate),
+                    style: TextStyle(color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5), fontSize: 12),
+                  ),
+                  const SizedBox(width: 8),
+                  if (rt.isActive)
+                    Text(
+                      '($daysLeftText)',
+                      style: TextStyle(color: daysLeft <= 3 ? AppColors.expense : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                ],
+              ),
+            ),
+            trailing: Text(
               '${rt.isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
               style: TextStyle(
-                color: rt.isIncome ? AppColors.income : AppColors.expense,
+                color: !rt.isActive ? Colors.grey : (rt.isIncome ? AppColors.income : AppColors.expense),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.edit, color: AppColors.textSecondary, size: 20),
-              onPressed: () => _showEditDialog(context, ref, rt, category.name),
+          ),
+          const Divider(height: 1, indent: 16, endIndent: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      rt.isActive ? 'Aktif' : 'Duraklatıldı',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: rt.isActive ? AppColors.income : AppColors.textSecondary,
+                      ),
+                    ),
+                    Transform.scale(
+                      scale: 0.7,
+                      child: Switch(
+                        value: rt.isActive,
+                        activeColor: AppColors.income,
+                        onChanged: (val) {
+                          ref.read(transactionNotifierProvider.notifier).toggleRecurringTransactionActive(rt, val);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: AppColors.textSecondary, size: 20),
+                      onPressed: () => _showEditDialog(context, ref, rt, category.name),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: AppColors.expense, size: 20),
+                      onPressed: () => _showDeleteDialog(context, ref, rt),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: AppColors.expense, size: 20),
-              onPressed: () => _showDeleteDialog(context, ref, rt),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -20,7 +20,18 @@ class MainScreen extends ConsumerWidget {
       final isGuest = ref.read(guestModeProvider);
       if (user != null || isGuest) {
         final userId = isGuest ? 'guest' : user!.id;
-        await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
+        final processed = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
+        if (processed > 0 && context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('$processed adet yeni düzenli işlem hesabınıza eklendi.'),
+              backgroundColor: const Color(0xFF22C55E),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
       ref.read(syncServiceProvider).start();
     });

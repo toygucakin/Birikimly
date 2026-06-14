@@ -115,6 +115,18 @@ class TransactionNotifier extends Notifier<void> {
     ref.read(syncServiceProvider).syncAll();
   }
 
+  Future<void> toggleRecurringTransactionActive(RecurringTransaction rt, bool isActive) async {
+    final db = ref.read(databaseProvider);
+    await db.updateRecurringTransaction(rt.copyWith(isActive: isActive, isSynced: false));
+    ref.read(syncServiceProvider).syncAll();
+  }
+
+  Future<void> updateRecurringTransactionFrequency(RecurringTransaction rt, String frequency) async {
+    final db = ref.read(databaseProvider);
+    await db.updateRecurringTransaction(rt.copyWith(frequency: frequency, isSynced: false));
+    ref.read(syncServiceProvider).syncAll();
+  }
+
   double calculateBalance(List<Transaction> transactions) {
     return transactions.fold(0, (sum, item) {
       return item.isIncome ? sum + item.amount : sum - item.amount;

@@ -160,6 +160,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final recurringAsync = ref.watch(recurringTransactionStreamProvider);
     final notifier = ref.watch(transactionNotifierProvider.notifier);
     final categoriesAsync = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
@@ -549,6 +550,110 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                   ),
                                 ),
                               ],
+                              recurringAsync.maybeWhen(
+                                data: (recurringTxs) {
+                                  final today = DateTime(now.year, now.month, now.day);
+                                  final upcoming = recurringTxs.where((rt) {
+                                    if (!rt.isActive) return false;
+                                    final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
+                                    final daysLeft = execDate.difference(today).inDays;
+                                    return daysLeft >= 0 && daysLeft <= 14;
+                                  }).toList();
+                                  
+                                  if (upcoming.isEmpty) return const SizedBox.shrink();
+
+                                  upcoming.sort((a, b) => a.nextExecutionDate.compareTo(b.nextExecutionDate));
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 24),
+                                      const Text(
+                                        'Yaklaşan Ödemeler (Sonraki 14 Gün)',
+                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      SizedBox(
+                                        height: 110,
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.horizontal,
+                                          physics: const BouncingScrollPhysics(),
+                                          itemCount: upcoming.length,
+                                          itemBuilder: (context, index) {
+                                            final rt = upcoming[index];
+                                            final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
+                                            final daysLeft = execDate.difference(today).inDays;
+                                            final isIncome = rt.isIncome;
+                                            
+                                            // Find category
+                                            final rawId = rt.categoryId?.trim() ?? '';
+                                            CategoryModel? cat = categories.cast<CategoryModel?>().firstWhere(
+                                              (c) => c?.id == rawId,
+                                              orElse: () => null,
+                                            );
+                                            final catName = cat?.name ?? (isIncome ? 'Gelir' : 'Gider');
+                                            final catIcon = cat?.icon ?? (isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline);
+                                            final catColor = cat?.color ?? Colors.grey;
+
+                                            return Container(
+                                              width: 160,
+                                              margin: const EdgeInsets.only(right: 12),
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.surface,
+                                                borderRadius: BorderRadius.circular(16),
+                                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Icon(catIcon, color: catColor, size: 24),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                        decoration: BoxDecoration(
+                                                          color: daysLeft <= 3 ? AppColors.expense.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: Text(
+                                                          daysLeft == 0 ? 'Bugün' : (daysLeft == 1 ? 'Yarın' : '$daysLeft gün'),
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.bold,
+                                                            color: daysLeft <= 3 ? AppColors.expense : AppColors.primary,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Text(
+                                                    rt.description.isNotEmpty ? rt.description : catName,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                                  ),
+                                                  Text(
+                                                    '${isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
+                                                    style: TextStyle(
+                                                      color: isIncome ? AppColors.income : AppColors.expense,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 16,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                                orElse: () => const SizedBox.shrink(),
+                              ),
                             ],
                           );
                         }(),

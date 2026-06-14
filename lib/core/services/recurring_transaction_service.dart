@@ -16,12 +16,15 @@ class RecurringTransactionService {
 
   /// Processes all pending recurring transactions for the given user.
   /// If a transaction's next execution date has passed, it creates a regular transaction
-  /// and updates the next execution date.
-  Future<void> processRecurringTransactions(String userId) async {
+  /// and updates the next execution date. Returns the number of created transactions.
+  Future<int> processRecurringTransactions(String userId) async {
     final recurringTxs = await _db.getAllRecurringTransactions(userId);
     final now = DateTime.now();
+    int processedCount = 0;
     
     for (var rt in recurringTxs) {
+      if (!rt.isActive) continue;
+
       DateTime nextDate = rt.nextExecutionDate;
       bool wasUpdated = false;
 
@@ -38,13 +41,15 @@ class RecurringTransactionService {
           isIncome: Value(rt.isIncome),
           isSynced: const Value(false),
           isDeleted: const Value(false),
+          recurringUuid: Value(rt.uuid),
         );
         
         await _db.insertTransaction(txCompanion);
 
-        // 2. Advance the nextDate by 1 month
-        nextDate = _advanceOneMonth(nextDate, rt.startDate);
+        // 2. Advance the nextDate based on frequency
+        nextDate = _advanceDate(nextDate, rt.startDate, rt.frequency);
         wasUpdated = true;
+        processedCount++;
       }
 
       // 3. Update the recurring transaction record if we executed it
@@ -55,6 +60,20 @@ class RecurringTransactionService {
         );
         await _db.updateRecurringTransaction(updatedRt);
       }
+    }
+    
+    return processedCount;
+  }
+
+  DateTime _advanceDate(DateTime current, DateTime originalStart, String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return current.add(const Duration(days: 7));
+      case 'yearly':
+        return _advanceOneYear(current, originalStart);
+      case 'monthly':
+      default:
+        return _advanceOneMonth(current, originalStart);
     }
   }
 
@@ -74,6 +93,25 @@ class RecurringTransactionService {
     final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
     
     // Clamp the day so we don't overflow (e.g. asking for Feb 30 -> Feb 28/29)
+    final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
+
+    return DateTime(
+      nextYear,
+      nextMonth,
+      clampedDay,
+      originalStart.hour,
+      originalStart.minute,
+      originalStart.second,
+    );
+  }
+
+  DateTime _advanceOneYear(DateTime current, DateTime originalStart) {
+    int nextYear = current.year + 1;
+    int nextMonth = current.month;
+    
+    final targetDay = originalStart.day;
+    final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    
     final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
 
     return DateTime(

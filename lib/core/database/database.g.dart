@@ -136,6 +136,17 @@ class $TransactionsTable extends Transactions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _recurringUuidMeta = const VerificationMeta(
+    'recurringUuid',
+  );
+  @override
+  late final GeneratedColumn<String> recurringUuid = GeneratedColumn<String>(
+    'recurring_uuid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -149,6 +160,7 @@ class $TransactionsTable extends Transactions
     isIncome,
     isSynced,
     isDeleted,
+    recurringUuid,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -238,6 +250,15 @@ class $TransactionsTable extends Transactions
         isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
       );
     }
+    if (data.containsKey('recurring_uuid')) {
+      context.handle(
+        _recurringUuidMeta,
+        recurringUuid.isAcceptableOrUnknown(
+          data['recurring_uuid']!,
+          _recurringUuidMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -291,6 +312,10 @@ class $TransactionsTable extends Transactions
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted'],
       )!,
+      recurringUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recurring_uuid'],
+      ),
     );
   }
 
@@ -312,6 +337,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final bool isIncome;
   final bool isSynced;
   final bool isDeleted;
+  final String? recurringUuid;
   const Transaction({
     required this.id,
     required this.uuid,
@@ -324,6 +350,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     required this.isIncome,
     required this.isSynced,
     required this.isDeleted,
+    this.recurringUuid,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -343,6 +370,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['is_income'] = Variable<bool>(isIncome);
     map['is_synced'] = Variable<bool>(isSynced);
     map['is_deleted'] = Variable<bool>(isDeleted);
+    if (!nullToAbsent || recurringUuid != null) {
+      map['recurring_uuid'] = Variable<String>(recurringUuid);
+    }
     return map;
   }
 
@@ -363,6 +393,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isIncome: Value(isIncome),
       isSynced: Value(isSynced),
       isDeleted: Value(isDeleted),
+      recurringUuid: recurringUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurringUuid),
     );
   }
 
@@ -383,6 +416,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isIncome: serializer.fromJson<bool>(json['isIncome']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      recurringUuid: serializer.fromJson<String?>(json['recurringUuid']),
     );
   }
   @override
@@ -400,6 +434,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'isIncome': serializer.toJson<bool>(isIncome),
       'isSynced': serializer.toJson<bool>(isSynced),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'recurringUuid': serializer.toJson<String?>(recurringUuid),
     };
   }
 
@@ -415,6 +450,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     bool? isIncome,
     bool? isSynced,
     bool? isDeleted,
+    Value<String?> recurringUuid = const Value.absent(),
   }) => Transaction(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -427,6 +463,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     isIncome: isIncome ?? this.isIncome,
     isSynced: isSynced ?? this.isSynced,
     isDeleted: isDeleted ?? this.isDeleted,
+    recurringUuid: recurringUuid.present
+        ? recurringUuid.value
+        : this.recurringUuid,
   );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -445,6 +484,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       isIncome: data.isIncome.present ? data.isIncome.value : this.isIncome,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      recurringUuid: data.recurringUuid.present
+          ? data.recurringUuid.value
+          : this.recurringUuid,
     );
   }
 
@@ -461,7 +503,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
           ..write('isSynced: $isSynced, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('recurringUuid: $recurringUuid')
           ..write(')'))
         .toString();
   }
@@ -479,6 +522,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     isIncome,
     isSynced,
     isDeleted,
+    recurringUuid,
   );
   @override
   bool operator ==(Object other) =>
@@ -494,7 +538,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.date == this.date &&
           other.isIncome == this.isIncome &&
           other.isSynced == this.isSynced &&
-          other.isDeleted == this.isDeleted);
+          other.isDeleted == this.isDeleted &&
+          other.recurringUuid == this.recurringUuid);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -509,6 +554,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<bool> isIncome;
   final Value<bool> isSynced;
   final Value<bool> isDeleted;
+  final Value<String?> recurringUuid;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -521,6 +567,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.isIncome = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.recurringUuid = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -534,6 +581,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     required bool isIncome,
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.recurringUuid = const Value.absent(),
   }) : userId = Value(userId),
        amount = Value(amount),
        description = Value(description),
@@ -551,6 +599,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<bool>? isIncome,
     Expression<bool>? isSynced,
     Expression<bool>? isDeleted,
+    Expression<String>? recurringUuid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -564,6 +613,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (isIncome != null) 'is_income': isIncome,
       if (isSynced != null) 'is_synced': isSynced,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (recurringUuid != null) 'recurring_uuid': recurringUuid,
     });
   }
 
@@ -579,6 +629,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<bool>? isIncome,
     Value<bool>? isSynced,
     Value<bool>? isDeleted,
+    Value<String?>? recurringUuid,
   }) {
     return TransactionsCompanion(
       id: id ?? this.id,
@@ -592,6 +643,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       isIncome: isIncome ?? this.isIncome,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      recurringUuid: recurringUuid ?? this.recurringUuid,
     );
   }
 
@@ -631,6 +683,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (recurringUuid.present) {
+      map['recurring_uuid'] = Variable<String>(recurringUuid.value);
+    }
     return map;
   }
 
@@ -647,7 +702,8 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('date: $date, ')
           ..write('isIncome: $isIncome, ')
           ..write('isSynced: $isSynced, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('recurringUuid: $recurringUuid')
           ..write(')'))
         .toString();
   }
@@ -1497,6 +1553,33 @@ class $RecurringTransactionsTable extends RecurringTransactions
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+    'frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('monthly'),
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1511,6 +1594,8 @@ class $RecurringTransactionsTable extends RecurringTransactions
     isIncome,
     isSynced,
     isDeleted,
+    frequency,
+    isActive,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1611,6 +1696,18 @@ class $RecurringTransactionsTable extends RecurringTransactions
         isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta),
       );
     }
+    if (data.containsKey('frequency')) {
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
     return context;
   }
 
@@ -1668,6 +1765,14 @@ class $RecurringTransactionsTable extends RecurringTransactions
         DriftSqlType.bool,
         data['${effectivePrefix}is_deleted'],
       )!,
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      )!,
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
     );
   }
 
@@ -1691,6 +1796,8 @@ class RecurringTransaction extends DataClass
   final bool isIncome;
   final bool isSynced;
   final bool isDeleted;
+  final String frequency;
+  final bool isActive;
   const RecurringTransaction({
     required this.id,
     required this.uuid,
@@ -1704,6 +1811,8 @@ class RecurringTransaction extends DataClass
     required this.isIncome,
     required this.isSynced,
     required this.isDeleted,
+    required this.frequency,
+    required this.isActive,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1724,6 +1833,8 @@ class RecurringTransaction extends DataClass
     map['is_income'] = Variable<bool>(isIncome);
     map['is_synced'] = Variable<bool>(isSynced);
     map['is_deleted'] = Variable<bool>(isDeleted);
+    map['frequency'] = Variable<String>(frequency);
+    map['is_active'] = Variable<bool>(isActive);
     return map;
   }
 
@@ -1745,6 +1856,8 @@ class RecurringTransaction extends DataClass
       isIncome: Value(isIncome),
       isSynced: Value(isSynced),
       isDeleted: Value(isDeleted),
+      frequency: Value(frequency),
+      isActive: Value(isActive),
     );
   }
 
@@ -1768,6 +1881,8 @@ class RecurringTransaction extends DataClass
       isIncome: serializer.fromJson<bool>(json['isIncome']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      frequency: serializer.fromJson<String>(json['frequency']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
     );
   }
   @override
@@ -1786,6 +1901,8 @@ class RecurringTransaction extends DataClass
       'isIncome': serializer.toJson<bool>(isIncome),
       'isSynced': serializer.toJson<bool>(isSynced),
       'isDeleted': serializer.toJson<bool>(isDeleted),
+      'frequency': serializer.toJson<String>(frequency),
+      'isActive': serializer.toJson<bool>(isActive),
     };
   }
 
@@ -1802,6 +1919,8 @@ class RecurringTransaction extends DataClass
     bool? isIncome,
     bool? isSynced,
     bool? isDeleted,
+    String? frequency,
+    bool? isActive,
   }) => RecurringTransaction(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -1815,6 +1934,8 @@ class RecurringTransaction extends DataClass
     isIncome: isIncome ?? this.isIncome,
     isSynced: isSynced ?? this.isSynced,
     isDeleted: isDeleted ?? this.isDeleted,
+    frequency: frequency ?? this.frequency,
+    isActive: isActive ?? this.isActive,
   );
   RecurringTransaction copyWithCompanion(RecurringTransactionsCompanion data) {
     return RecurringTransaction(
@@ -1836,6 +1957,8 @@ class RecurringTransaction extends DataClass
       isIncome: data.isIncome.present ? data.isIncome.value : this.isIncome,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
     );
   }
 
@@ -1853,7 +1976,9 @@ class RecurringTransaction extends DataClass
           ..write('nextExecutionDate: $nextExecutionDate, ')
           ..write('isIncome: $isIncome, ')
           ..write('isSynced: $isSynced, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('frequency: $frequency, ')
+          ..write('isActive: $isActive')
           ..write(')'))
         .toString();
   }
@@ -1872,6 +1997,8 @@ class RecurringTransaction extends DataClass
     isIncome,
     isSynced,
     isDeleted,
+    frequency,
+    isActive,
   );
   @override
   bool operator ==(Object other) =>
@@ -1888,7 +2015,9 @@ class RecurringTransaction extends DataClass
           other.nextExecutionDate == this.nextExecutionDate &&
           other.isIncome == this.isIncome &&
           other.isSynced == this.isSynced &&
-          other.isDeleted == this.isDeleted);
+          other.isDeleted == this.isDeleted &&
+          other.frequency == this.frequency &&
+          other.isActive == this.isActive);
 }
 
 class RecurringTransactionsCompanion
@@ -1905,6 +2034,8 @@ class RecurringTransactionsCompanion
   final Value<bool> isIncome;
   final Value<bool> isSynced;
   final Value<bool> isDeleted;
+  final Value<String> frequency;
+  final Value<bool> isActive;
   const RecurringTransactionsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -1918,6 +2049,8 @@ class RecurringTransactionsCompanion
     this.isIncome = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.isActive = const Value.absent(),
   });
   RecurringTransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1932,6 +2065,8 @@ class RecurringTransactionsCompanion
     required bool isIncome,
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.isActive = const Value.absent(),
   }) : userId = Value(userId),
        amount = Value(amount),
        description = Value(description),
@@ -1951,6 +2086,8 @@ class RecurringTransactionsCompanion
     Expression<bool>? isIncome,
     Expression<bool>? isSynced,
     Expression<bool>? isDeleted,
+    Expression<String>? frequency,
+    Expression<bool>? isActive,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1965,6 +2102,8 @@ class RecurringTransactionsCompanion
       if (isIncome != null) 'is_income': isIncome,
       if (isSynced != null) 'is_synced': isSynced,
       if (isDeleted != null) 'is_deleted': isDeleted,
+      if (frequency != null) 'frequency': frequency,
+      if (isActive != null) 'is_active': isActive,
     });
   }
 
@@ -1981,6 +2120,8 @@ class RecurringTransactionsCompanion
     Value<bool>? isIncome,
     Value<bool>? isSynced,
     Value<bool>? isDeleted,
+    Value<String>? frequency,
+    Value<bool>? isActive,
   }) {
     return RecurringTransactionsCompanion(
       id: id ?? this.id,
@@ -1995,6 +2136,8 @@ class RecurringTransactionsCompanion
       isIncome: isIncome ?? this.isIncome,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
+      frequency: frequency ?? this.frequency,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -2037,6 +2180,12 @@ class RecurringTransactionsCompanion
     if (isDeleted.present) {
       map['is_deleted'] = Variable<bool>(isDeleted.value);
     }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
     return map;
   }
 
@@ -2054,7 +2203,9 @@ class RecurringTransactionsCompanion
           ..write('nextExecutionDate: $nextExecutionDate, ')
           ..write('isIncome: $isIncome, ')
           ..write('isSynced: $isSynced, ')
-          ..write('isDeleted: $isDeleted')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('frequency: $frequency, ')
+          ..write('isActive: $isActive')
           ..write(')'))
         .toString();
   }
@@ -2091,6 +2242,7 @@ typedef $$TransactionsTableCreateCompanionBuilder =
       required bool isIncome,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<String?> recurringUuid,
     });
 typedef $$TransactionsTableUpdateCompanionBuilder =
     TransactionsCompanion Function({
@@ -2105,6 +2257,7 @@ typedef $$TransactionsTableUpdateCompanionBuilder =
       Value<bool> isIncome,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<String?> recurringUuid,
     });
 
 class $$TransactionsTableFilterComposer
@@ -2168,6 +2321,11 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
     column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recurringUuid => $composableBuilder(
+    column: $table.recurringUuid,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2235,6 +2393,11 @@ class $$TransactionsTableOrderingComposer
     column: $table.isDeleted,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get recurringUuid => $composableBuilder(
+    column: $table.recurringUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -2282,6 +2445,11 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<String> get recurringUuid => $composableBuilder(
+    column: $table.recurringUuid,
+    builder: (column) => column,
+  );
 }
 
 class $$TransactionsTableTableManager
@@ -2326,6 +2494,7 @@ class $$TransactionsTableTableManager
                 Value<bool> isIncome = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<String?> recurringUuid = const Value.absent(),
               }) => TransactionsCompanion(
                 id: id,
                 uuid: uuid,
@@ -2338,6 +2507,7 @@ class $$TransactionsTableTableManager
                 isIncome: isIncome,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                recurringUuid: recurringUuid,
               ),
           createCompanionCallback:
               ({
@@ -2352,6 +2522,7 @@ class $$TransactionsTableTableManager
                 required bool isIncome,
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<String?> recurringUuid = const Value.absent(),
               }) => TransactionsCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -2364,6 +2535,7 @@ class $$TransactionsTableTableManager
                 isIncome: isIncome,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                recurringUuid: recurringUuid,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -2729,6 +2901,8 @@ typedef $$RecurringTransactionsTableCreateCompanionBuilder =
       required bool isIncome,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<String> frequency,
+      Value<bool> isActive,
     });
 typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
     RecurringTransactionsCompanion Function({
@@ -2744,6 +2918,8 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
       Value<bool> isIncome,
       Value<bool> isSynced,
       Value<bool> isDeleted,
+      Value<String> frequency,
+      Value<bool> isActive,
     });
 
 class $$RecurringTransactionsTableFilterComposer
@@ -2812,6 +2988,16 @@ class $$RecurringTransactionsTableFilterComposer
 
   ColumnFilters<bool> get isDeleted => $composableBuilder(
     column: $table.isDeleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2884,6 +3070,16 @@ class $$RecurringTransactionsTableOrderingComposer
     column: $table.isDeleted,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get frequency => $composableBuilder(
+    column: $table.frequency,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecurringTransactionsTableAnnotationComposer
@@ -2936,6 +3132,12 @@ class $$RecurringTransactionsTableAnnotationComposer
 
   GeneratedColumn<bool> get isDeleted =>
       $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<String> get frequency =>
+      $composableBuilder(column: $table.frequency, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
 }
 
 class $$RecurringTransactionsTableTableManager
@@ -2996,6 +3198,8 @@ class $$RecurringTransactionsTableTableManager
                 Value<bool> isIncome = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<String> frequency = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
               }) => RecurringTransactionsCompanion(
                 id: id,
                 uuid: uuid,
@@ -3009,6 +3213,8 @@ class $$RecurringTransactionsTableTableManager
                 isIncome: isIncome,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                frequency: frequency,
+                isActive: isActive,
               ),
           createCompanionCallback:
               ({
@@ -3024,6 +3230,8 @@ class $$RecurringTransactionsTableTableManager
                 required bool isIncome,
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
+                Value<String> frequency = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
               }) => RecurringTransactionsCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -3037,6 +3245,8 @@ class $$RecurringTransactionsTableTableManager
                 isIncome: isIncome,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
+                frequency: frequency,
+                isActive: isActive,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

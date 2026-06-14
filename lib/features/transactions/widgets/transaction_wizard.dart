@@ -22,6 +22,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
   bool _isRecurring = false;
+  String _frequency = 'monthly';
 
   // Form State
   final _amountController = TextEditingController();
@@ -115,6 +116,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         nextExecutionDate: drift.Value(_selectedDate),
         isIncome: drift.Value(widget.isIncome),
         isSynced: const drift.Value(false),
+        frequency: drift.Value(_frequency),
+        isActive: const drift.Value(true),
       );
       ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
     } else {
@@ -300,6 +303,38 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               contentPadding: EdgeInsets.zero,
             ),
           ),
+          if (_isRecurring) ...[
+            const SizedBox(height: 16),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'weekly', label: Text('Haftalık', style: TextStyle(fontSize: 12))),
+                ButtonSegment(value: 'monthly', label: Text('Aylık', style: TextStyle(fontSize: 12))),
+                ButtonSegment(value: 'yearly', label: Text('Yıllık', style: TextStyle(fontSize: 12))),
+              ],
+              selected: {_frequency},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() => _frequency = newSelection.first);
+              },
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return AppColors.primary.withValues(alpha: 0.1);
+                    }
+                    return Colors.transparent;
+                  },
+                ),
+                foregroundColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return AppColors.primary;
+                    }
+                    return AppColors.textSecondary;
+                  },
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

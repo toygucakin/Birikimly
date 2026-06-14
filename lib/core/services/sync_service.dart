@@ -308,6 +308,8 @@ class SyncService {
             'next_execution_date': rt.nextExecutionDate.toUtc().toIso8601String(),
             'is_income': rt.isIncome,
             'is_deleted': rt.isDeleted,
+            'frequency': rt.frequency,
+            'is_active': rt.isActive,
           };
           try {
             final responseData = await _resilientUpsert('recurring_transactions', data);
@@ -349,6 +351,8 @@ class SyncService {
             isIncome: Value(rt['is_income'] ?? false),
             isSynced: const Value(true),
             isDeleted: Value(rt['is_deleted'] ?? false),
+            frequency: Value(rt['frequency'] ?? 'monthly'),
+            isActive: Value(rt['is_active'] ?? true),
           );
           await _db.insertRecurringTransaction(data);
           restored++;
@@ -396,6 +400,7 @@ final user = SupabaseService.client.auth.currentUser;
             'description': tx.description,
             'date': tx.date.toUtc().toIso8601String(),
             'is_income': tx.isIncome,
+            if (tx.recurringUuid != null) 'recurring_uuid': tx.recurringUuid,
           };
 
           try {
@@ -450,6 +455,7 @@ final user = SupabaseService.client.auth.currentUser;
           isIncome: rt['is_income'] ?? false,
           isSynced: const Value(true),
           isDeleted: Value(isRemoteDeleted),
+          recurringUuid: Value(rt['recurring_uuid']?.toString()),
         ));
         
         existingRemoteIds.add(rId);
