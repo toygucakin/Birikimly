@@ -40,3 +40,25 @@ class UserNameNotifier extends Notifier<String> {
 }
 
 final userNameProvider = NotifierProvider<UserNameNotifier, String>(UserNameNotifier.new);
+
+class MonthlyLimitNotifier extends Notifier<double?> {
+  static const _key = 'monthlyLimit';
+
+  @override
+  double? build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getDouble(_key);
+  }
+
+  Future<void> setMonthlyLimit(double? value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (value == null) {
+      await prefs.remove(_key);
+    } else {
+      await prefs.setDouble(_key, value);
+    }
+    state = value;
+  }
+}
+
+final monthlyLimitProvider = NotifierProvider<MonthlyLimitNotifier, double?>(MonthlyLimitNotifier.new);

@@ -8,6 +8,7 @@ class CategoryModel {
   final Color color;
   final bool isIncome;
   final int orderIndex;
+  final double? maxLimit;
 
   CategoryModel({
     required this.id,
@@ -16,6 +17,7 @@ class CategoryModel {
     required this.color,
     this.isIncome = false,
     this.orderIndex = 0,
+    this.maxLimit,
   });
 
   factory CategoryModel.fromDb(db.Category record) {
@@ -26,6 +28,7 @@ class CategoryModel {
       color: Color(record.colorValue),
       isIncome: record.isIncome,
       orderIndex: record.orderIndex,
+      maxLimit: record.maxLimit,
     );
   }
 }

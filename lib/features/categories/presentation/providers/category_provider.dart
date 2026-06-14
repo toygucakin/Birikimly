@@ -134,6 +134,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
     required IconData icon,
     required Color color,
     required bool isIncome,
+    double? maxLimit,
   }) async {
     final user = ref.read(currentUserProvider);
     final isGuest = ref.read(guestModeProvider);
@@ -150,6 +151,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
       colorValue: color.value,
       isIncome: isIncome,
       orderIndex: const drift.Value(999), // Will fall to the bottom of the list
+      maxLimit: drift.Value(maxLimit),
       isSynced: const drift.Value(false),
     ));
 
@@ -158,7 +160,13 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
     }
   }
 
-  Future<void> updateCategory(String id, {String? name, IconData? icon, Color? color}) async {
+  Future<void> updateCategory(
+    String id, {
+    String? name,
+    IconData? icon,
+    Color? color,
+    drift.Value<double?> maxLimit = const drift.Value.absent(),
+  }) async {
     final user = ref.read(currentUserProvider);
     final isGuest = ref.read(guestModeProvider);
     if (user == null && !isGuest) return;
@@ -172,6 +180,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
       name: name ?? record.name,
       iconCode: icon?.codePoint ?? record.iconCode,
       colorValue: color?.value ?? record.colorValue,
+      maxLimit: maxLimit,
       isSynced: false,
     );
 

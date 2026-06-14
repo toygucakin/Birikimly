@@ -175,6 +175,13 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                 ? customName
                 : (user?.email?.split('@').first ?? 'Kullanıcı');
 
+    final localLimit = ref.watch(monthlyLimitProvider);
+    final double? monthlyLimit = isGuest
+        ? localLimit
+        : (user?.userMetadata?['monthly_limit'] != null
+            ? double.tryParse(user!.userMetadata!['monthly_limit'].toString())
+            : localLimit);
+
     return Scaffold(
       body: SafeArea(
         child: categoriesAsync.when(
@@ -240,6 +247,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             totalBalance: notifier.calculateBalance(currentMonthTransactions),
                             income: notifier.calculateIncome(currentMonthTransactions),
                             expense: notifier.calculateExpense(currentMonthTransactions),
+                            monthlyLimit: monthlyLimit,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -248,6 +256,93 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             },
                           );
                         }(),
+                        if (monthlyLimit != null) ...[
+                          () {
+                            final now = DateTime.now();
+                            final currentMonthTransactions = transactions.where((t) => 
+                              t.date.year == now.year && t.date.month == now.month).toList();
+                            final totalExpense = notifier.calculateExpense(currentMonthTransactions);
+
+                            double totalCategoryLimits = 0;
+                            for (final cat in categories) {
+                              if (!cat.isIncome && cat.maxLimit != null) {
+                                totalCategoryLimits += cat.maxLimit!;
+                              }
+                            }
+
+                            final hasExpenseExceeded = totalExpense > monthlyLimit;
+                            final hasCategoryMismatch = totalCategoryLimits > monthlyLimit;
+
+                            return Column(
+                              children: [
+                                if (hasExpenseExceeded) ...[
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.expense.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: AppColors.expense.withValues(alpha: 0.3), width: 1.5),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Bütçe Sınırı Aşıldı!',
+                                                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
+                                              ),
+                                              Text(
+                                                'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
+                                                style: const TextStyle(color: AppColors.expense, fontSize: 13),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                                if (hasCategoryMismatch) ...[
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.amber.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1.5),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'Kategori Limit Uyuşmazlığı',
+                                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14),
+                                              ),
+                                              Text(
+                                                'Kategori limitlerinin toplamı (${CurrencyUtils.format(totalCategoryLimits)}), aylık genel limitinizi (${CurrencyUtils.format(monthlyLimit)}) aşıyor.',
+                                                style: const TextStyle(color: Colors.amber, fontSize: 13),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          }(),
+                        ],
                         const SizedBox(height: 40),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

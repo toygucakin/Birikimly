@@ -6,6 +6,7 @@ class SummaryCard extends StatelessWidget {
   final double totalBalance;
   final double income;
   final double expense;
+  final double? monthlyLimit;
   final VoidCallback? onTap;
 
   const SummaryCard({
@@ -13,6 +14,7 @@ class SummaryCard extends StatelessWidget {
     required this.totalBalance,
     required this.income,
     required this.expense,
+    this.monthlyLimit,
     this.onTap,
   });
 
@@ -63,6 +65,46 @@ class SummaryCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+            if (monthlyLimit != null) ...[
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Limit Kullanımı: %${((expense / monthlyLimit!) * 100).toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '${CurrencyUtils.format(expense)} / ${CurrencyUtils.format(monthlyLimit!)}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: (expense / monthlyLimit!).clamp(0.0, 1.0),
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    (expense >= monthlyLimit!) 
+                        ? Colors.redAccent 
+                        : (expense >= monthlyLimit! * 0.8) 
+                            ? Colors.orangeAccent 
+                            : Colors.white,
+                  ),
+                  minHeight: 6,
+                ),
+              ),
+            ],
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

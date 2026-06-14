@@ -139,6 +139,16 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
       print('Failed to update display name: $e');
     }
   }
+
+  Future<void> updateMonthlyLimit(double? limit) async {
+    try {
+      await SupabaseService.client.auth.updateUser(
+        UserAttributes(data: {'monthly_limit': limit}),
+      );
+    } catch (e) {
+      print('Failed to update monthly limit: $e');
+    }
+  }
 }
 
 final authNotifierProvider = NotifierProvider<AuthNotifier, AsyncValue<void>>(AuthNotifier.new);

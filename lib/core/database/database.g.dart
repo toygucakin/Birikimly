@@ -758,6 +758,17 @@ class $CategoriesTable extends Categories
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _maxLimitMeta = const VerificationMeta(
+    'maxLimit',
+  );
+  @override
+  late final GeneratedColumn<double> maxLimit = GeneratedColumn<double>(
+    'max_limit',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isSyncedMeta = const VerificationMeta(
     'isSynced',
   );
@@ -799,6 +810,7 @@ class $CategoriesTable extends Categories
     colorValue,
     isIncome,
     orderIndex,
+    maxLimit,
     isSynced,
     isDeleted,
   ];
@@ -877,6 +889,12 @@ class $CategoriesTable extends Categories
         orderIndex.isAcceptableOrUnknown(data['order_index']!, _orderIndexMeta),
       );
     }
+    if (data.containsKey('max_limit')) {
+      context.handle(
+        _maxLimitMeta,
+        maxLimit.isAcceptableOrUnknown(data['max_limit']!, _maxLimitMeta),
+      );
+    }
     if (data.containsKey('is_synced')) {
       context.handle(
         _isSyncedMeta,
@@ -934,6 +952,10 @@ class $CategoriesTable extends Categories
         DriftSqlType.int,
         data['${effectivePrefix}order_index'],
       )!,
+      maxLimit: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}max_limit'],
+      ),
       isSynced: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_synced'],
@@ -961,6 +983,7 @@ class Category extends DataClass implements Insertable<Category> {
   final int colorValue;
   final bool isIncome;
   final int orderIndex;
+  final double? maxLimit;
   final bool isSynced;
   final bool isDeleted;
   const Category({
@@ -973,6 +996,7 @@ class Category extends DataClass implements Insertable<Category> {
     required this.colorValue,
     required this.isIncome,
     required this.orderIndex,
+    this.maxLimit,
     required this.isSynced,
     required this.isDeleted,
   });
@@ -990,6 +1014,9 @@ class Category extends DataClass implements Insertable<Category> {
     map['color_value'] = Variable<int>(colorValue);
     map['is_income'] = Variable<bool>(isIncome);
     map['order_index'] = Variable<int>(orderIndex);
+    if (!nullToAbsent || maxLimit != null) {
+      map['max_limit'] = Variable<double>(maxLimit);
+    }
     map['is_synced'] = Variable<bool>(isSynced);
     map['is_deleted'] = Variable<bool>(isDeleted);
     return map;
@@ -1008,6 +1035,9 @@ class Category extends DataClass implements Insertable<Category> {
       colorValue: Value(colorValue),
       isIncome: Value(isIncome),
       orderIndex: Value(orderIndex),
+      maxLimit: maxLimit == null && nullToAbsent
+          ? const Value.absent()
+          : Value(maxLimit),
       isSynced: Value(isSynced),
       isDeleted: Value(isDeleted),
     );
@@ -1028,6 +1058,7 @@ class Category extends DataClass implements Insertable<Category> {
       colorValue: serializer.fromJson<int>(json['colorValue']),
       isIncome: serializer.fromJson<bool>(json['isIncome']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
+      maxLimit: serializer.fromJson<double?>(json['maxLimit']),
       isSynced: serializer.fromJson<bool>(json['isSynced']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
     );
@@ -1045,6 +1076,7 @@ class Category extends DataClass implements Insertable<Category> {
       'colorValue': serializer.toJson<int>(colorValue),
       'isIncome': serializer.toJson<bool>(isIncome),
       'orderIndex': serializer.toJson<int>(orderIndex),
+      'maxLimit': serializer.toJson<double?>(maxLimit),
       'isSynced': serializer.toJson<bool>(isSynced),
       'isDeleted': serializer.toJson<bool>(isDeleted),
     };
@@ -1060,6 +1092,7 @@ class Category extends DataClass implements Insertable<Category> {
     int? colorValue,
     bool? isIncome,
     int? orderIndex,
+    Value<double?> maxLimit = const Value.absent(),
     bool? isSynced,
     bool? isDeleted,
   }) => Category(
@@ -1072,6 +1105,7 @@ class Category extends DataClass implements Insertable<Category> {
     colorValue: colorValue ?? this.colorValue,
     isIncome: isIncome ?? this.isIncome,
     orderIndex: orderIndex ?? this.orderIndex,
+    maxLimit: maxLimit.present ? maxLimit.value : this.maxLimit,
     isSynced: isSynced ?? this.isSynced,
     isDeleted: isDeleted ?? this.isDeleted,
   );
@@ -1090,6 +1124,7 @@ class Category extends DataClass implements Insertable<Category> {
       orderIndex: data.orderIndex.present
           ? data.orderIndex.value
           : this.orderIndex,
+      maxLimit: data.maxLimit.present ? data.maxLimit.value : this.maxLimit,
       isSynced: data.isSynced.present ? data.isSynced.value : this.isSynced,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
     );
@@ -1107,6 +1142,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('colorValue: $colorValue, ')
           ..write('isIncome: $isIncome, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('maxLimit: $maxLimit, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted')
           ..write(')'))
@@ -1124,6 +1160,7 @@ class Category extends DataClass implements Insertable<Category> {
     colorValue,
     isIncome,
     orderIndex,
+    maxLimit,
     isSynced,
     isDeleted,
   );
@@ -1140,6 +1177,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.colorValue == this.colorValue &&
           other.isIncome == this.isIncome &&
           other.orderIndex == this.orderIndex &&
+          other.maxLimit == this.maxLimit &&
           other.isSynced == this.isSynced &&
           other.isDeleted == this.isDeleted);
 }
@@ -1154,6 +1192,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<int> colorValue;
   final Value<bool> isIncome;
   final Value<int> orderIndex;
+  final Value<double?> maxLimit;
   final Value<bool> isSynced;
   final Value<bool> isDeleted;
   const CategoriesCompanion({
@@ -1166,6 +1205,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.colorValue = const Value.absent(),
     this.isIncome = const Value.absent(),
     this.orderIndex = const Value.absent(),
+    this.maxLimit = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
   });
@@ -1179,6 +1219,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     required int colorValue,
     required bool isIncome,
     this.orderIndex = const Value.absent(),
+    this.maxLimit = const Value.absent(),
     this.isSynced = const Value.absent(),
     this.isDeleted = const Value.absent(),
   }) : uuid = Value(uuid),
@@ -1197,6 +1238,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<int>? colorValue,
     Expression<bool>? isIncome,
     Expression<int>? orderIndex,
+    Expression<double>? maxLimit,
     Expression<bool>? isSynced,
     Expression<bool>? isDeleted,
   }) {
@@ -1210,6 +1252,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (colorValue != null) 'color_value': colorValue,
       if (isIncome != null) 'is_income': isIncome,
       if (orderIndex != null) 'order_index': orderIndex,
+      if (maxLimit != null) 'max_limit': maxLimit,
       if (isSynced != null) 'is_synced': isSynced,
       if (isDeleted != null) 'is_deleted': isDeleted,
     });
@@ -1225,6 +1268,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Value<int>? colorValue,
     Value<bool>? isIncome,
     Value<int>? orderIndex,
+    Value<double?>? maxLimit,
     Value<bool>? isSynced,
     Value<bool>? isDeleted,
   }) {
@@ -1238,6 +1282,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       colorValue: colorValue ?? this.colorValue,
       isIncome: isIncome ?? this.isIncome,
       orderIndex: orderIndex ?? this.orderIndex,
+      maxLimit: maxLimit ?? this.maxLimit,
       isSynced: isSynced ?? this.isSynced,
       isDeleted: isDeleted ?? this.isDeleted,
     );
@@ -1273,6 +1318,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (orderIndex.present) {
       map['order_index'] = Variable<int>(orderIndex.value);
     }
+    if (maxLimit.present) {
+      map['max_limit'] = Variable<double>(maxLimit.value);
+    }
     if (isSynced.present) {
       map['is_synced'] = Variable<bool>(isSynced.value);
     }
@@ -1294,6 +1342,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('colorValue: $colorValue, ')
           ..write('isIncome: $isIncome, ')
           ..write('orderIndex: $orderIndex, ')
+          ..write('maxLimit: $maxLimit, ')
           ..write('isSynced: $isSynced, ')
           ..write('isDeleted: $isDeleted')
           ..write(')'))
@@ -2352,6 +2401,7 @@ typedef $$CategoriesTableCreateCompanionBuilder =
       required int colorValue,
       required bool isIncome,
       Value<int> orderIndex,
+      Value<double?> maxLimit,
       Value<bool> isSynced,
       Value<bool> isDeleted,
     });
@@ -2366,6 +2416,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<int> colorValue,
       Value<bool> isIncome,
       Value<int> orderIndex,
+      Value<double?> maxLimit,
       Value<bool> isSynced,
       Value<bool> isDeleted,
     });
@@ -2421,6 +2472,11 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<int> get orderIndex => $composableBuilder(
     column: $table.orderIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get maxLimit => $composableBuilder(
+    column: $table.maxLimit,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2489,6 +2545,11 @@ class $$CategoriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get maxLimit => $composableBuilder(
+    column: $table.maxLimit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isSynced => $composableBuilder(
     column: $table.isSynced,
     builder: (column) => ColumnOrderings(column),
@@ -2540,6 +2601,9 @@ class $$CategoriesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get maxLimit =>
+      $composableBuilder(column: $table.maxLimit, builder: (column) => column);
+
   GeneratedColumn<bool> get isSynced =>
       $composableBuilder(column: $table.isSynced, builder: (column) => column);
 
@@ -2584,6 +2648,7 @@ class $$CategoriesTableTableManager
                 Value<int> colorValue = const Value.absent(),
                 Value<bool> isIncome = const Value.absent(),
                 Value<int> orderIndex = const Value.absent(),
+                Value<double?> maxLimit = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
               }) => CategoriesCompanion(
@@ -2596,6 +2661,7 @@ class $$CategoriesTableTableManager
                 colorValue: colorValue,
                 isIncome: isIncome,
                 orderIndex: orderIndex,
+                maxLimit: maxLimit,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
               ),
@@ -2610,6 +2676,7 @@ class $$CategoriesTableTableManager
                 required int colorValue,
                 required bool isIncome,
                 Value<int> orderIndex = const Value.absent(),
+                Value<double?> maxLimit = const Value.absent(),
                 Value<bool> isSynced = const Value.absent(),
                 Value<bool> isDeleted = const Value.absent(),
               }) => CategoriesCompanion.insert(
@@ -2622,6 +2689,7 @@ class $$CategoriesTableTableManager
                 colorValue: colorValue,
                 isIncome: isIncome,
                 orderIndex: orderIndex,
+                maxLimit: maxLimit,
                 isSynced: isSynced,
                 isDeleted: isDeleted,
               ),

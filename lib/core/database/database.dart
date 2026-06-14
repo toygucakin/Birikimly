@@ -32,6 +32,7 @@ class Categories extends Table {
   IntColumn get colorValue => integer()();
   BoolColumn get isIncome => boolean()();
   IntColumn get orderIndex => integer().withDefault(const Constant(0))();
+  RealColumn get maxLimit => real().nullable()();
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
 }
@@ -56,7 +57,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration {
@@ -77,6 +78,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 12) {
           await m.createTable(recurringTransactions);
+        }
+        if (from < 13) {
+          await m.addColumn(categories, categories.maxLimit);
         }
       },
       beforeOpen: (details) async {

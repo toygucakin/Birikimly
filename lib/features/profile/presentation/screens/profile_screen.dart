@@ -6,6 +6,7 @@ import 'package:birikimly/features/categories/presentation/providers/category_pr
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+import 'package:drift/drift.dart' as drift;
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -27,6 +28,13 @@ class ProfileScreen extends ConsumerWidget {
             : (customName.isNotEmpty && customName != 'Misafir')
                 ? customName
                 : (user?.email?.split('@').first ?? 'Kullanıcı');
+
+    final localLimit = ref.watch(monthlyLimitProvider);
+    final double? monthlyLimit = isGuest
+        ? localLimit
+        : (user?.userMetadata?['monthly_limit'] != null
+            ? double.tryParse(user!.userMetadata!['monthly_limit'].toString())
+            : localLimit);
 
     return categories.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -86,6 +94,38 @@ class ProfileScreen extends ConsumerWidget {
                         isGuest ? 'Misafir Modu' : (user?.email ?? ''),
                         style: const TextStyle(color: AppColors.textSecondary),
                       ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: () => _showEditLimitDialog(context, ref, monthlyLimit),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.teal.withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.speed, size: 16, color: Colors.teal),
+                              const SizedBox(width: 8),
+                              Text(
+                                monthlyLimit != null 
+                                    ? 'Aylık Limit: ${monthlyLimit.toStringAsFixed(0)} ₺'
+                                    : 'Aylık Limit Belirle',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.teal,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.edit, size: 14, color: Colors.teal),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -108,6 +148,8 @@ class ProfileScreen extends ConsumerWidget {
                   title: 'Gider Kategorileri',
                   categories: expenseCategories,
                   isIncome: false,
+                  totalCategoryLimit: expenseCategories.fold<double>(0.0, (sum, cat) => sum + (cat.maxLimit ?? 0.0)),
+                  monthlyLimit: monthlyLimit,
                 ),
                 const SizedBox(height: 48),
 
@@ -145,6 +187,8 @@ class ProfileScreen extends ConsumerWidget {
     required String title,
     required List<CategoryModel> categories,
     required bool isIncome,
+    double? totalCategoryLimit,
+    double? monthlyLimit,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,7 +196,21 @@ class ProfileScreen extends ConsumerWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                if (!isIncome && totalCategoryLimit != null && totalCategoryLimit > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      'Toplam Limit: ${totalCategoryLimit.toStringAsFixed(0)} ₺' + 
+                      (monthlyLimit != null ? ' / ${monthlyLimit.toStringAsFixed(0)} ₺' : ''),
+                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+              ],
+            ),
             IconButton(
               icon: const Icon(Icons.add_circle, color: AppColors.primary),
               onPressed: () => _showAddCategoryDialog(context, ref, isIncome),
@@ -230,6 +288,12 @@ class ProfileScreen extends ConsumerWidget {
               ],
             ),
             title: Text(cat.name),
+            subtitle: (cat.maxLimit != null && !cat.isIncome)
+                ? Text(
+                    'Limit: ${cat.maxLimit!.toStringAsFixed(0)} ₺',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                  )
+                : null,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -467,6 +531,9 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showRenameDialog(BuildContext context, WidgetRef ref, CategoryModel cat) {
     final controller = TextEditingController(text: cat.name);
+    final limitController = TextEditingController(
+      text: (cat.maxLimit != null) ? cat.maxLimit!.toStringAsFixed(0) : ''
+    );
     IconData selectedIcon = cat.icon;
     Color selectedColor = cat.color;
 
@@ -545,6 +612,23 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   autofocus: true,
                 ),
+                if (!cat.isIncome) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: limitController,
+                    decoration: InputDecoration(
+                      hintText: 'Kategori limiti (Opsiyonel)',
+                      suffixText: '₺',
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                  ),
+                ],
               ],
             ),
           ),
@@ -556,14 +640,24 @@ class ProfileScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  ref.read(categoryProvider.notifier).updateCategory(
-                    cat.id, 
+                  final limitStr = limitController.text.trim();
+                  final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
+                  
+                  Navigator.pop(context); // Pop first
+                  
+                  _checkAndSaveCategoryLimit(
+                    context,
+                    ref,
+                    categoryId: cat.id,
                     name: controller.text.trim(),
                     icon: selectedIcon,
                     color: selectedColor,
+                    isIncome: cat.isIncome,
+                    newCategoryLimit: limitVal,
                   );
+                } else {
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -607,6 +701,7 @@ class ProfileScreen extends ConsumerWidget {
 
   void _showAddCategoryDialog(BuildContext context, WidgetRef ref, bool isIncome) {
     final controller = TextEditingController();
+    final limitController = TextEditingController();
     IconData selectedIcon = isIncome ? Icons.trending_up : Icons.category;
     Color selectedColor = isIncome ? Colors.teal : Colors.blueGrey;
 
@@ -685,6 +780,23 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   autofocus: true,
                 ),
+                if (!isIncome) ...[
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: limitController,
+                    decoration: InputDecoration(
+                      hintText: 'Kategori limiti (Opsiyonel)',
+                      suffixText: '₺',
+                      filled: true,
+                      fillColor: AppColors.background,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                  ),
+                ],
               ],
             ),
           ),
@@ -696,14 +808,24 @@ class ProfileScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  ref.read(categoryProvider.notifier).addCategory(
+                  final limitStr = limitController.text.trim();
+                  final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
+
+                  Navigator.pop(context); // Pop first
+
+                  _checkAndSaveCategoryLimit(
+                    context,
+                    ref,
+                    categoryId: null,
                     name: controller.text.trim(),
                     icon: selectedIcon,
                     color: selectedColor,
                     isIncome: isIncome,
+                    newCategoryLimit: limitVal,
                   );
+                } else {
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -750,5 +872,234 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  void _showEditLimitDialog(BuildContext context, WidgetRef ref, double? currentLimit) {
+    final controller = TextEditingController(text: currentLimit != null ? currentLimit.toStringAsFixed(0) : '');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        alignment: Alignment.topCenter,
+        insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+        ),
+        title: const Text('Aylık Harcama Limiti'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            hintText: 'Örn: 5000',
+            suffixText: '₺',
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: false),
+          autofocus: true,
+        ),
+        actions: [
+          if (currentLimit != null)
+            TextButton(
+              onPressed: () async {
+                final isGuest = ref.read(guestModeProvider);
+                if (isGuest) {
+                  await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(null);
+                } else {
+                  await ref.read(authNotifierProvider.notifier).updateMonthlyLimit(null);
+                  await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(null);
+                }
+                Navigator.pop(context);
+              },
+              style: TextButton.styleFrom(foregroundColor: AppColors.expense),
+              child: const Text('Limiti Kaldır'),
+            ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
+          TextButton(
+            onPressed: () async {
+              final valStr = controller.text.trim();
+              final double? newLimit = double.tryParse(valStr);
+              Navigator.pop(context); // Pop first
+
+              if (newLimit != null && newLimit > 0) {
+                final categoriesState = ref.read(categoryProvider).value ?? [];
+                double totalExpenseLimit = 0;
+                for (final c in categoriesState) {
+                  if (!c.isIncome && c.maxLimit != null) {
+                    totalExpenseLimit += c.maxLimit!;
+                  }
+                }
+
+                final isGuest = ref.read(guestModeProvider);
+
+                if (newLimit < totalExpenseLimit) {
+                  await showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      title: const Text('Limit Uyuşmazlığı'),
+                      content: Text(
+                        'Mevcut gider kategori limitleriniz toplamı ($totalExpenseLimit ₺), belirlediğiniz aylık limitten ($newLimit ₺) daha yüksek. Aylık limitiniz toplam gider limitinize ($totalExpenseLimit ₺) eşitlensin mi?',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text('İptal'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (isGuest) {
+                              await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(totalExpenseLimit);
+                            } else {
+                              await ref.read(authNotifierProvider.notifier).updateMonthlyLimit(totalExpenseLimit);
+                              await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(totalExpenseLimit);
+                            }
+                            Navigator.pop(ctx);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Eşitle'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  if (isGuest) {
+                    await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(newLimit);
+                  } else {
+                    await ref.read(authNotifierProvider.notifier).updateMonthlyLimit(newLimit);
+                    await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(newLimit);
+                  }
+                }
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _checkAndSaveCategoryLimit(
+    BuildContext context,
+    WidgetRef ref, {
+    required String? categoryId,
+    required String name,
+    required IconData icon,
+    required Color color,
+    required bool isIncome,
+    required double? newCategoryLimit,
+  }) async {
+    final isGuest = ref.read(guestModeProvider);
+    final user = ref.read(currentUserProvider);
+    final localLimit = ref.read(monthlyLimitProvider);
+    final double? monthlyLimit = isGuest
+        ? localLimit
+        : (user?.userMetadata?['monthly_limit'] != null
+            ? double.tryParse(user!.userMetadata!['monthly_limit'].toString())
+            : localLimit);
+
+    if (isIncome || newCategoryLimit == null || monthlyLimit == null) {
+      await _executeCategorySave(ref, categoryId, name, icon, color, isIncome, newCategoryLimit);
+      return;
+    }
+
+    final categoriesState = ref.read(categoryProvider).value ?? [];
+    double otherLimitsSum = 0;
+    for (final c in categoriesState) {
+      if (!c.isIncome && c.id != categoryId && c.maxLimit != null) {
+        otherLimitsSum += c.maxLimit!;
+      }
+    }
+
+    final totalProposedLimits = otherLimitsSum + newCategoryLimit;
+
+    if (totalProposedLimits > monthlyLimit) {
+      final excess = totalProposedLimits - monthlyLimit;
+      final maxAllowedCategoryLimit = monthlyLimit - otherLimitsSum;
+
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          alignment: Alignment.center,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: const Text('Limit Aşımı Tespit Edildi'),
+          content: Text(
+            'Belirlediğiniz kategori limitlerinin toplamı ($totalProposedLimits ₺), aylık genel harcama limitinizi ($monthlyLimit ₺) $excess ₺ aşıyor.\n\nNasıl ilerlemek istersiniz?',
+            style: const TextStyle(fontSize: 15),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actionsOverflowButtonSpacing: 8,
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                final newMonthlyLimit = monthlyLimit + excess;
+                if (isGuest) {
+                  await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(newMonthlyLimit);
+                } else {
+                  await ref.read(authNotifierProvider.notifier).updateMonthlyLimit(newMonthlyLimit);
+                  await ref.read(monthlyLimitProvider.notifier).setMonthlyLimit(newMonthlyLimit);
+                }
+                await _executeCategorySave(ref, categoryId, name, icon, color, isIncome, newCategoryLimit);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Aylık Limiti ${excess.toStringAsFixed(0)} ₺ Artır'),
+            ),
+            OutlinedButton(
+              onPressed: () async {
+                final adjustedLimit = maxAllowedCategoryLimit > 0 ? maxAllowedCategoryLimit : 0.0;
+                await _executeCategorySave(ref, categoryId, name, icon, color, isIncome, adjustedLimit);
+                Navigator.pop(context);
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: const BorderSide(color: AppColors.primary),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: Text('Kategori Limitini ${maxAllowedCategoryLimit > 0 ? maxAllowedCategoryLimit.toStringAsFixed(0) : '0'} ₺ Olarak Ayarla'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            ),
+          ],
+        ),
+      );
+    } else {
+      await _executeCategorySave(ref, categoryId, name, icon, color, isIncome, newCategoryLimit);
+    }
+  }
+
+  Future<void> _executeCategorySave(
+    WidgetRef ref,
+    String? categoryId,
+    String name,
+    IconData icon,
+    Color color,
+    bool isIncome,
+    double? limit,
+  ) async {
+    if (categoryId == null) {
+      await ref.read(categoryProvider.notifier).addCategory(
+        name: name,
+        icon: icon,
+        color: color,
+        isIncome: isIncome,
+        maxLimit: limit,
+      );
+    } else {
+      await ref.read(categoryProvider.notifier).updateCategory(
+        categoryId,
+        name: name,
+        icon: icon,
+        color: color,
+        maxLimit: drift.Value(limit),
+      );
+    }
   }
 }

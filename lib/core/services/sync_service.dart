@@ -211,6 +211,7 @@ class SyncService {
             'is_deleted': cat.isDeleted,
             'order_index': cat.orderIndex,
             'user_id': user.id,
+            'max_limit': cat.maxLimit,
           };
 
           try {
@@ -273,6 +274,7 @@ class SyncService {
           remoteId: Value(rc['id'].toString()),
           isDeleted: Value(isRemoteDeleted),
           orderIndex: Value(rc['order_index'] as int? ?? 0),
+          maxLimit: Value(rc['max_limit'] != null ? (rc['max_limit'] as num).toDouble() : null),
         ));
 
         existingKeys.add(key);
