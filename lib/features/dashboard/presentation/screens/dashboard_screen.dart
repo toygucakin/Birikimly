@@ -16,6 +16,7 @@ import 'package:birikimly/features/categories/domain/models/category_model.dart'
 import 'package:intl/intl.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+import 'package:birikimly/features/dashboard/presentation/widgets/category_budget_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -256,28 +257,46 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             },
                           );
                         }(),
-                        if (monthlyLimit != null) ...[
-                          () {
-                            final now = DateTime.now();
-                            final currentMonthTransactions = transactions.where((t) => 
-                              t.date.year == now.year && t.date.month == now.month).toList();
-                            final totalExpense = notifier.calculateExpense(currentMonthTransactions);
+                        () {
+                          final now = DateTime.now();
+                          final currentMonthTransactions = transactions.where((t) => 
+                            t.date.year == now.year && t.date.month == now.month).toList();
+                          final totalExpense = notifier.calculateExpense(currentMonthTransactions);
 
-                            double totalCategoryLimits = 0;
-                            for (final cat in categories) {
-                              if (!cat.isIncome && cat.maxLimit != null) {
-                                totalCategoryLimits += cat.maxLimit!;
+                          double totalCategoryLimits = 0;
+                          final List<Widget> warningWidgets = [];
+                          final List<Widget> categoryBudgetCards = [];
+
+                          for (final cat in categories) {
+                            if (!cat.isIncome && cat.maxLimit != null) {
+                              totalCategoryLimits += cat.maxLimit!;
+
+                              // Kategoriye ait bu ayki harcamayı hesapla
+                              double spentForCat = 0;
+                              for (final tx in currentMonthTransactions) {
+                                if (!tx.isIncome && tx.categoryId != null) {
+                                  final rawId = tx.categoryId!.trim().toLowerCase();
+                                  final catCleanId = cat.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                                  final txCleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                                  
+                                  if (txCleanId == catCleanId || txCleanId == cat.name.toLowerCase().trim()) {
+                                    spentForCat += tx.amount;
+                                  }
+                                }
                               }
-                            }
 
-                            final hasExpenseExceeded = totalExpense > monthlyLimit;
-                            final hasCategoryMismatch = totalCategoryLimits > monthlyLimit;
+                              categoryBudgetCards.add(
+                                CategoryBudgetCard(
+                                  category: cat,
+                                  spentAmount: spentForCat,
+                                ),
+                              );
 
-                            return Column(
-                              children: [
-                                if (hasExpenseExceeded) ...[
-                                  const SizedBox(height: 16),
+                              // Aşım uyarısı oluştur
+                              if (spentForCat > cat.maxLimit!) {
+                                warningWidgets.add(
                                   Container(
+                                    margin: const EdgeInsets.only(top: 16),
                                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                     decoration: BoxDecoration(
                                       color: AppColors.expense.withValues(alpha: 0.1),
@@ -292,12 +311,12 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              const Text(
-                                                'Bütçe Sınırı Aşıldı!',
-                                                style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
+                                              Text(
+                                                '${cat.name} Limiti Aşıldı!',
+                                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
                                               ),
                                               Text(
-                                                'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
+                                                'Bu kategorideki limitinizi ${CurrencyUtils.format(spentForCat - cat.maxLimit!)} aştınız.',
                                                 style: const TextStyle(color: AppColors.expense, fontSize: 13),
                                               ),
                                             ],
@@ -306,43 +325,108 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                       ],
                                     ),
                                   ),
-                                ],
-                                if (hasCategoryMismatch) ...[
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.amber.withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1.5),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text(
-                                                'Kategori Limit Uyuşmazlığı',
-                                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14),
-                                              ),
-                                              Text(
-                                                'Kategori limitlerinin toplamı (${CurrencyUtils.format(totalCategoryLimits)}), aylık genel limitinizi (${CurrencyUtils.format(monthlyLimit)}) aşıyor.',
-                                                style: const TextStyle(color: Colors.amber, fontSize: 13),
-                                              ),
-                                            ],
+                                );
+                              }
+                            }
+                          }
+
+                          if (monthlyLimit != null) {
+                            final hasExpenseExceeded = totalExpense > monthlyLimit;
+                            final hasCategoryMismatch = totalCategoryLimits > monthlyLimit;
+
+                            if (hasExpenseExceeded) {
+                              warningWidgets.insert(0, Container(
+                                margin: const EdgeInsets.only(top: 16),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.expense.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.expense.withValues(alpha: 0.3), width: 1.5),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Genel Bütçe Sınırı Aşıldı!',
+                                            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
                                           ),
-                                        ),
-                                      ],
+                                          Text(
+                                            'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
+                                            style: const TextStyle(color: AppColors.expense, fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
                                     ),
+                                  ],
+                                ),
+                              ));
+                            }
+
+                            if (hasCategoryMismatch) {
+                              warningWidgets.add(Container(
+                                margin: const EdgeInsets.only(top: 16),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1.5),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Kategori Limit Uyuşmazlığı',
+                                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14),
+                                          ),
+                                          Text(
+                                            'Kategori limitlerinin toplamı (${CurrencyUtils.format(totalCategoryLimits)}), aylık genel limitinizi (${CurrencyUtils.format(monthlyLimit)}) aşıyor.',
+                                            style: const TextStyle(color: Colors.amber, fontSize: 13),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ));
+                            }
+                          }
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ...warningWidgets,
+                              if (categoryBudgetCards.isNotEmpty) ...[
+                                const SizedBox(height: 24),
+                                const Text(
+                                  'Kategori Bütçeleri',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  height: 160,
+                                  child: ListView(
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    children: categoryBudgetCards,
+                                  ),
+                                ),
                               ],
-                            );
-                          }(),
-                        ],
+                            ],
+                          );
+                        }(),
                         const SizedBox(height: 40),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
