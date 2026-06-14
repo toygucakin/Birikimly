@@ -265,8 +265,8 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
 
                           double totalCategoryLimits = 0;
                           final List<Widget> warningWidgets = [];
-                          final List<Widget> categoryBudgetCards = [];
                           final List<Map<String, dynamic>> exceededCategories = [];
+                          final List<Map<String, dynamic>> categoryBudgetCardData = [];
 
                           for (final cat in categories) {
                             if (!cat.isIncome && cat.maxLimit != null) {
@@ -286,12 +286,17 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                 }
                               }
 
-                              categoryBudgetCards.add(
-                                CategoryBudgetCard(
+                              final double percent = cat.maxLimit! > 0 ? spentForCat / cat.maxLimit! : (spentForCat > 0 ? double.infinity : 0.0);
+                              final double overrun = spentForCat - cat.maxLimit!;
+                              
+                              categoryBudgetCardData.add({
+                                'widget': CategoryBudgetCard(
                                   category: cat,
                                   spentAmount: spentForCat,
                                 ),
-                              );
+                                'percent': percent,
+                                'overrun': overrun,
+                              });
 
                               // Aşım kontrolü
                               if (spentForCat > cat.maxLimit!) {
@@ -303,6 +308,29 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                               }
                             }
                           }
+
+                          // Sıralama Algoritması:
+                          // 1. İkisi de aşılmışsa -> Miktar (TL) olarak en çok aşan en önde
+                          // 2. Biri aşılmış, diğeri aşılmamışsa -> Aşılan en önde
+                          // 3. İkisi de aşılmamışsa -> Yüzdelik doluluğu en yüksek olan en önde
+                          categoryBudgetCardData.sort((a, b) {
+                            final double percentA = a['percent'] as double;
+                            final double percentB = b['percent'] as double;
+                            final double overA = a['overrun'] as double;
+                            final double overB = b['overrun'] as double;
+
+                            if (percentA > 1.0 && percentB > 1.0) {
+                              return overB.compareTo(overA);
+                            } else if (percentA > 1.0 && percentB <= 1.0) {
+                              return -1;
+                            } else if (percentB > 1.0 && percentA <= 1.0) {
+                              return 1;
+                            } else {
+                              return percentB.compareTo(percentA);
+                            }
+                          });
+                          
+                          final List<Widget> categoryBudgetCards = categoryBudgetCardData.map((e) => e['widget'] as Widget).toList();
 
                           if (exceededCategories.isNotEmpty) {
                             warningWidgets.add(
