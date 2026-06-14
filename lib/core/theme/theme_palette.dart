@@ -169,3 +169,56 @@ class ClassicLightPalette implements ThemePalette {
   @override
   List<Color> get cardGradient => [primary, secondary];
 }
+
+// 7. Cream Blue (Krem Mavi - Nike Air Max 1 ilhamlı)
+class CreamBluePalette implements ThemePalette {
+  @override
+  bool get isDark => false;
+  @override
+  Color get background => const Color(0xFFFAF7F2); // Warm cream/off-white background
+  @override
+  Color get surface => Colors.white;
+  @override
+  Color get primary => const Color(0xFF1E7B88); // Nike Air Max mudguard teal
+  @override
+  Color get secondary => const Color(0xFF4FA0B0); // Swoosh/light teal accents
+  @override
+  Color get accent => const Color(0xFFE5D5C5); // Beige/cream suede overlays
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => const Color(0xFF20292B); // Dark slate/charcoal
+  @override
+  Color get textSecondary => const Color(0xFF7A8B8E); // Muted teal-grey
+  @override
+  List<Color> get cardGradient => [primary, secondary];
+}
+
+// 8. Sapphire Blue (Safir Mavi - Koyu Mavi Tema)
+class SapphireBluePalette implements ThemePalette {
+  @override
+  bool get isDark => true;
+  @override
+  Color get background => const Color(0xFF070B19); // Deep sapphire dark background
+  @override
+  Color get surface => const Color(0xFF0F172A); // Deep slate-blue card surface
+  @override
+  Color get primary => const Color(0xFF3B82F6); // Electric/sapphire blue
+  @override
+  Color get secondary => const Color(0xFF00D2FF); // Light cyan/neon blue
+  @override
+  Color get accent => const Color(0xFFF59E0B);
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => Colors.white;
+  @override
+  Color get textSecondary => const Color(0xFF8BA2C0); // Soft grey-blue
+  @override
+  List<Color> get cardGradient => [primary, secondary];
+}
+

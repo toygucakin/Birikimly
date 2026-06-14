@@ -9,6 +9,8 @@ enum AppThemePreset {
   amethyst,
   sunset,
   classicLight,
+  creamBlue,
+  sapphireBlue,
 }
 
 extension AppThemePresetExtension on AppThemePreset {
@@ -26,6 +28,10 @@ extension AppThemePresetExtension on AppThemePreset {
         return SunsetRosePalette();
       case AppThemePreset.classicLight:
         return ClassicLightPalette();
+      case AppThemePreset.creamBlue:
+        return CreamBluePalette();
+      case AppThemePreset.sapphireBlue:
+        return SapphireBluePalette();
     }
   }
 
@@ -43,6 +49,10 @@ extension AppThemePresetExtension on AppThemePreset {
         return 'Kızıl Günbatımı';
       case AppThemePreset.classicLight:
         return 'Klasik Aydınlık';
+      case AppThemePreset.creamBlue:
+        return 'Krem Mavi';
+      case AppThemePreset.sapphireBlue:
+        return 'Safir Mavi';
     }
   }
 }
