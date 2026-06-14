@@ -9,10 +9,12 @@ enum AppThemePreset {
   amethyst,
   sunset,
   sapphireBlue,
+  crimsonNoir,
   creamBlue,
   classicLight,
   oceanBlue,
   sakuraPink,
+  scarletLight,
 }
 
 extension AppThemePresetExtension on AppThemePreset {
@@ -30,6 +32,8 @@ extension AppThemePresetExtension on AppThemePreset {
         return SunsetRosePalette();
       case AppThemePreset.sapphireBlue:
         return SapphireBluePalette();
+      case AppThemePreset.crimsonNoir:
+        return CrimsonNoirPalette();
       case AppThemePreset.creamBlue:
         return CreamBluePalette();
       case AppThemePreset.classicLight:
@@ -38,6 +42,8 @@ extension AppThemePresetExtension on AppThemePreset {
         return OceanBluePalette();
       case AppThemePreset.sakuraPink:
         return SakuraPinkPalette();
+      case AppThemePreset.scarletLight:
+        return ScarletLightPalette();
     }
   }
 
@@ -55,6 +61,8 @@ extension AppThemePresetExtension on AppThemePreset {
         return 'Kızıl Günbatımı';
       case AppThemePreset.sapphireBlue:
         return 'Safir Mavi';
+      case AppThemePreset.crimsonNoir:
+        return 'Kızıl Gece';
       case AppThemePreset.creamBlue:
         return 'Krem Mavi';
       case AppThemePreset.classicLight:
@@ -63,6 +71,8 @@ extension AppThemePresetExtension on AppThemePreset {
         return 'Okyanus Mavisi';
       case AppThemePreset.sakuraPink:
         return 'Sakura Pembe';
+      case AppThemePreset.scarletLight:
+        return 'Kızıl Işık';
     }
   }
 }

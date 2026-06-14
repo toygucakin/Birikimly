@@ -274,3 +274,55 @@ class SakuraPinkPalette implements ThemePalette {
   List<Color> get cardGradient => [primary, secondary];
 }
 
+// 11. Crimson Noir (Kızıl Gece - Siyah/Kırmızı/Beyaz Koyu Tema)
+class CrimsonNoirPalette implements ThemePalette {
+  @override
+  bool get isDark => true;
+  @override
+  Color get background => const Color(0xFF0A0A0A); // Jet black background
+  @override
+  Color get surface => const Color(0xFF161616); // Charcoal black surface
+  @override
+  Color get primary => const Color(0xFFE11D48); // Vibrant crimson red
+  @override
+  Color get secondary => Colors.white; // Pure white accents
+  @override
+  Color get accent => const Color(0xFFEF4444); // Accent red
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => Colors.white; // White text
+  @override
+  Color get textSecondary => const Color(0xFF9CA3AF); // Light grey text
+  @override
+  List<Color> get cardGradient => [primary, const Color(0xFF991B1B)]; // Crimson to dark red gradient
+}
+
+// 12. Scarlet Light (Kızıl Işık - Beyaz/Siyah/Kırmızı Açık Tema)
+class ScarletLightPalette implements ThemePalette {
+  @override
+  bool get isDark => false;
+  @override
+  Color get background => const Color(0xFFFCFCFC); // Clean off-white background
+  @override
+  Color get surface => Colors.white;
+  @override
+  Color get primary => const Color(0xFFDC2626); // Scarlet red primary
+  @override
+  Color get secondary => const Color(0xFF0F172A); // Ink/slate black accents
+  @override
+  Color get accent => const Color(0xFF4B5563); // Muted slate grey
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => const Color(0xFF0F172A); // Ink black text
+  @override
+  Color get textSecondary => const Color(0xFF4B5563); // Slate grey text
+  @override
+  List<Color> get cardGradient => [primary, const Color(0xFF0F172A)]; // Scarlet to ink black gradient
+}
+
