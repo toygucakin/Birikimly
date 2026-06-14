@@ -36,7 +36,7 @@ class _DashboardScreenContent extends ConsumerStatefulWidget {
   ConsumerState<_DashboardScreenContent> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
+class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with TickerProviderStateMixin {
   bool _isUpcomingExpanded = false;
 
   @override
@@ -321,8 +321,12 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                   onTap: () {
                                     if (catTransactions.isEmpty) return;
                                     catTransactions.sort((a, b) => b.date.compareTo(a.date));
+                                    final animationController = BottomSheet.createAnimationController(this);
+                                    animationController.duration = const Duration(milliseconds: 300);
+                                    animationController.reverseDuration = const Duration(milliseconds: 500);
                                     showModalBottomSheet(
                                       context: context,
+                                      transitionAnimationController: animationController,
                                       backgroundColor: Colors.transparent,
                                       isScrollControlled: true,
                                       builder: (context) => Container(
@@ -436,7 +440,13 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                           ],
                                         ),
                                       ),
-                                    );
+                                    ).whenComplete(() {
+                                      Future.delayed(const Duration(milliseconds: 600), () {
+                                        try {
+                                          animationController.dispose();
+                                        } catch (_) {}
+                                      });
+                                    });
                                   },
                                 ),
                                 'percent': percent,
