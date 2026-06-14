@@ -37,6 +37,8 @@ class _DashboardScreenContent extends ConsumerStatefulWidget {
 }
 
 class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
+  bool _isUpcomingExpanded = false;
+
   @override
   void initState() {
     super.initState();
@@ -221,25 +223,45 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                 ),
                               ],
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.account_circle_outlined, size: 28),
-                                onPressed: () {
-                                  widget.pageController.animateToPage(
-                                    1,
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                              ),
+                            Row(
+                              children: [
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.event_repeat_rounded, size: 24, color: AppColors.primary),
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => const birikimly_rt_screen.RecurringTransactionsScreen()),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.account_circle_outlined, size: 28),
+                                    onPressed: () {
+                                      widget.pageController.animateToPage(
+                                        1,
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 16),
                         () {
                           final now = DateTime.now();
                           final currentMonthTransactions = transactions.where((t) => 
@@ -532,7 +554,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             children: [
                               ...warningWidgets,
                               if (categoryBudgetCards.isNotEmpty) ...[
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 16),
                                 const Text(
                                   'Kategori Bütçeleri',
                                   style: TextStyle(
@@ -556,8 +578,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                   final upcoming = recurringTxs.where((rt) {
                                     if (!rt.isActive) return false;
                                     final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
-                                    final daysLeft = execDate.difference(today).inDays;
-                                    return daysLeft >= 0 && daysLeft <= 14;
+                                    return execDate.year == today.year && execDate.month == today.month && execDate.difference(today).inDays >= 0;
                                   }).toList();
                                   
                                   if (upcoming.isEmpty) return const SizedBox.shrink();
@@ -567,14 +588,40 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                   return Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const SizedBox(height: 24),
-                                      const Text(
-                                        'Yaklaşan Ödemeler (Sonraki 14 Gün)',
-                                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                      ),
                                       const SizedBox(height: 16),
-                                      SizedBox(
-                                        height: 110,
+                                      GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            _isUpcomingExpanded = !_isUpcomingExpanded;
+                                          });
+                                        },
+                                        behavior: HitTestBehavior.opaque,
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                'Yaklaşan Ödemeler (Bu Ay)',
+                                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                              ),
+                                              Icon(
+                                                _isUpcomingExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                                                color: AppColors.textSecondary,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      AnimatedSize(
+                                        duration: const Duration(milliseconds: 300),
+                                        curve: Curves.easeInOut,
+                                        child: _isUpcomingExpanded
+                                            ? Column(
+                                                children: [
+                                                  const SizedBox(height: 8),
+                                                  SizedBox(
+                                                    height: 110,
                                         child: ListView.builder(
                                           scrollDirection: Axis.horizontal,
                                           physics: const BouncingScrollPhysics(),
@@ -650,6 +697,10 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                                         ),
                                       ),
                                     ],
+                                  )
+                                : const SizedBox(width: double.infinity, height: 0),
+                                      ),
+                                    ],
                                   );
                                 },
                                 orElse: () => const SizedBox.shrink(),
@@ -657,31 +708,13 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> {
                             ],
                           );
                         }(),
-                        const SizedBox(height: 40),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Son İşlemler',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const birikimly_rt_screen.RecurringTransactionsScreen()),
-                                );
-                              },
-                              style: TextButton.styleFrom(
-                                foregroundColor: AppColors.primary,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              ),
-                              child: const Text('Düzenli İşlemler'),
-                            ),
-                          ],
+                        const SizedBox(height: 24),
+                        const Text(
+                          'Son İşlemler',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 20),
                       ],
