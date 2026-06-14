@@ -260,6 +260,7 @@ class ProfileScreen extends ConsumerWidget {
     Icons.child_care, Icons.electric_bolt, Icons.water_drop,
     Icons.fastfood, Icons.local_mall, Icons.sports_esports, 
     Icons.health_and_safety, Icons.savings, Icons.receipt_long,
+    Icons.card_giftcard, Icons.currency_exchange, Icons.face_retouching_natural, Icons.payments,
   ];
 
   static const List<Color> _curatedColors = [

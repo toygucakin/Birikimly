@@ -13,7 +13,15 @@ final currentUserProvider = Provider<User?>((ref) {
 
 class AwaitingPasswordNotifier extends Notifier<bool> {
   @override
-  bool build() => false;
+  bool build() {
+    final sub = SupabaseService.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == AuthChangeEvent.passwordRecovery) {
+        state = true;
+      }
+    });
+    ref.onDispose(() => sub.cancel());
+    return false;
+  }
 
   void set(bool value) => state = value;
 }

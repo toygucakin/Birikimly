@@ -23,7 +23,7 @@ migrate_working_dir/
 !.env.example
 *.sqlite
 *.db
-TAPTAP.md
+BIRIKIMLY.md
 Birikimly.ipa
 Payload/
 docs/IOS_CI_GUIDE.md
@@ -51,3 +51,9 @@ app.*.map.json
 
 # JMeter Test Data
 test_users.csv
+
+# Security & Local files
+key.properties
+*.jks
+*.keystore
+/*.png
