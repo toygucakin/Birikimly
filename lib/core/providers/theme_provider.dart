@@ -8,9 +8,9 @@ enum AppThemePreset {
   cyberpunk,
   amethyst,
   sunset,
-  classicLight,
-  creamBlue,
   sapphireBlue,
+  creamBlue,
+  classicLight,
   oceanBlue,
   sakuraPink,
 }
@@ -28,12 +28,12 @@ extension AppThemePresetExtension on AppThemePreset {
         return AmethystPalette();
       case AppThemePreset.sunset:
         return SunsetRosePalette();
-      case AppThemePreset.classicLight:
-        return ClassicLightPalette();
-      case AppThemePreset.creamBlue:
-        return CreamBluePalette();
       case AppThemePreset.sapphireBlue:
         return SapphireBluePalette();
+      case AppThemePreset.creamBlue:
+        return CreamBluePalette();
+      case AppThemePreset.classicLight:
+        return ClassicLightPalette();
       case AppThemePreset.oceanBlue:
         return OceanBluePalette();
       case AppThemePreset.sakuraPink:
@@ -53,12 +53,12 @@ extension AppThemePresetExtension on AppThemePreset {
         return 'Ametist Lavanta';
       case AppThemePreset.sunset:
         return 'Kızıl Günbatımı';
-      case AppThemePreset.classicLight:
-        return 'Klasik Aydınlık';
-      case AppThemePreset.creamBlue:
-        return 'Krem Mavi';
       case AppThemePreset.sapphireBlue:
         return 'Safir Mavi';
+      case AppThemePreset.creamBlue:
+        return 'Krem Mavi';
+      case AppThemePreset.classicLight:
+        return 'Klasik Aydınlık';
       case AppThemePreset.oceanBlue:
         return 'Okyanus Mavisi';
       case AppThemePreset.sakuraPink:
