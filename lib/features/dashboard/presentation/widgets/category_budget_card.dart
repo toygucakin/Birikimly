@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 class CategoryBudgetCard extends StatelessWidget {
   final CategoryModel category;
   final double spentAmount;
+  final VoidCallback? onTap;
   
   const CategoryBudgetCard({
     super.key,
     required this.category,
     required this.spentAmount,
+    this.onTap,
   });
 
   String _formatLimit(double val) {
@@ -24,7 +26,9 @@ class CategoryBudgetCard extends StatelessWidget {
     final double percent = rawPercent.clamp(0.0, 1.0);
     final bool isExceeded = spentAmount > limit;
 
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       width: 160,
       margin: const EdgeInsets.only(right: 16),
       padding: const EdgeInsets.all(16),
@@ -98,6 +102,7 @@ class CategoryBudgetCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
