@@ -64,7 +64,7 @@ class TransactionItem extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      DateFormat('dd MMM yyyy').format(transaction.date),
+                      DateFormat('dd MMM yyyy', 'tr_TR').format(transaction.date),
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,

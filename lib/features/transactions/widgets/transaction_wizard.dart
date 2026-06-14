@@ -369,7 +369,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   Icon(Icons.calendar_today, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Text(
-                    DateFormat('dd MMMM yyyy').format(_selectedDate),
+                    DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
