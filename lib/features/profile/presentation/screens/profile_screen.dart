@@ -361,131 +361,153 @@ class ProfileScreen extends ConsumerWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    width: double.infinity,
-                    alignment: Alignment.center,
-                    child: Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(2),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header (Non-scrollable to allow drag dismissal)
+                Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.center,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(height: 12),
+                          // Drag Handle
+                          Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Görünüm Teması',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Uygulamanın renk temasını değiştirerek kişiselleştirin.',
+                            style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const Text(
-                    'Görünüm Teması',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Uygulamanın renk temasını değiştirerek kişiselleştirin.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 2.2,
+                    Positioned(
+                      right: 12,
+                      top: 16,
+                      child: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
                     ),
-                    itemCount: AppThemePreset.values.length,
-                    itemBuilder: (context, index) {
-                      final preset = AppThemePreset.values[index];
-                      final palette = preset.palette;
-                      final isSelected = preset == activePreset;
+                  ],
+                ),
+                const SizedBox(height: 16),
+                // Scrollable Grid
+                Flexible(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 2.2,
+                      ),
+                      itemCount: AppThemePreset.values.length,
+                      itemBuilder: (context, index) {
+                        final preset = AppThemePreset.values[index];
+                        final palette = preset.palette;
+                        final isSelected = preset == activePreset;
 
-                      return InkWell(
-                        onTap: () {
-                          ref.read(themeProvider.notifier).setPreset(preset);
-                          Navigator.pop(context);
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: palette.background,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected 
-                                  ? palette.primary 
-                                  : palette.surface.withValues(alpha: 0.5),
-                              width: isSelected ? 2.5 : 1,
-                            ),
-                            boxShadow: isSelected ? [
-                              BoxShadow(
-                                color: palette.primary.withValues(alpha: 0.25),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              )
-                            ] : null,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      preset.displayName,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.bold,
-                                        color: palette.textPrimary,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Container(
-                                          width: 12,
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color: palette.primary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Container(
-                                          width: 12,
-                                          height: 12,
-                                          decoration: BoxDecoration(
-                                            color: palette.secondary,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                        return InkWell(
+                          onTap: () {
+                            ref.read(themeProvider.notifier).setPreset(preset);
+                            Navigator.pop(context);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: palette.background,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected 
+                                    ? palette.primary 
+                                    : palette.surface.withValues(alpha: 0.5),
+                                width: isSelected ? 2.5 : 1,
                               ),
-                              if (isSelected)
-                                Icon(
-                                 Icons.check_circle,
-                                  color: palette.primary,
-                                  size: 20,
+                              boxShadow: isSelected ? [
+                                BoxShadow(
+                                  color: palette.primary.withValues(alpha: 0.25),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                )
+                              ] : null,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        preset.displayName,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: palette.textPrimary,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: palette.primary,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: palette.secondary,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                            ],
+                                if (isSelected)
+                                  Icon(
+                                   Icons.check_circle,
+                                    color: palette.primary,
+                                    size: 20,
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
