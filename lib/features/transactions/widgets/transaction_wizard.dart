@@ -99,8 +99,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       final startOfMonth = DateTime(now.year, now.month, 1);
       if (_selectedDate.isBefore(startOfMonth)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Düzenli işlemler yalnızca bulunduğumuz ay ve gelecek aylar için eklenebilir.'),
+          SnackBar(
+            content: const Text('Düzenli işlemler yalnızca bulunduğumuz ay ve gelecek aylar için eklenebilir.'),
             backgroundColor: AppColors.expense,
           ),
         );
@@ -182,7 +182,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   ),
                   Text(
                     '${_currentStep + 1} / 4',
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
@@ -224,14 +224,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Miktarı Girin',
                 style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Düzenli',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
                   ),
@@ -243,31 +243,31 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                         builder: (context) => AlertDialog(
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                           backgroundColor: AppColors.background,
-                          title: const Row(
+                          title: Row(
                             children: [
                               Icon(Icons.info_outline, color: AppColors.primary),
-                              SizedBox(width: 8),
-                              Text(
+                              const SizedBox(width: 8),
+                              const Text(
                                 'Düzenli İşlem Nedir?',
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
-                          content: const Text(
+                          content: Text(
                             'Bu seçeneği aktif ettiğinizde; girdiğiniz tutar, kategori ve açıklama, her ay seçtiğiniz işlem gününde otomatik olarak eklenir.\n\nGeçmiş tarihler için düzenli işlem oluşturulamaz.',
                             style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: const Text('Anladım', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                              child: Text('Anladım', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
                             ),
                           ],
                         ),
                       );
                     },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Icon(
                         Icons.info_outline,
                         size: 14,
@@ -297,8 +297,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             keyboardType: TextInputType.number,
             inputFormatters: [ThousandsFormatter()],
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
-            decoration: const InputDecoration(
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+            decoration: InputDecoration(
               prefixText: '₺ ',
               prefixStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
               border: InputBorder.none,
@@ -349,7 +349,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             'İşlem Tarihi',
             style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
           ),
@@ -366,7 +366,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.calendar_today, color: AppColors.primary),
+                  Icon(Icons.calendar_today, color: AppColors.primary),
                   const SizedBox(width: 12),
                   Text(
                     DateFormat('dd MMMM yyyy').format(_selectedDate),
@@ -387,7 +387,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          Text(
             'Açıklama Ekleyin',
             style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
           ),
@@ -443,7 +443,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                const Text(
+                Text(
                   'Kategori Seçin ve Kaydedin',
                   style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                 ),

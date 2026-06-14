@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
+import 'theme_palette.dart';
 
 class AppColors {
-  static const Color background = Color(0xFF0F172A);
-  static const Color surface = Color(0xFF1E293B);
-  static const Color primary = Color(0xFF6366F1);
-  static const Color secondary = Color(0xFFEC4899);
-  static const Color accent = Color(0xFF10B981);
-  
-  static const Color income = Color(0xFF10B981);
-  static const Color expense = Color(0xFFEF4444);
-  
-  static const Color textPrimary = Colors.white;
-  static const Color textSecondary = Color(0xFF94A3B8);
+  static ThemePalette _currentPalette = MidnightPalette();
 
-  static const List<Color> cardGradient = [primary, secondary];
+  static void setPalette(ThemePalette palette) {
+    _currentPalette = palette;
+  }
+
+  static ThemePalette get current => _currentPalette;
+
+  static Color get background => _currentPalette.background;
+  static Color get surface => _currentPalette.surface;
+  static Color get primary => _currentPalette.primary;
+  static Color get secondary => _currentPalette.secondary;
+  static Color get accent => _currentPalette.accent;
+  
+  static Color get income => _currentPalette.income;
+  static Color get expense => _currentPalette.expense;
+  
+  static Color get textPrimary => _currentPalette.textPrimary;
+  static Color get textSecondary => _currentPalette.textSecondary;
+
+  static List<Color> get cardGradient => _currentPalette.cardGradient;
 }

@@ -29,16 +29,16 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
     final confirmPassword = _confirmPasswordController.text.trim();
 
     if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Şifre en az 6 karakter olmalıdır.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Şifre en az 6 karakter olmalıdır.'),
         backgroundColor: AppColors.expense,
       ));
       return;
     }
 
     if (password != confirmPassword) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Şifreler eşleşmiyor. Lütfen kontrol edin.'),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Şifreler eşleşmiyor. Lütfen kontrol edin.'),
         backgroundColor: AppColors.expense,
       ));
       return;
@@ -72,7 +72,7 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 'Şifre Belirle',
                 style: TextStyle(
                   fontSize: 32,

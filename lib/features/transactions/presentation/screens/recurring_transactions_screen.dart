@@ -32,7 +32,7 @@ class RecurringTransactionsScreen extends ConsumerWidget {
             error: (err, stack) => Center(child: Text('İşlemler yüklenemedi: $err')),
             data: (transactions) {
               if (transactions.isEmpty) {
-                return const Center(
+                return Center(
                   child: Text(
                     'Henüz düzenli işlem eklenmemiş.',
                     style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
@@ -145,7 +145,7 @@ class RecurringTransactionsScreen extends ConsumerWidget {
                   ),
                   child: Text(
                     freqText,
-                    style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -209,11 +209,11 @@ class RecurringTransactionsScreen extends ConsumerWidget {
                 Row(
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit, color: AppColors.textSecondary, size: 20),
+                      icon: Icon(Icons.edit, color: AppColors.textSecondary, size: 20),
                       onPressed: () => _showEditDialog(context, ref, rt, category.name),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.delete_outline, color: AppColors.expense, size: 20),
+                      icon: Icon(Icons.delete_outline, color: AppColors.expense, size: 20),
                       onPressed: () => _showDeleteDialog(context, ref, rt),
                     ),
                   ],
@@ -235,7 +235,7 @@ class RecurringTransactionsScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {

@@ -19,12 +19,12 @@ class FinancialHistoryScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
+        title: Text(
           'Mali Geçmiş',
           style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -119,7 +119,7 @@ class FinancialHistoryScreen extends ConsumerWidget {
             children: [
               Text(
                 DateFormat('MMMM yyyy', 'tr_TR').format(data.month),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -171,7 +171,7 @@ class FinancialHistoryScreen extends ConsumerWidget {
               color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
@@ -182,7 +182,7 @@ class FinancialHistoryScreen extends ConsumerWidget {
                     fontSize: 14,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.primary),
               ],
             ),
@@ -207,14 +207,14 @@ class FinancialHistoryScreen extends ConsumerWidget {
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
             ),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           CurrencyUtils.format(amount),
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,

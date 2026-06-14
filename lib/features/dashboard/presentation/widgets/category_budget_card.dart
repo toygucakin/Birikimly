@@ -82,7 +82,7 @@ class CategoryBudgetCard extends StatelessWidget {
           ),
           Text(
             '/ ${_formatLimit(limit)} ₺',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,

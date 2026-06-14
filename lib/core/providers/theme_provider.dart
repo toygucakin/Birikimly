@@ -1,32 +1,80 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/core/theme/theme_palette.dart';
 
-class ThemeNotifier extends Notifier<ThemeMode> {
-  static const _key = 'theme_mode';
-
-  @override
-  ThemeMode build() {
-    final prefs = ref.watch(sharedPreferencesProvider);
-    final savedTheme = prefs.getString(_key);
-    if (savedTheme == 'light') {
-      return ThemeMode.light;
-    }
-    return ThemeMode.dark;
-  }
-
-  void toggleTheme() {
-    final prefs = ref.read(sharedPreferencesProvider);
-    if (state == ThemeMode.dark) {
-      state = ThemeMode.light;
-      prefs.setString(_key, 'light');
-    } else {
-      state = ThemeMode.dark;
-      prefs.setString(_key, 'dark');
-    }
-  }
-
-  bool get isDarkMode => state == ThemeMode.dark;
+enum AppThemePreset {
+  midnight,
+  emerald,
+  cyberpunk,
+  amethyst,
+  sunset,
+  classicLight,
 }
 
-final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(ThemeNotifier.new);
+extension AppThemePresetExtension on AppThemePreset {
+  ThemePalette get palette {
+    switch (this) {
+      case AppThemePreset.midnight:
+        return MidnightPalette();
+      case AppThemePreset.emerald:
+        return ForestEmeraldPalette();
+      case AppThemePreset.cyberpunk:
+        return CyberpunkPalette();
+      case AppThemePreset.amethyst:
+        return AmethystPalette();
+      case AppThemePreset.sunset:
+        return SunsetRosePalette();
+      case AppThemePreset.classicLight:
+        return ClassicLightPalette();
+    }
+  }
+
+  String get displayName {
+    switch (this) {
+      case AppThemePreset.midnight:
+        return 'Gece Yarısı';
+      case AppThemePreset.emerald:
+        return 'Zümrüt Ormanı';
+      case AppThemePreset.cyberpunk:
+        return 'Kehribar Sarısı';
+      case AppThemePreset.amethyst:
+        return 'Ametist Lavanta';
+      case AppThemePreset.sunset:
+        return 'Kızıl Günbatımı';
+      case AppThemePreset.classicLight:
+        return 'Klasik Aydınlık';
+    }
+  }
+}
+
+class ThemePresetNotifier extends Notifier<AppThemePreset> {
+  static const _key = 'theme_preset_name';
+
+  @override
+  AppThemePreset build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final saved = prefs.getString(_key);
+    if (saved != null) {
+      try {
+        return AppThemePreset.values.byName(saved);
+      } catch (_) {
+        // Fallback
+      }
+    }
+    
+    // Check legacy theme
+    final legacyTheme = prefs.getString('theme_mode');
+    if (legacyTheme == 'light') {
+      return AppThemePreset.classicLight;
+    }
+    
+    return AppThemePreset.midnight;
+  }
+
+  void setPreset(AppThemePreset preset) {
+    state = preset;
+    ref.read(sharedPreferencesProvider).setString(_key, preset.name);
+  }
+}
+
+final themeProvider = NotifierProvider<ThemePresetNotifier, AppThemePreset>(ThemePresetNotifier.new);

@@ -130,7 +130,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                  icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                   onPressed: () {
                     setState(() {
                       if (_isOtpSent) {
@@ -151,7 +151,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Birikimly',
                   style: TextStyle(
                     fontSize: 48,
@@ -225,7 +225,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           _isOtpSent = false;
                         });
                       },
-                      child: const Text(
+                      child: Text(
                         'Şifremi Unuttum',
                         style: TextStyle(
                           color: AppColors.textSecondary,
@@ -296,7 +296,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     _authMode == AuthMode.login
                         ? 'Hesabın yok mu? Kayıt Ol'
                         : 'Zaten hesabın var mı? Giriş Yap',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -308,7 +308,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     await ref.read(authNotifierProvider.notifier).signOut();
                     ref.read(guestModeProvider.notifier).setGuestMode(true);
                   },
-                  child: const Text(
+                  child: Text(
                     'Misafir olarak giriş yap',
                     style: TextStyle(
                       color: AppColors.textSecondary,

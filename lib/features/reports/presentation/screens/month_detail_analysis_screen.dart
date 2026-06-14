@@ -42,10 +42,10 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
             elevation: 0,
             title: Text(
               DateFormat('MMMM yyyy', 'tr_TR').format(month),
-              style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+              style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
             ),
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
+              icon: Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
               onPressed: () => Navigator.pop(context),
             ),
           ),
@@ -102,9 +102,9 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
         maxChildSize: 0.95,
         builder: (_, scrollController) => Container(
           padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             children: [
@@ -121,7 +121,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
               const SizedBox(height: 20),
               Expanded(
                 child: transactions.isEmpty
-                    ? const Center(child: Text('Bu ay işlem bulunmuyor.', style: TextStyle(color: AppColors.textSecondary)))
+                    ? Center(child: Text('Bu ay işlem bulunmuyor.', style: TextStyle(color: AppColors.textSecondary)))
                     : ListView.builder(
                         controller: scrollController,
                         itemCount: transactions.length,
@@ -176,12 +176,12 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
                                     children: [
                                       Text(
                                         displayCategory.name,
-                                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         DateFormat('dd MMM yyyy', 'tr_TR').format(tx.date),
-                                        style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                                       ),
                                     ],
                                   ),
@@ -245,7 +245,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 16),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: AppColors.textPrimary,
@@ -265,7 +265,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: AppColors.textSecondary),
+        style: TextStyle(color: AppColors.textSecondary),
       ),
     );
   }
@@ -308,7 +308,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
                   children: [
                     Text(
                       stats.categoryName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -316,7 +316,7 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
                     ),
                     Text(
                       '${(stats.percentage * 100).toStringAsFixed(1)}%',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),

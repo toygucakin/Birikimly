@@ -66,9 +66,9 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -106,7 +106,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                       ),
                       Text(
                         DateFormat('dd MMMM yyyy, HH:mm', 'tr_TR').format(tx.date),
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                       ),
                     ],
                   ),
@@ -122,7 +122,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
               ],
             ),
             const SizedBox(height: 32),
-            const Text(
+            Text(
               'Açıklama',
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
             ),
@@ -136,7 +136,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
               ),
               child: Text(
                 tx.description.isEmpty ? 'Açıklama belirtilmemiş.' : tx.description,
-                style: const TextStyle(fontSize: 16, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 16, color: AppColors.textPrimary),
               ),
             ),
             const SizedBox(height: 32),
@@ -207,7 +207,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'Hoş Geldin,',
                                   style: TextStyle(
                                     color: AppColors.textSecondary,
@@ -231,7 +231,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: IconButton(
-                                    icon: const Icon(Icons.event_repeat_rounded, size: 24, color: AppColors.primary),
+                                    icon: Icon(Icons.event_repeat_rounded, size: 24, color: AppColors.primary),
                                     onPressed: () {
                                       Navigator.push(
                                         context,
@@ -332,9 +332,9 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                       builder: (context) => Container(
                                         height: MediaQuery.of(context).size.height * 0.7,
                                         padding: const EdgeInsets.all(24),
-                                        decoration: const BoxDecoration(
+                                        decoration: BoxDecoration(
                                           color: AppColors.surface,
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                                         ),
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,7 +369,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                                         cat.name,
                                                         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                                       ),
-                                                      const Text(
+                                                      Text(
                                                         'Bu Ayki İşlemler',
                                                         style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                                                       ),
@@ -404,14 +404,14 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                                               const SizedBox(height: 4),
                                                               Text(
                                                                 DateFormat('dd MMMM', 'tr_TR').format(tx.date),
-                                                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                                                               ),
                                                             ],
                                                           ),
                                                         ),
                                                         Text(
                                                           '-${CurrencyUtils.format(tx.amount)}',
-                                                          style: const TextStyle(
+                                                          style: TextStyle(
                                                             color: AppColors.expense,
                                                             fontWeight: FontWeight.bold,
                                                             fontSize: 16,
@@ -496,9 +496,9 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                     backgroundColor: Colors.transparent,
                                     builder: (context) => Container(
                                       padding: const EdgeInsets.all(24),
-                                      decoration: const BoxDecoration(
+                                      decoration: BoxDecoration(
                                         color: AppColors.surface,
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                                       ),
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
@@ -512,7 +512,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                               borderRadius: BorderRadius.circular(2),
                                             ),
                                           ),
-                                          const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 48),
+                                          Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 48),
                                           const SizedBox(height: 16),
                                           const Text(
                                             'Aşılan Kategoriler',
@@ -544,11 +544,11 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                                     children: [
                                                       Text(
                                                         'Aşım: ${CurrencyUtils.format(spent - limit)}',
-                                                        style: const TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold),
+                                                        style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold),
                                                       ),
                                                       Text(
                                                         '${CurrencyUtils.format(spent)} / ${CurrencyUtils.format(limit)}',
-                                                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
                                                       ),
                                                     ],
                                                   ),
@@ -585,24 +585,24 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
+                                      Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            const Text(
+                                            Text(
                                               'Kategori Limitleri Aşıldı!',
                                               style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
                                             ),
                                             Text(
                                               '${exceededCategories.length} kategoride limitinizi aştınız. Detaylar için tıklayın.',
-                                              style: const TextStyle(color: AppColors.expense, fontSize: 13),
+                                              style: TextStyle(color: AppColors.expense, fontSize: 13),
                                             ),
                                           ],
                                         ),
                                       ),
-                                      const Icon(Icons.chevron_right, color: AppColors.expense),
+                                      Icon(Icons.chevron_right, color: AppColors.expense),
                                     ],
                                   ),
                                 ),
@@ -625,19 +625,19 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
+                                    Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Genel Bütçe Sınırı Aşıldı!',
                                             style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
                                           ),
                                           Text(
                                             'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
-                                            style: const TextStyle(color: AppColors.expense, fontSize: 13),
+                                            style: TextStyle(color: AppColors.expense, fontSize: 13),
                                           ),
                                         ],
                                       ),
@@ -854,7 +854,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                   ),
                 ),
                 if (transactions.isEmpty)
-                  const SliverFillRemaining(
+                  SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Text(
@@ -968,7 +968,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                   ),
                                   child: Text(
                                     monthName,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.textSecondary,

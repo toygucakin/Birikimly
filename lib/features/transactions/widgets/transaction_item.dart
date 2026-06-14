@@ -65,21 +65,21 @@ class TransactionItem extends StatelessWidget {
                   children: [
                     Text(
                       DateFormat('dd MMM yyyy').format(transaction.date),
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
                     if (transaction.description.isNotEmpty) ...[
                       const SizedBox(width: 6),
-                      const Text('•', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                      Text('•', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           transaction.description,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12,
                           ),
@@ -101,7 +101,7 @@ class TransactionItem extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
+            icon: Icon(Icons.more_vert, size: 20, color: AppColors.textSecondary),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () => _showOptionsSheet(context),
@@ -118,9 +118,9 @@ class TransactionItem extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -201,7 +201,7 @@ class TransactionItem extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
                   ),
                 ],
               ),
@@ -219,9 +219,9 @@ class TransactionItem extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.all(24),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -241,7 +241,7 @@ class TransactionItem extends StatelessWidget {
                 color: AppColors.expense.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.delete_outline, color: AppColors.expense, size: 32),
+              child: Icon(Icons.delete_outline, color: AppColors.expense, size: 32),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -249,7 +249,7 @@ class TransactionItem extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Bu işlemi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
               textAlign: TextAlign.center,
               style: TextStyle(color: AppColors.textSecondary),
@@ -304,9 +304,9 @@ class TransactionItem extends StatelessWidget {
         padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         child: Container(
           padding: const EdgeInsets.all(24),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -335,10 +335,10 @@ class TransactionItem extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
                   keyboardType: TextInputType.number,
                   inputFormatters: [ThousandsFormatter()],
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     suffixText: 'TL',
                     suffixStyle: TextStyle(fontSize: 18, color: AppColors.textSecondary),

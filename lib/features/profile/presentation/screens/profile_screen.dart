@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
+import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
@@ -62,6 +63,12 @@ class ProfileScreen extends ConsumerWidget {
                       curve: Curves.easeInOut,
                     ),
                   ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.palette_outlined),
+                onPressed: () => _showThemeSelectionSheet(context, ref),
+              ),
+            ],
           ),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -76,10 +83,10 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   child: Column(
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 40,
                         backgroundColor: AppColors.primary,
-                        child: Icon(Icons.person, size: 40, color: Colors.white),
+                        child: const Icon(Icons.person, size: 40, color: Colors.white),
                       ),
                       const SizedBox(height: 16),
                       Row(
@@ -97,7 +104,7 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                       Text(
                         isGuest ? 'Misafir Modu' : (user?.email ?? ''),
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: TextStyle(color: AppColors.textSecondary),
                       ),
                       const SizedBox(height: 12),
                       InkWell(
@@ -171,7 +178,7 @@ class ProfileScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: const BorderSide(color: AppColors.expense, width: 1.5),
+                        side: BorderSide(color: AppColors.expense, width: 1.5),
                       ),
                       elevation: 0,
                     ),
@@ -211,13 +218,13 @@ class ProfileScreen extends ConsumerWidget {
                     child: Text(
                       'Toplam Limit: ${_formatLimit(totalCategoryLimit)} ₺' + 
                       (monthlyLimit != null ? ' / ${_formatLimit(monthlyLimit)} ₺' : ''),
-                      style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     ),
                   ),
               ],
             ),
             IconButton(
-              icon: const Icon(Icons.add_circle, color: AppColors.primary),
+              icon: Icon(Icons.add_circle, color: AppColors.primary),
               onPressed: () => _showAddCategoryDialog(context, ref, isIncome),
             ),
           ],
@@ -296,7 +303,7 @@ class ProfileScreen extends ConsumerWidget {
             subtitle: (cat.maxLimit != null && !cat.isIncome)
                 ? Text(
                     'Limit: ${_formatLimit(cat.maxLimit!)} ₺',
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                   )
                 : null,
             trailing: Row(
@@ -307,7 +314,7 @@ class ProfileScreen extends ConsumerWidget {
                   onPressed: () => _showRenameDialog(context, ref, cat),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.expense),
+                  icon: Icon(Icons.delete_outline, size: 20, color: AppColors.expense),
                   onPressed: () => _showDeleteConfirm(context, ref, cat),
                 ),
               ],
@@ -338,6 +345,147 @@ class ProfileScreen extends ConsumerWidget {
     Colors.teal, Colors.cyan, Colors.green, Colors.lightGreen,
     Colors.lime, Colors.blueGrey, Colors.brown,
   ];
+
+  void _showThemeSelectionSheet(BuildContext context, WidgetRef ref) {
+    final activePreset = ref.read(themeProvider);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 32),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                width: double.infinity,
+                alignment: Alignment.center,
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const Text(
+                'Görünüm Teması',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Uygulamanın renk temasını değiştirerek kişiselleştirin.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 2.2,
+                ),
+                itemCount: AppThemePreset.values.length,
+                itemBuilder: (context, index) {
+                  final preset = AppThemePreset.values[index];
+                  final palette = preset.palette;
+                  final isSelected = preset == activePreset;
+
+                  return InkWell(
+                    onTap: () {
+                      ref.read(themeProvider.notifier).setPreset(preset);
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: palette.background,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isSelected 
+                              ? palette.primary 
+                              : palette.surface.withValues(alpha: 0.5),
+                          width: isSelected ? 2.5 : 1,
+                        ),
+                        boxShadow: isSelected ? [
+                          BoxShadow(
+                            color: palette.primary.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                          )
+                        ] : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  preset.displayName,
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.textPrimary,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: palette.primary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Container(
+                                      width: 12,
+                                      height: 12,
+                                      decoration: BoxDecoration(
+                                        color: palette.secondary,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            Icon(
+                              Icons.check_circle,
+                              color: palette.primary,
+                              size: 20,
+                            ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   void _showEditNameDialog(BuildContext context, WidgetRef ref, String currentName) {
     final controller = TextEditingController(text: currentName);
@@ -381,9 +529,9 @@ class ProfileScreen extends ConsumerWidget {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 24),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -457,9 +605,9 @@ class ProfileScreen extends ConsumerWidget {
 
           return Container(
             padding: const EdgeInsets.only(top: 8, left: 24, right: 24, bottom: 24),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -563,7 +711,7 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Column(
                       children: [
-                        const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
@@ -583,7 +731,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     Column(
                       children: [
-                        const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () => _showColorPicker(context, selectedColor, (color) {
@@ -640,7 +788,7 @@ class ProfileScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -731,7 +879,7 @@ class ProfileScreen extends ConsumerWidget {
                   children: [
                     Column(
                       children: [
-                        const Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
@@ -751,7 +899,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     Column(
                       children: [
-                        const Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                        Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
                         const SizedBox(height: 8),
                         InkWell(
                           onTap: () => _showColorPicker(context, selectedColor, (color) {
@@ -808,7 +956,7 @@ class ProfileScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1063,14 +1211,14 @@ class ProfileScreen extends ConsumerWidget {
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primary),
+                side: BorderSide(color: AppColors.primary),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               child: Text('Kategori Limitini ${maxAllowedCategoryLimit > 0 ? maxAllowedCategoryLimit.toStringAsFixed(0) : '0'} ₺ Olarak Ayarla'),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
+              child: Text('Vazgeç', style: TextStyle(color: AppColors.textSecondary)),
             ),
           ],
         ),

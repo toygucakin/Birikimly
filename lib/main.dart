@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
+import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/theme/app_theme.dart';
 import 'package:birikimly/features/auth/presentation/screens/auth_gate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -40,16 +41,17 @@ class BirikimlyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    final preset = ref.watch(themeProvider);
+    
+    // Set the global dynamic palette
+    AppColors.setPalette(preset.palette);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: MaterialApp(
         title: 'Birikimly',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeMode,
+        theme: AppTheme.buildTheme(preset.palette),
         home: const AuthGate(),
       ),
     );
