@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -52,6 +53,15 @@ class BirikimlyApp extends ConsumerWidget {
         title: 'Birikimly',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.buildTheme(preset.palette),
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('tr', 'TR'),
+        ],
+        locale: const Locale('tr', 'TR'),
         home: const AuthGate(),
       ),
     );

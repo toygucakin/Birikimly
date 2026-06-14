@@ -414,6 +414,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
       initialDate: _selectedDate,
       firstDate: DateTime(2026, 1, 1),
       lastDate: DateTime.now().add(const Duration(days: 365)),
+      locale: const Locale('tr', 'TR'),
     );
     if (date != null) {
       final now = DateTime.now();
