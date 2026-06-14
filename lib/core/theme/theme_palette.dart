@@ -222,3 +222,55 @@ class SapphireBluePalette implements ThemePalette {
   List<Color> get cardGradient => [primary, secondary];
 }
 
+// 9. Ocean Blue (Okyanus Mavisi - Açık Mavi Tema)
+class OceanBluePalette implements ThemePalette {
+  @override
+  bool get isDark => false;
+  @override
+  Color get background => const Color(0xFFF5F9FC); // Fresh ocean breeze white/light blue
+  @override
+  Color get surface => Colors.white;
+  @override
+  Color get primary => const Color(0xFF0284C7); // Rich sky/ocean blue
+  @override
+  Color get secondary => const Color(0xFF0EA5E9); // Light blue accents
+  @override
+  Color get accent => const Color(0xFF0D9488); // Teal accent
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => const Color(0xFF0F172A); // Deep slate/black
+  @override
+  Color get textSecondary => const Color(0xFF64748B); // Slate grey
+  @override
+  List<Color> get cardGradient => [primary, secondary];
+}
+
+// 10. Sakura Pink (Sakura Pembe - Açık Pembe Tema)
+class SakuraPinkPalette implements ThemePalette {
+  @override
+  bool get isDark => false;
+  @override
+  Color get background => const Color(0xFFFFF7F8); // Soft rose blossom white
+  @override
+  Color get surface => Colors.white;
+  @override
+  Color get primary => const Color(0xFFEC4899); // Sakura pink primary
+  @override
+  Color get secondary => const Color(0xFFF472B6); // Soft blush pink
+  @override
+  Color get accent => const Color(0xFF8B5CF6); // Lavender violet accent
+  @override
+  Color get income => const Color(0xFF10B981);
+  @override
+  Color get expense => const Color(0xFFEF4444);
+  @override
+  Color get textPrimary => const Color(0xFF1F2937); // Charcoal grey
+  @override
+  Color get textSecondary => const Color(0xFF6B7280); // Medium grey
+  @override
+  List<Color> get cardGradient => [primary, secondary];
+}
+
