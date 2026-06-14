@@ -14,11 +14,16 @@ String _formatLimit(double val) {
   return NumberFormat('#,##0', 'en_US').format(val).replaceAll(',', '.');
 }
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
     final pageController = ref.watch(mainPageControllerProvider);
     final categories = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
@@ -349,10 +354,15 @@ class ProfileScreen extends ConsumerWidget {
   void _showThemeSelectionSheet(BuildContext context, WidgetRef ref) {
     final activePreset = ref.read(themeProvider);
 
+    final animationController = BottomSheet.createAnimationController(this);
+    animationController.duration = const Duration(milliseconds: 400);
+    animationController.reverseDuration = const Duration(milliseconds: 900);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
+      transitionAnimationController: animationController,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
