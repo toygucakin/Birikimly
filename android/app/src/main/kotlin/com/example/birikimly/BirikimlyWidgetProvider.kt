@@ -36,8 +36,8 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
                 if (themeHex != null) {
                     try {
                         val colorInt = android.graphics.Color.parseColor(themeHex)
-                        setTextColor(R.id.tv_title, colorInt)
-                        setTextColor(R.id.tv_income_title, colorInt)
+                        // Apply dynamic theme color to the background image
+                        setInt(R.id.iv_background, "setColorFilter", colorInt)
                     } catch (e: Exception) {
                         // ignore parse errors
                     }

@@ -1,111 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_bg"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:layout_height="wrap_content">
 
-    <TextView
-        android:id="@+id/tv_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Aylık Net Durum"
-        android:textColor="#A0A0A0"
-        android:textSize="13sp" />
-
-    <TextView
-        android:id="@+id/tv_net"
+    <!-- Dynamic Background Image -->
+    <ImageView
+        android:id="@+id/iv_background"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="₺0,00"
-        android:textColor="#FFFFFF"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="4dp"/>
-        
-    <TextView
-        android:id="@+id/tv_limit"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textColor="#FF6B6B"
-        android:textSize="12sp"
-        android:layout_marginBottom="16dp"/>
-
-    <!-- Expandable Space so buttons stay at bottom or adjust nicely -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:layout_alignTop="@+id/content_layout"
+        android:layout_alignBottom="@+id/content_layout"
+        android:layout_alignStart="@+id/content_layout"
+        android:layout_alignEnd="@+id/content_layout"
+        android:src="@drawable/widget_bg" />
 
     <LinearLayout
+        android:id="@+id/content_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:weightSum="2">
+        android:orientation="vertical"
+        android:padding="16dp">
 
-        <!-- Expense Side (Left) -->
-        <LinearLayout
-            android:id="@+id/btn_add_expense"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/widget_btn_bg"
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:layout_marginEnd="6dp"
-            android:gravity="center">
+            android:text="Aylık Net Durum"
+            android:textColor="#E0FFFFFF"
+            android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/tv_expense_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="▼ Gider Ekle"
-                android:textColor="#FF6B6B"
-                android:textSize="12sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/tv_expense"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₺0,00"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-        </LinearLayout>
-
-        <!-- Income Side (Right) -->
-        <LinearLayout
-            android:id="@+id/btn_add_income"
-            android:layout_width="0dp"
+        <TextView
+            android:id="@+id/tv_net"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/widget_btn_bg"
-            android:orientation="vertical"
-            android:padding="12dp"
-            android:layout_marginStart="6dp"
-            android:gravity="center">
+            android:text="₺0,00"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="2dp"/>
+            
+        <TextView
+            android:id="@+id/tv_limit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#FFCDD2"
+            android:textSize="11sp"
+            android:layout_marginBottom="12dp"/>
 
-            <TextView
-                android:id="@+id/tv_income_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="▲ Gelir Ekle"
-                android:textColor="#4ECDC4"
-                android:textSize="12sp"
-                android:textStyle="bold" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
 
-            <TextView
-                android:id="@+id/tv_income"
-                android:layout_width="wrap_content"
+            <!-- Expense Side (Left) -->
+            <LinearLayout
+                android:id="@+id/btn_add_expense"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="₺0,00"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="14sp" />
+                android:layout_weight="1"
+                android:background="@drawable/widget_btn_bg"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:layout_marginEnd="6dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▼ Gider Ekle"
+                    android:textColor="#E0FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_expense"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₺0,00"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <!-- Income Side (Right) -->
+            <LinearLayout
+                android:id="@+id/btn_add_income"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/widget_btn_bg"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:layout_marginStart="6dp"
+                android:gravity="center">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▲ Gelir Ekle"
+                    android:textColor="#E0FFFFFF"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_income"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="₺0,00"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
-
     </LinearLayout>
-</LinearLayout>
+</RelativeLayout>
