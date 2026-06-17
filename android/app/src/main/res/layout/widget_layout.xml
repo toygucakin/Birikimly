@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Aylık Net Durum"
+        android:textColor="#A0A0A0"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/tv_net"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="₺0,00"
+        android:textColor="#FFFFFF"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="4dp"/>
+        
+    <TextView
+        android:id="@+id/tv_limit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="#FF6B6B"
+        android:textSize="12sp"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Expandable Space so buttons stay at bottom or adjust nicely -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <!-- Expense Side (Left) -->
+        <LinearLayout
+            android:id="@+id/btn_add_expense"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_btn_bg"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:layout_marginEnd="6dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_expense_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▼ Gider Ekle"
+                android:textColor="#FF6B6B"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_expense"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₺0,00"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Income Side (Right) -->
+        <LinearLayout
+            android:id="@+id/btn_add_income"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/widget_btn_bg"
+            android:orientation="vertical"
+            android:padding="12dp"
+            android:layout_marginStart="6dp"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tv_income_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="▲ Gelir Ekle"
+                android:textColor="#4ECDC4"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_income"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="₺0,00"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

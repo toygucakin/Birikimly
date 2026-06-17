@@ -11,6 +11,10 @@ import 'package:birikimly/features/auth/presentation/screens/auth_gate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
+import 'package:birikimly/core/services/widget_service.dart';
+import 'package:birikimly/core/providers/widget_sync_provider.dart';
+import 'package:home_widget/home_widget.dart';
+import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +30,9 @@ Future<void> main() async {
 
   // Initialize Supabase
   await SupabaseService.initialize();
+  
+  // Initialize Home Widget Service
+  await WidgetService.init();
 
   runApp(
     ProviderScope(
@@ -37,11 +44,53 @@ Future<void> main() async {
   );
 }
 
-class BirikimlyApp extends ConsumerWidget {
+class BirikimlyApp extends ConsumerStatefulWidget {
   const BirikimlyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<BirikimlyApp> createState() => _BirikimlyAppState();
+}
+
+class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+  @override
+  void initState() {
+    super.initState();
+    HomeWidget.widgetClicked.listen(_checkForWidgetLaunch);
+    _checkForWidgetLaunch(null);
+  }
+
+  void _checkForWidgetLaunch(Uri? uri) async {
+    if (uri == null) {
+      uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+    }
+    
+    if (uri != null) {
+      if (uri.host == 'add_expense' || uri.host == 'add_income') {
+        final isIncome = uri.host == 'add_income';
+        // Wait a tiny bit for the UI to be ready if launched cold
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (navigatorKey.currentState != null) {
+            showModalBottomSheet(
+              context: navigatorKey.currentState!.context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (context) => TransactionWizard(
+                isIncome: isIncome,
+              ),
+            );
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Keep widget sync provider alive
+    ref.watch(widgetSyncProvider);
+
     final preset = ref.watch(themeProvider);
     
     // Set the global dynamic palette
@@ -62,6 +111,7 @@ class BirikimlyApp extends ConsumerWidget {
           Locale('tr', 'TR'),
         ],
         locale: const Locale('tr', 'TR'),
+        navigatorKey: navigatorKey,
         home: const AuthGate(),
       ),
     );
