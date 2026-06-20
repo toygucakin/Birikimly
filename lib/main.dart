@@ -59,6 +59,7 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
 
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription<Uri?>? _widgetSubscription;
 
   @override
   void initState() {
@@ -68,7 +69,7 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   }
 
   void _initDeepLinks() async {
-    // Handle initial link if app was closed
+    // Handle app_links initial link
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
@@ -78,9 +79,26 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
       print('Failed to get initial deep link: $e');
     }
 
-    // Handle deep links while app is open
+    // Handle app_links stream
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
       _handleDeepLink(uri);
+    });
+
+    // Handle HomeWidget initially launched link
+    try {
+      final initialWidgetUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      if (initialWidgetUri != null) {
+        _handleDeepLink(initialWidgetUri);
+      }
+    } catch (e) {
+      print('Failed to get initial widget link: $e');
+    }
+
+    // Handle HomeWidget click stream
+    _widgetSubscription = HomeWidget.widgetClicked.listen((uri) {
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
     });
   }
 
@@ -93,6 +111,7 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   @override
   void dispose() {
     _linkSubscription?.cancel();
+    _widgetSubscription?.cancel();
     super.dispose();
   }
 
@@ -122,6 +141,17 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
         ],
         locale: const Locale('tr', 'TR'),
         navigatorKey: navigatorKey,
+        onGenerateRoute: (settings) {
+          // Catch any leftover native deep links from cached widgets
+          // that try to push these paths to the navigator natively.
+          if (settings.name == '/add_expense' || settings.name == '/add_income') {
+            return PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const SizedBox.shrink(),
+              transitionDuration: Duration.zero,
+            );
+          }
+          return null; // Let Flutter handle other routes normally
+        },
         home: const AuthGate(),
       ),
     );

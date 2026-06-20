@@ -161,7 +161,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
 
   @override
   Widget build(BuildContext context) {
-    final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final transactionsAsync = ref.watch(transactionStreamProvider);
     final recurringAsync = ref.watch(recurringTransactionStreamProvider);
     final notifier = ref.watch(transactionNotifierProvider.notifier);
     final categoriesAsync = ref.watch(categoryProvider);
@@ -194,7 +194,12 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
           data: (categories) => transactionsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('İşlemler yüklenemedi: $err')),
-            data: (transactions) => CustomScrollView(
+            data: (allTransactions) {
+              final now = DateTime.now();
+              final transactions = allTransactions.where((t) => 
+                t.date.year == now.year && t.date.month == now.month).toList();
+              
+              return CustomScrollView(
               slivers: [
                 SliverToBoxAdapter(
                   child: Padding(
@@ -263,14 +268,10 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                         ),
                         const SizedBox(height: 16),
                         () {
-                          final now = DateTime.now();
-                          final currentMonthTransactions = transactions.where((t) => 
-                            t.date.year == now.year && t.date.month == now.month).toList();
-                          
                           return SummaryCard(
-                            totalBalance: notifier.calculateBalance(currentMonthTransactions),
-                            income: notifier.calculateIncome(currentMonthTransactions),
-                            expense: notifier.calculateExpense(currentMonthTransactions),
+                            totalBalance: notifier.calculateBalance(transactions),
+                            income: notifier.calculateIncome(transactions),
+                            expense: notifier.calculateExpense(transactions),
                             monthlyLimit: monthlyLimit,
                             onTap: () {
                               Navigator.push(
@@ -281,10 +282,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                           );
                         }(),
                         () {
-                          final now = DateTime.now();
-                          final currentMonthTransactions = transactions.where((t) => 
-                            t.date.year == now.year && t.date.month == now.month).toList();
-                          final totalExpense = notifier.calculateExpense(currentMonthTransactions);
+                          final totalExpense = notifier.calculateExpense(transactions);
 
                           double totalCategoryLimits = 0;
                           final List<Widget> warningWidgets = [];
@@ -298,7 +296,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                               // Kategoriye ait bu ayki harcamayı hesapla
                               double spentForCat = 0;
                               final List<Transaction> catTransactions = [];
-                              for (final tx in currentMonthTransactions) {
+                              for (final tx in transactions) {
                                 if (!tx.isIncome && tx.categoryId != null) {
                                   final rawId = tx.categoryId!.trim().toLowerCase();
                                   final catCleanId = cat.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
@@ -842,7 +840,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                         }(),
                         const SizedBox(height: 24),
                         const Text(
-                          'Son İşlemler',
+                          'Bu Ayki İşlemler',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -988,7 +986,8 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                   ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
-            ),
+            );
+            },
           ),
         ),
       ),

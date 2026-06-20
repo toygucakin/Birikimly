@@ -45,7 +45,7 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
 
                 // Expense Intent
                 val expenseIntent = Intent(context, MainActivity::class.java).apply {
-                    action = Intent.ACTION_VIEW
+                    action = "es.antonborri.home_widget.action.LAUNCH"
                     data = Uri.parse("birikimly://add_expense")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
@@ -57,7 +57,7 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
 
                 // Income Intent
                 val incomeIntent = Intent(context, MainActivity::class.java).apply {
-                    action = Intent.ACTION_VIEW
+                    action = "es.antonborri.home_widget.action.LAUNCH"
                     data = Uri.parse("birikimly://add_income")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 }
