@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,7 +15,6 @@ import 'package:birikimly/core/services/widget_service.dart';
 import 'package:birikimly/core/providers/widget_sync_provider.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:app_links/app_links.dart';
-import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 import 'package:birikimly/core/providers/deep_link_provider.dart';
 
 Future<void> main() async {
@@ -60,18 +58,23 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription<Uri?>? _widgetSubscription;
+  Uri? _lastProcessedUri;
+  DateTime? _lastProcessedTime;
 
   @override
   void initState() {
     super.initState();
+    print('DEBUG: _BirikimlyAppState.initState called');
     _appLinks = AppLinks();
     _initDeepLinks();
   }
 
   void _initDeepLinks() async {
+    print('DEBUG: _initDeepLinks called');
     // Handle app_links initial link
     try {
       final initialUri = await _appLinks.getInitialLink();
+      print('DEBUG: initialUri = $initialUri');
       if (initialUri != null) {
         _handleDeepLink(initialUri);
       }
@@ -81,12 +84,14 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
 
     // Handle app_links stream
     _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      print('DEBUG: uriLinkStream emitted $uri');
       _handleDeepLink(uri);
     });
 
     // Handle HomeWidget initially launched link
     try {
       final initialWidgetUri = await HomeWidget.initiallyLaunchedFromHomeWidget();
+      print('DEBUG: initialWidgetUri = $initialWidgetUri');
       if (initialWidgetUri != null) {
         _handleDeepLink(initialWidgetUri);
       }
@@ -96,6 +101,7 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
 
     // Handle HomeWidget click stream
     _widgetSubscription = HomeWidget.widgetClicked.listen((uri) {
+      print('DEBUG: HomeWidget.widgetClicked emitted $uri');
       if (uri != null) {
         _handleDeepLink(uri);
       }
@@ -103,13 +109,25 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   }
 
   void _handleDeepLink(Uri uri) {
+    print('DEBUG: _handleDeepLink called with uri = $uri');
     if (uri.host == 'add_expense' || uri.host == 'add_income') {
+      final now = DateTime.now();
+      if (_lastProcessedUri == uri &&
+          _lastProcessedTime != null &&
+          now.difference(_lastProcessedTime!).inMilliseconds < 1500) {
+        print('DEBUG: Duplicate deep link ignored (timestamp check: <1500ms)');
+        return;
+      }
+      _lastProcessedUri = uri;
+      _lastProcessedTime = now;
+      
       ref.read(deepLinkProvider.notifier).setUri(uri);
     }
   }
 
   @override
   void dispose() {
+    print('DEBUG: _BirikimlyAppState.dispose called');
     _linkSubscription?.cancel();
     _widgetSubscription?.cancel();
     super.dispose();

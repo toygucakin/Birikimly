@@ -20,11 +20,12 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   late PageController _pageController;
-  bool _isWizardOpen = false;
+  static bool _isWizardOpen = false;
 
   @override
   void initState() {
     super.initState();
+    print('DEBUG: _MainScreenState.initState called');
     _pageController = PageController();
     
     // Start sync service when main screen is built (user is logged in)
@@ -52,6 +53,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void dispose() {
+    print('DEBUG: _MainScreenState.dispose called');
     _pageController.dispose();
     super.dispose();
   }
@@ -60,20 +62,29 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     // Listen for deep links (e.g. from widget) to open TransactionWizard
     ref.listen<Uri?>(deepLinkProvider, (previous, next) {
+      print('DEBUG: deepLinkProvider listener fired: previous = $previous, next = $next, _isWizardOpen = $_isWizardOpen');
       if (next != null && (next.host == 'add_expense' || next.host == 'add_income')) {
         final isIncome = next.host == 'add_income';
         // Reset state so it can be triggered again
-        Future.microtask(() => ref.read(deepLinkProvider.notifier).setUri(null));
+        Future.microtask(() {
+          print('DEBUG: Resetting deepLinkProvider to null');
+          ref.read(deepLinkProvider.notifier).setUri(null);
+        });
 
-        if (_isWizardOpen) return;
+        if (_isWizardOpen) {
+          print('DEBUG: Wizard is already open, ignoring event');
+          return;
+        }
         _isWizardOpen = true;
 
         // Delay slightly to prevent Flutter Native Navigation or Android lifecycle from closing the dialog
         Future.delayed(const Duration(milliseconds: 150), () {
-          if (!mounted) {
+          if (!mounted || !context.mounted) {
+            print('DEBUG: _MainScreenState or context not mounted after delay, resetting _isWizardOpen');
             _isWizardOpen = false;
             return;
           }
+          print('DEBUG: Showing TransactionWizard dialog');
           showDialog(
             context: context,
             barrierDismissible: true,
@@ -84,7 +95,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               child: TransactionWizard(isIncome: isIncome),
             ),
           ).then((_) {
-            if (mounted) _isWizardOpen = false;
+            print('DEBUG: TransactionWizard dialog closed');
+            _isWizardOpen = false;
+            print('DEBUG: Reset _isWizardOpen to false (static)');
           });
         });
       }
