@@ -15,15 +15,15 @@ import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:intl/intl.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
-import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+
 import 'package:birikimly/features/dashboard/presentation/widgets/category_budget_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
+  final PageController pageController;
+  const DashboardScreen({super.key, required this.pageController});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final pageController = ref.watch(mainPageControllerProvider);
     return _DashboardScreenContent(pageController: pageController);
   }
 }

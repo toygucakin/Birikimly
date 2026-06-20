@@ -6,7 +6,7 @@ import 'package:birikimly/features/auth/presentation/providers/auth_provider.dar
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
-import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
 
@@ -15,7 +15,8 @@ String _formatLimit(double val) {
 }
 
 class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
+  final PageController pageController;
+  const ProfileScreen({super.key, required this.pageController});
 
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
@@ -24,7 +25,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    final pageController = ref.watch(mainPageControllerProvider);
+    final pageController = widget.pageController;
     final categories = ref.watch(categoryProvider);
     final isGuest = ref.watch(guestModeProvider);
     final customName = ref.watch(userNameProvider);

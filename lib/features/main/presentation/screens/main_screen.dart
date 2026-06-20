@@ -3,7 +3,7 @@ import 'package:birikimly/features/dashboard/presentation/screens/dashboard_scre
 import 'package:birikimly/features/profile/presentation/screens/profile_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:birikimly/features/main/presentation/providers/main_screen_provider.dart';
+
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/core/services/recurring_transaction_service.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
@@ -11,11 +11,22 @@ import 'package:birikimly/features/auth/presentation/providers/auth_provider.dar
 import 'package:birikimly/core/providers/deep_link_provider.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 
-class MainScreen extends ConsumerWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MainScreen> createState() => _MainScreenState();
+}
+
+class _MainScreenState extends ConsumerState<MainScreen> {
+  late PageController _pageController;
+  bool _isWizardOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+    
     // Start sync service when main screen is built (user is logged in)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final user = ref.read(currentUserProvider);
@@ -23,7 +34,7 @@ class MainScreen extends ConsumerWidget {
       if (user != null || isGuest) {
         final userId = isGuest ? 'guest' : user!.id;
         final processed = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
-        if (processed > 0 && context.mounted) {
+        if (processed > 0 && mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('$processed adet yeni düzenli işlem hesabınıza eklendi.'),
@@ -37,38 +48,57 @@ class MainScreen extends ConsumerWidget {
       }
       ref.read(syncServiceProvider).start();
     });
+  }
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Listen for deep links (e.g. from widget) to open TransactionWizard
     ref.listen<Uri?>(deepLinkProvider, (previous, next) {
       if (next != null && (next.host == 'add_expense' || next.host == 'add_income')) {
         final isIncome = next.host == 'add_income';
-        // Show as Dialog exactly like DashboardScreen does
-        showDialog(
-          context: context,
-          barrierDismissible: true,
-          builder: (context) => Dialog(
-            alignment: Alignment.topCenter,
-            backgroundColor: Colors.transparent,
-            insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-            child: TransactionWizard(isIncome: isIncome),
-          ),
-        );
         // Reset state so it can be triggered again
         Future.microtask(() => ref.read(deepLinkProvider.notifier).setUri(null));
+
+        if (_isWizardOpen) return;
+        _isWizardOpen = true;
+
+        // Delay slightly to prevent Flutter Native Navigation or Android lifecycle from closing the dialog
+        Future.delayed(const Duration(milliseconds: 150), () {
+          if (!mounted) {
+            _isWizardOpen = false;
+            return;
+          }
+          showDialog(
+            context: context,
+            barrierDismissible: true,
+            builder: (context) => Dialog(
+              alignment: Alignment.topCenter,
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+              child: TransactionWizard(isIncome: isIncome),
+            ),
+          ).then((_) {
+            if (mounted) _isWizardOpen = false;
+          });
+        });
       }
     });
 
-    final pageController = ref.watch(mainPageControllerProvider);
-
     return Scaffold(
       body: ListenableBuilder(
-        listenable: pageController,
+        listenable: _pageController,
         builder: (context, child) {
           bool isProfile = false;
-          if (pageController.hasClients && pageController.positions.length == 1) {
+          if (_pageController.hasClients) {
             try {
-              if (pageController.position.haveDimensions) {
-                isProfile = pageController.page?.round() == 1;
+              if (_pageController.position.haveDimensions) {
+                isProfile = _pageController.page?.round() == 1;
               }
             } catch (_) {}
           }
@@ -77,7 +107,7 @@ class MainScreen extends ConsumerWidget {
             onPopInvoked: (didPop) {
               if (didPop) return;
               if (isProfile) {
-                pageController.animateToPage(
+                _pageController.animateToPage(
                   0,
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -88,10 +118,10 @@ class MainScreen extends ConsumerWidget {
           );
         },
         child: PageView(
-          controller: pageController,
-          children: const [
-            DashboardScreen(),
-            ProfileScreen(),
+          controller: _pageController,
+          children: [
+            DashboardScreen(pageController: _pageController),
+            ProfileScreen(pageController: _pageController),
           ],
         ),
       ),
