@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -14,7 +15,9 @@ import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/core/services/widget_service.dart';
 import 'package:birikimly/core/providers/widget_sync_provider.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:app_links/app_links.dart';
 import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
+import 'package:birikimly/core/providers/deep_link_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,36 +57,43 @@ class BirikimlyApp extends ConsumerStatefulWidget {
 class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
   @override
   void initState() {
     super.initState();
-    HomeWidget.widgetClicked.listen(_checkForWidgetLaunch);
-    _checkForWidgetLaunch(null);
+    _appLinks = AppLinks();
+    _initDeepLinks();
   }
 
-  void _checkForWidgetLaunch(Uri? uri) async {
-    if (uri == null) {
-      uri = await HomeWidget.initiallyLaunchedFromHomeWidget();
-    }
-    
-    if (uri != null) {
-      if (uri.host == 'add_expense' || uri.host == 'add_income') {
-        final isIncome = uri.host == 'add_income';
-        // Wait a tiny bit for the UI to be ready if launched cold
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (navigatorKey.currentState != null) {
-            showModalBottomSheet(
-              context: navigatorKey.currentState!.context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => TransactionWizard(
-                isIncome: isIncome,
-              ),
-            );
-          }
-        });
+  void _initDeepLinks() async {
+    // Handle initial link if app was closed
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        _handleDeepLink(initialUri);
       }
+    } catch (e) {
+      print('Failed to get initial deep link: $e');
     }
+
+    // Handle deep links while app is open
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      _handleDeepLink(uri);
+    });
+  }
+
+  void _handleDeepLink(Uri uri) {
+    if (uri.host == 'add_expense' || uri.host == 'add_income') {
+      ref.read(deepLinkProvider.notifier).setUri(uri);
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
   }
 
   @override
