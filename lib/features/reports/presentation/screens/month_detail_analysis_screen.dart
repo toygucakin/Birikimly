@@ -96,113 +96,9 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.85,
-        minChildSize: 0.5,
-        maxChildSize: 0.95,
-        builder: (_, scrollController) => Container(
-          padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
-          decoration: BoxDecoration(
-            color: AppColors.background,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text('Ay İçerisindeki İşlemler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              Expanded(
-                child: transactions.isEmpty
-                    ? Center(child: Text('Bu ay işlem bulunmuyor.', style: TextStyle(color: AppColors.textSecondary)))
-                    : ListView.builder(
-                        controller: scrollController,
-                        itemCount: transactions.length,
-                        itemBuilder: (context, index) {
-                          // Sort transactions by date descending inside the builder? No, let's sort them once or assume they are sorted
-                          // The transactions passed here are from the main screen, which are sorted by date descending.
-                          final tx = transactions[index];
-                          
-                          // Match category
-                          CategoryModel? txCategory;
-                          final rawId = tx.categoryId?.trim() ?? '';
-                          if (rawId.isNotEmpty) {
-                            txCategory = categories.cast<CategoryModel?>().firstWhere(
-                              (c) {
-                                final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
-                                final cid = c?.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
-                                return cid == cleanId || c?.name.toLowerCase().trim() == rawId.toLowerCase();
-                              },
-                              orElse: () => null,
-                            );
-                          }
-                          
-                          String displayName = tx.isIncome ? 'Genel Gelir' : 'Genel Gider';
-                          if (txCategory != null) {
-                            displayName = txCategory.name;
-                          }
-
-                          final displayCategory = txCategory ?? CategoryModel(
-                            id: 'unknown',
-                            name: displayName,
-                            icon: tx.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                            color: Colors.grey,
-                            isIncome: tx.isIncome,
-                          );
-
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: displayCategory.color.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Icon(displayCategory.icon, color: displayCategory.color, size: 24),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        displayCategory.name,
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        DateFormat('dd MMM yyyy', 'tr_TR').format(tx.date),
-                                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  '${tx.isIncome ? '+' : '-'}${CurrencyUtils.format(tx.amount)}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: tx.isIncome ? AppColors.income : AppColors.expense,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
+      builder: (context) => _MonthlyTransactionsSheet(
+        transactions: transactions,
+        categories: categories,
       ),
     );
   }
@@ -219,7 +115,6 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
     final totalAmount = transactions.fold<double>(0, (sum, t) => sum + t.amount);
 
     final List<_CategoryStats> stats = categoryTotals.entries.map((entry) {
-      // Safely find category using manual loop to avoid firstWhere type issues
       CategoryModel? category;
       for (final c in categories) {
         if (c.id == entry.key || c.name == entry.key) {
@@ -345,6 +240,377 @@ class MonthDetailAnalysisScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _MonthlyTransactionsSheet extends StatefulWidget {
+  final List<Transaction> transactions;
+  final List<CategoryModel> categories;
+
+  const _MonthlyTransactionsSheet({
+    required this.transactions,
+    required this.categories,
+  });
+
+  @override
+  State<_MonthlyTransactionsSheet> createState() => _MonthlyTransactionsSheetState();
+}
+
+class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
+  String _selectedType = 'all'; // 'all', 'income', 'expense'
+  CategoryModel? _selectedCategory;
+
+  void _showCategorySelectionSheet() {
+    final availableCategories = widget.categories.where((c) {
+      if (_selectedType == 'income') return c.isIncome;
+      if (_selectedType == 'expense') return !c.isIncome;
+      return true;
+    }).toList();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 20),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Kategori Seçin',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            if (availableCategories.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: Center(
+                  child: Text(
+                    'Kategori bulunmuyor.',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
+              )
+            else
+              Flexible(
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.0,
+                  ),
+                  itemCount: availableCategories.length,
+                  itemBuilder: (context, index) {
+                    final cat = availableCategories[index];
+                    final isSelected = _selectedCategory?.id == cat.id;
+
+                    return GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedCategory = cat;
+                          _selectedType = cat.isIncome ? 'income' : 'expense';
+                        });
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isSelected ? cat.color.withValues(alpha: 0.1) : AppColors.surface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isSelected ? cat.color : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              cat.icon,
+                              color: isSelected ? cat.color : AppColors.textSecondary,
+                              size: 24,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              cat.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                color: isSelected ? cat.color : AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryFilterChip() {
+    final hasCategory = _selectedCategory != null;
+    final label = hasCategory ? 'Kategori: ${_selectedCategory!.name}' : 'Kategori Seç';
+    final isSelected = hasCategory;
+
+    return GestureDetector(
+      onTap: _showCategorySelectionSheet,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary : AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.1),
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (hasCategory) ...[
+              Icon(
+                _selectedCategory!.icon,
+                color: Colors.white,
+                size: 14,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              Icons.arrow_drop_down,
+              color: isSelected ? Colors.white : AppColors.textSecondary,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final filteredTransactions = widget.transactions.where((tx) {
+      if (_selectedType == 'income' && !tx.isIncome) return false;
+      if (_selectedType == 'expense' && tx.isIncome) return false;
+      
+      if (_selectedCategory != null) {
+        final rawId = tx.categoryId?.trim() ?? '';
+        final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+        final selId = _selectedCategory!.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+        return cleanId == selId || tx.categoryId?.toLowerCase().trim() == _selectedCategory!.name.toLowerCase().trim();
+      }
+      return true;
+    }).toList();
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (_, scrollController) => Container(
+        padding: const EdgeInsets.only(top: 24, left: 20, right: 20),
+        decoration: BoxDecoration(
+          color: AppColors.background,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Ay İçerisindeki İşlemler',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _buildFilterChip(
+                    label: 'Tümü',
+                    isSelected: _selectedType == 'all' && _selectedCategory == null,
+                    onTap: () {
+                      setState(() {
+                        _selectedType = 'all';
+                        _selectedCategory = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    label: 'Gelirler',
+                    isSelected: _selectedType == 'income' && _selectedCategory == null,
+                    onTap: () {
+                      setState(() {
+                        _selectedType = 'income';
+                        _selectedCategory = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildFilterChip(
+                    label: 'Giderler',
+                    isSelected: _selectedType == 'expense' && _selectedCategory == null,
+                    onTap: () {
+                      setState(() {
+                        _selectedType = 'expense';
+                        _selectedCategory = null;
+                      });
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  _buildCategoryFilterChip(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            
+            Expanded(
+              child: filteredTransactions.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Filtreye uygun işlem bulunmuyor.',
+                        style: TextStyle(color: AppColors.textSecondary),
+                      ),
+                    )
+                  : ListView.builder(
+                      controller: scrollController,
+                      itemCount: filteredTransactions.length,
+                      itemBuilder: (context, index) {
+                        final tx = filteredTransactions[index];
+                        
+                        CategoryModel? txCategory;
+                        final rawId = tx.categoryId?.trim() ?? '';
+                        if (rawId.isNotEmpty) {
+                          txCategory = widget.categories.cast<CategoryModel?>().firstWhere(
+                            (c) {
+                              final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                              final cid = c?.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+                              return cid == cleanId || c?.name.toLowerCase().trim() == rawId.toLowerCase();
+                            },
+                            orElse: () => null,
+                          );
+                        }
+                        
+                        String displayName = tx.isIncome ? 'Genel Gelir' : 'Genel Gider';
+                        if (txCategory != null) {
+                          displayName = txCategory.name;
+                        }
+
+                        final displayCategory = txCategory ?? CategoryModel(
+                          id: 'unknown',
+                          name: displayName,
+                          icon: tx.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                          color: Colors.grey,
+                          isIncome: tx.isIncome,
+                        );
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: displayCategory.color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(displayCategory.icon, color: displayCategory.color, size: 24),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayCategory.name,
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      DateFormat('dd MMM yyyy', 'tr_TR').format(tx.date),
+                                      style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                '${tx.isIncome ? '+' : '-'}${CurrencyUtils.format(tx.amount)}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: tx.isIncome ? AppColors.income : AppColors.expense,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
