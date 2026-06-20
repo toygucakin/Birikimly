@@ -36,6 +36,14 @@ class WidgetService {
         await HomeWidget.saveWidgetData<String>('limit_amount', '');
       }
       
+      int expenseProgress = 0;
+      if (limit != null && limit > 0) {
+        expenseProgress = ((expense / limit) * 100).toInt();
+        if (expenseProgress > 100) expenseProgress = 100;
+      }
+      await HomeWidget.saveWidgetData<int>('expense_progress', expenseProgress);
+      await HomeWidget.saveWidgetData<bool>('has_limit', limit != null && limit > 0);
+      
       if (themeHex != null) {
         await HomeWidget.saveWidgetData<String>('theme_hex', themeHex);
       }

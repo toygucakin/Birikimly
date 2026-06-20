@@ -23,8 +23,10 @@ struct Provider: TimelineProvider {
         let income = userDefaults?.string(forKey: "income_amount") ?? "₺0,00"
         let expense = userDefaults?.string(forKey: "expense_amount") ?? "₺0,00"
         let limit = userDefaults?.string(forKey: "limit_amount") ?? ""
+        let hasLimit = userDefaults?.bool(forKey: "has_limit") ?? false
+        let expenseProgress = userDefaults?.integer(forKey: "expense_progress") ?? 0
         
-        return SimpleEntry(date: Date(), net: net, income: income, expense: expense, limit: limit)
+        return SimpleEntry(date: Date(), net: net, income: income, expense: expense, limit: limit, hasLimit: hasLimit, expenseProgress: expenseProgress)
     }
 }
 
@@ -34,6 +36,8 @@ struct SimpleEntry: TimelineEntry {
     let income: String
     let expense: String
     let limit: String
+    let hasLimit: Bool
+    let expenseProgress: Int
 }
 
 struct BirikimlyWidgetEntryView : View {
@@ -41,7 +45,7 @@ struct BirikimlyWidgetEntryView : View {
 
     var body: some View {
         VStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .center, spacing: 4) {
                 Text("Aylık Net Durum")
                     .font(.caption)
                     .foregroundColor(.gray)
@@ -49,13 +53,18 @@ struct BirikimlyWidgetEntryView : View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                 
-                if !entry.limit.isEmpty {
+                if entry.hasLimit {
                     Text("Aylık Limit: \(entry.limit)")
                         .font(.system(size: 10))
-                        .foregroundColor(.red)
+                        .foregroundColor(Color(red: 1.0, green: 0.8, blue: 0.82))
+                    
+                    ProgressView(value: Double(entry.expenseProgress), total: 100)
+                        .progressViewStyle(LinearProgressViewStyle(tint: Color(red: 1.0, green: 0.8, blue: 0.82)))
+                        .frame(height: 4)
+                        .padding(.horizontal, 16)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .center)
             
             HStack(spacing: 8) {
                 Link(destination: URL(string: "birikimly://add_expense")!) {

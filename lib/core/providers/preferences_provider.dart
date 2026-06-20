@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('sharedPreferencesProvider must be overridden in ProviderScope');
@@ -24,7 +25,13 @@ class GuestModeNotifier extends Notifier<bool> {
 final guestModeProvider = NotifierProvider<GuestModeNotifier, bool>(GuestModeNotifier.new);
 
 class UserNameNotifier extends Notifier<String> {
-  static const _key = 'userName';
+  String get _key {
+    final isGuest = ref.watch(guestModeProvider);
+    final user = ref.watch(currentUserProvider);
+    if (isGuest) return 'userName_guest';
+    if (user != null) return 'userName_${user.id}';
+    return 'userName';
+  }
 
   @override
   String build() {
@@ -42,7 +49,13 @@ class UserNameNotifier extends Notifier<String> {
 final userNameProvider = NotifierProvider<UserNameNotifier, String>(UserNameNotifier.new);
 
 class MonthlyLimitNotifier extends Notifier<double?> {
-  static const _key = 'monthlyLimit';
+  String get _key {
+    final isGuest = ref.watch(guestModeProvider);
+    final user = ref.watch(currentUserProvider);
+    if (isGuest) return 'monthlyLimit_guest';
+    if (user != null) return 'monthlyLimit_${user.id}';
+    return 'monthlyLimit';
+  }
 
   @override
   double? build() {

@@ -22,15 +22,20 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
                 val expenseAmount = widgetData.getString("expense_amount", "₺0,00")
                 val limitAmount = widgetData.getString("limit_amount", "")
                 val themeHex = widgetData.getString("theme_hex", null)
+                val hasLimit = widgetData.getBoolean("has_limit", false)
+                val expenseProgress = widgetData.getInt("expense_progress", 0)
 
                 setTextViewText(R.id.tv_net, netAmount)
                 setTextViewText(R.id.tv_income, incomeAmount)
                 setTextViewText(R.id.tv_expense, expenseAmount)
                 
-                if (limitAmount.isNullOrEmpty()) {
+                if (limitAmount.isNullOrEmpty() || !hasLimit) {
                     setTextViewText(R.id.tv_limit, "")
+                    setViewVisibility(R.id.pb_limit, android.view.View.GONE)
                 } else {
                     setTextViewText(R.id.tv_limit, "Aylık Limit: $limitAmount")
+                    setViewVisibility(R.id.pb_limit, android.view.View.VISIBLE)
+                    setProgressBar(R.id.pb_limit, 100, expenseProgress, false)
                 }
 
                 if (themeHex != null) {

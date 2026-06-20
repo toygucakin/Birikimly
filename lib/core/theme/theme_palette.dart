@@ -274,7 +274,7 @@ class SakuraPinkPalette implements ThemePalette {
   List<Color> get cardGradient => [primary, secondary];
 }
 
-// 11. Crimson Noir (Kızıl Gece - Siyah/Kırmızı/Beyaz Koyu Tema)
+// 11. Crimson Noir (Kadife Gül - Siyah/Kırmızı/Beyaz Koyu Tema)
 class CrimsonNoirPalette implements ThemePalette {
   @override
   bool get isDark => true;
@@ -300,7 +300,7 @@ class CrimsonNoirPalette implements ThemePalette {
   List<Color> get cardGradient => [primary, const Color(0xFF991B1B)]; // Crimson to dark red gradient
 }
 
-// 12. Scarlet Light (Kızıl Işık - Beyaz/Siyah/Kırmızı Açık Tema)
+// 12. Scarlet Light (Mermer Alevi - Beyaz/Siyah/Kırmızı Açık Tema)
 class ScarletLightPalette implements ThemePalette {
   @override
   bool get isDark => false;

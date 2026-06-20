@@ -15,7 +15,7 @@ import 'package:birikimly/core/services/widget_service.dart';
 import 'package:birikimly/core/providers/widget_sync_provider.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:app_links/app_links.dart';
-import 'package:birikimly/core/providers/deep_link_provider.dart';
+import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -121,7 +121,17 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
       _lastProcessedUri = uri;
       _lastProcessedTime = now;
       
-      ref.read(deepLinkProvider.notifier).setUri(uri);
+      final routeName = '/${uri.host}';
+      
+      // Delay slightly to ensure Navigator is fully initialized if cold boot
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (navigatorKey.currentState != null) {
+          // Close any open dialogs/screens by popping until root
+          navigatorKey.currentState!.popUntil((route) => route.isFirst);
+          // Push the new wizard screen
+          navigatorKey.currentState!.pushNamed(routeName);
+        }
+      });
     }
   }
 
@@ -163,9 +173,29 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
           // Catch any leftover native deep links from cached widgets
           // that try to push these paths to the navigator natively.
           if (settings.name == '/add_expense' || settings.name == '/add_income') {
+            final isIncome = settings.name == '/add_income';
             return PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const SizedBox.shrink(),
-              transitionDuration: Duration.zero,
+              opaque: false,
+              barrierDismissible: true,
+              barrierColor: Colors.black54,
+              pageBuilder: (context, _, __) => Dialog(
+                alignment: Alignment.topCenter,
+                backgroundColor: Colors.transparent,
+                insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                child: TransactionWizard(isIncome: isIncome),
+              ),
+              transitionDuration: const Duration(milliseconds: 200),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(begin: 0.95, end: 1.0).animate(
+                      CurvedAnimation(parent: animation, curve: Curves.easeOut),
+                    ),
+                    child: child,
+                  ),
+                );
+              },
             );
           }
           return null; // Let Flutter handle other routes normally

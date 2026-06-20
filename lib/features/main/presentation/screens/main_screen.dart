@@ -8,8 +8,7 @@ import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/core/services/recurring_transaction_service.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
-import 'package:birikimly/core/providers/deep_link_provider.dart';
-import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -20,7 +19,6 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   late PageController _pageController;
-  static bool _isWizardOpen = false;
 
   @override
   void initState() {
@@ -60,48 +58,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Listen for deep links (e.g. from widget) to open TransactionWizard
-    ref.listen<Uri?>(deepLinkProvider, (previous, next) {
-      print('DEBUG: deepLinkProvider listener fired: previous = $previous, next = $next, _isWizardOpen = $_isWizardOpen');
-      if (next != null && (next.host == 'add_expense' || next.host == 'add_income')) {
-        final isIncome = next.host == 'add_income';
-        // Reset state so it can be triggered again
-        Future.microtask(() {
-          print('DEBUG: Resetting deepLinkProvider to null');
-          ref.read(deepLinkProvider.notifier).setUri(null);
-        });
-
-        if (_isWizardOpen) {
-          print('DEBUG: Wizard is already open, ignoring event');
-          return;
-        }
-        _isWizardOpen = true;
-
-        // Delay slightly to prevent Flutter Native Navigation or Android lifecycle from closing the dialog
-        Future.delayed(const Duration(milliseconds: 150), () {
-          if (!mounted || !context.mounted) {
-            print('DEBUG: _MainScreenState or context not mounted after delay, resetting _isWizardOpen');
-            _isWizardOpen = false;
-            return;
-          }
-          print('DEBUG: Showing TransactionWizard dialog');
-          showDialog(
-            context: context,
-            barrierDismissible: true,
-            builder: (context) => Dialog(
-              alignment: Alignment.topCenter,
-              backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
-              child: TransactionWizard(isIncome: isIncome),
-            ),
-          ).then((_) {
-            print('DEBUG: TransactionWizard dialog closed');
-            _isWizardOpen = false;
-            print('DEBUG: Reset _isWizardOpen to false (static)');
-          });
-        });
-      }
-    });
 
     return Scaffold(
       body: ListenableBuilder(

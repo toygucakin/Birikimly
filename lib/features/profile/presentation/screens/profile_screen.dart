@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
@@ -724,7 +726,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
   void _showRenameDialog(BuildContext context, WidgetRef ref, CategoryModel cat) {
     final controller = TextEditingController(text: cat.name);
     final limitController = TextEditingController(
-      text: (cat.maxLimit != null) ? cat.maxLimit!.toStringAsFixed(0) : ''
+      text: (cat.maxLimit != null) ? _formatLimit(cat.maxLimit!) : ''
     );
     IconData selectedIcon = cat.icon;
     Color selectedColor = cat.color;
@@ -819,6 +821,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
                       ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                    inputFormatters: [ThousandsFormatter()],
                   ),
                 ],
               ],
@@ -832,7 +835,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
             ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  final limitStr = limitController.text.trim();
+                  final limitStr = limitController.text.trim().replaceAll('.', '');
                   final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
                   
                   Navigator.pop(context); // Pop first
@@ -987,6 +990,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
                       ),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                    inputFormatters: [ThousandsFormatter()],
                   ),
                 ],
               ],
@@ -1000,7 +1004,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
             ElevatedButton(
               onPressed: () {
                 if (controller.text.trim().isNotEmpty) {
-                  final limitStr = limitController.text.trim();
+                  final limitStr = limitController.text.trim().replaceAll('.', '');
                   final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
 
                   Navigator.pop(context); // Pop first
@@ -1067,7 +1071,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
   }
 
   void _showEditLimitDialog(BuildContext context, WidgetRef ref, double? currentLimit) {
-    final controller = TextEditingController(text: currentLimit != null ? currentLimit.toStringAsFixed(0) : '');
+    final controller = TextEditingController(text: currentLimit != null ? _formatLimit(currentLimit) : '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1081,10 +1085,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(
-            hintText: 'Örn: 5000',
+            hintText: 'Örn: 5.000',
             suffixText: '₺',
           ),
           keyboardType: const TextInputType.numberWithOptions(decimal: false),
+          inputFormatters: [ThousandsFormatter()],
           autofocus: true,
         ),
         actions: [
@@ -1106,7 +1111,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('İptal')),
           TextButton(
             onPressed: () async {
-              final valStr = controller.text.trim();
+              final valStr = controller.text.trim().replaceAll('.', '');
               final double? newLimit = double.tryParse(valStr);
               Navigator.pop(context); // Pop first
 

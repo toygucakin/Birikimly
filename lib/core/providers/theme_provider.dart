@@ -62,7 +62,7 @@ extension AppThemePresetExtension on AppThemePreset {
       case AppThemePreset.sapphireBlue:
         return 'Safir Mavi';
       case AppThemePreset.crimsonNoir:
-        return 'Kızıl Gece';
+        return 'Kadife Gül';
       case AppThemePreset.creamBlue:
         return 'Krem Mavi';
       case AppThemePreset.classicLight:
@@ -72,7 +72,7 @@ extension AppThemePresetExtension on AppThemePreset {
       case AppThemePreset.sakuraPink:
         return 'Sakura Pembe';
       case AppThemePreset.scarletLight:
-        return 'Kızıl Işık';
+        return 'Mermer Alevi';
     }
   }
 }
