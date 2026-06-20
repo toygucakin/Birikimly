@@ -840,7 +840,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                         }(),
                         const SizedBox(height: 24),
                         const Text(
-                          'Bu Ayki İşlemler',
+                          'Son İşlemler',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
