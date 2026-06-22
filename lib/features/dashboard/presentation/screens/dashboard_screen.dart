@@ -290,9 +290,7 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                           final List<Map<String, dynamic>> categoryBudgetCardData = [];
 
                           for (final cat in categories) {
-                            if (!cat.isIncome && cat.maxLimit != null) {
-                              totalCategoryLimits += cat.maxLimit!;
-
+                            if (!cat.isIncome) {
                               // Kategoriye ait bu ayki harcamayı hesapla
                               double spentForCat = 0;
                               final List<Transaction> catTransactions = [];
@@ -309,155 +307,163 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                 }
                               }
 
-                              final double percent = cat.maxLimit! > 0 ? spentForCat / cat.maxLimit! : (spentForCat > 0 ? double.infinity : 0.0);
-                              final double overrun = spentForCat - cat.maxLimit!;
-                              
-                              categoryBudgetCardData.add({
-                                'widget': CategoryBudgetCard(
-                                  category: cat,
-                                  spentAmount: spentForCat,
-                                  onTap: () {
-                                    if (catTransactions.isEmpty) return;
-                                    catTransactions.sort((a, b) => b.date.compareTo(a.date));
-                                    final animationController = BottomSheet.createAnimationController(this);
-                                    animationController.duration = const Duration(milliseconds: 300);
-                                    animationController.reverseDuration = const Duration(milliseconds: 500);
-                                    showModalBottomSheet(
-                                      context: context,
-                                      transitionAnimationController: animationController,
-                                      backgroundColor: Colors.transparent,
-                                      isScrollControlled: true,
-                                      builder: (context) => Container(
-                                        height: MediaQuery.of(context).size.height * 0.7,
-                                        padding: const EdgeInsets.all(24),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surface,
-                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                                        ),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Center(
-                                              child: Container(
-                                                width: 40,
-                                                height: 4,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey.withValues(alpha: 0.3),
-                                                  borderRadius: BorderRadius.circular(2),
+                              if (cat.maxLimit != null || spentForCat > 0) {
+                                if (cat.maxLimit != null) {
+                                  totalCategoryLimits += cat.maxLimit!;
+                                }
+
+                                final double percent = cat.maxLimit != null
+                                    ? (cat.maxLimit! > 0 ? spentForCat / cat.maxLimit! : (spentForCat > 0 ? double.infinity : 0.0))
+                                    : 0.0;
+                                final double overrun = cat.maxLimit != null ? spentForCat - cat.maxLimit! : 0.0;
+                                
+                                categoryBudgetCardData.add({
+                                  'widget': CategoryBudgetCard(
+                                    category: cat,
+                                    spentAmount: spentForCat,
+                                    onTap: () {
+                                      if (catTransactions.isEmpty) return;
+                                      catTransactions.sort((a, b) => b.date.compareTo(a.date));
+                                      final animationController = BottomSheet.createAnimationController(this);
+                                      animationController.duration = const Duration(milliseconds: 300);
+                                      animationController.reverseDuration = const Duration(milliseconds: 500);
+                                      showModalBottomSheet(
+                                        context: context,
+                                        transitionAnimationController: animationController,
+                                        backgroundColor: Colors.transparent,
+                                        isScrollControlled: true,
+                                        builder: (context) => Container(
+                                          height: MediaQuery.of(context).size.height * 0.7,
+                                          padding: const EdgeInsets.all(24),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.surface,
+                                            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Center(
+                                                child: Container(
+                                                  width: 40,
+                                                  height: 4,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey.withValues(alpha: 0.3),
+                                                    borderRadius: BorderRadius.circular(2),
+                                                  ),
                                                 ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 24),
-                                            Row(
-                                              children: [
-                                                Container(
-                                                  padding: const EdgeInsets.all(12),
-                                                  decoration: BoxDecoration(
-                                                    color: cat.color.withValues(alpha: 0.1),
-                                                    borderRadius: BorderRadius.circular(16),
-                                                  ),
-                                                  child: Icon(cat.icon, color: cat.color, size: 28),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                                    children: [
-                                                      Text(
-                                                        cat.name,
-                                                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                                      ),
-                                                      Text(
-                                                        'Bu Ayki İşlemler',
-                                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 24),
-                                            Expanded(
-                                              child: ListView.builder(
-                                                itemCount: catTransactions.length,
-                                                itemBuilder: (context, idx) {
-                                                  final tx = catTransactions[idx];
-                                                  return Container(
-                                                    margin: const EdgeInsets.only(bottom: 12),
-                                                    padding: const EdgeInsets.all(16),
+                                              const SizedBox(height: 24),
+                                              Row(
+                                                children: [
+                                                  Container(
+                                                    padding: const EdgeInsets.all(12),
                                                     decoration: BoxDecoration(
-                                                      color: AppColors.background,
+                                                      color: cat.color.withValues(alpha: 0.1),
                                                       borderRadius: BorderRadius.circular(16),
                                                     ),
-                                                    child: Row(
+                                                    child: Icon(cat.icon, color: cat.color, size: 28),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
-                                                        Expanded(
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              Text(
-                                                                tx.description.isEmpty ? 'Açıklama yok' : tx.description,
-                                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                                              ),
-                                                              const SizedBox(height: 4),
-                                                              Text(
-                                                                DateFormat('dd MMMM', 'tr_TR').format(tx.date),
-                                                                style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                                              ),
-                                                            ],
-                                                          ),
+                                                        Text(
+                                                          cat.name,
+                                                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                                                         ),
                                                         Text(
-                                                          '-${CurrencyUtils.format(tx.amount)}',
-                                                          style: TextStyle(
-                                                            color: AppColors.expense,
-                                                            fontWeight: FontWeight.bold,
-                                                            fontSize: 16,
-                                                          ),
+                                                          'Bu Ayki İşlemler',
+                                                          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
                                                         ),
                                                       ],
                                                     ),
-                                                  );
-                                                },
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                            const SizedBox(height: 16),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                onPressed: () => Navigator.pop(context),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: AppColors.primary,
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets.symmetric(vertical: 16),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                              const SizedBox(height: 24),
+                                              Expanded(
+                                                child: ListView.builder(
+                                                  itemCount: catTransactions.length,
+                                                  itemBuilder: (context, idx) {
+                                                    final tx = catTransactions[idx];
+                                                    return Container(
+                                                      margin: const EdgeInsets.only(bottom: 12),
+                                                      padding: const EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.background,
+                                                        borderRadius: BorderRadius.circular(16),
+                                                      ),
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              children: [
+                                                                Text(
+                                                                  tx.description.isEmpty ? 'Açıklama yok' : tx.description,
+                                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                                                ),
+                                                                const SizedBox(height: 4),
+                                                                Text(
+                                                                  DateFormat('dd MMMM', 'tr_TR').format(tx.date),
+                                                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          Text(
+                                                            '-${CurrencyUtils.format(tx.amount)}',
+                                                            style: TextStyle(
+                                                              color: AppColors.expense,
+                                                              fontWeight: FontWeight.bold,
+                                                              fontSize: 16,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
                                                 ),
-                                                child: const Text('Kapat', style: TextStyle(fontWeight: FontWeight.bold)),
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(height: 16),
+                                              SizedBox(
+                                                width: double.infinity,
+                                                child: ElevatedButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  style: ElevatedButton.styleFrom(
+                                                    backgroundColor: AppColors.primary,
+                                                    foregroundColor: Colors.white,
+                                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                  ),
+                                                  child: const Text('Kapat', style: TextStyle(fontWeight: FontWeight.bold)),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ).whenComplete(() {
-                                      Future.delayed(const Duration(milliseconds: 600), () {
-                                        try {
-                                          animationController.dispose();
-                                        } catch (_) {}
+                                      ).whenComplete(() {
+                                        Future.delayed(const Duration(milliseconds: 600), () {
+                                          try {
+                                            animationController.dispose();
+                                          } catch (_) {}
+                                        });
                                       });
-                                    });
-                                  },
-                                ),
-                                'percent': percent,
-                                'overrun': overrun,
-                              });
-
-                              // Aşım kontrolü
-                              if (spentForCat > cat.maxLimit!) {
-                                exceededCategories.add({
-                                  'category': cat,
-                                  'spent': spentForCat,
-                                  'limit': cat.maxLimit!,
+                                    },
+                                  ),
+                                  'percent': percent,
+                                  'overrun': overrun,
                                 });
+
+                                // Aşım kontrolü
+                                if (cat.maxLimit != null && spentForCat > cat.maxLimit!) {
+                                  exceededCategories.add({
+                                    'category': cat,
+                                    'spent': spentForCat,
+                                    'limit': cat.maxLimit!,
+                                  });
+                                }
                               }
                             }
                           }

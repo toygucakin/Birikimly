@@ -21,10 +21,11 @@ class CategoryBudgetCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double limit = category.maxLimit ?? 1.0; // Fallback to avoid div by zero
-    final double rawPercent = spentAmount / limit;
+    final bool hasLimit = category.maxLimit != null;
+    final double limit = category.maxLimit ?? 1.0;
+    final double rawPercent = hasLimit ? spentAmount / limit : 0.0;
     final double percent = rawPercent.clamp(0.0, 1.0);
-    final bool isExceeded = spentAmount > limit;
+    final bool isExceeded = hasLimit && spentAmount > limit;
 
     return GestureDetector(
       onTap: onTap,
@@ -81,7 +82,7 @@ class CategoryBudgetCard extends StatelessWidget {
             ),
           ),
           Text(
-            '/ ${_formatLimit(limit)} ₺',
+            hasLimit ? '/ ${_formatLimit(limit)} ₺' : '/ Limit Yok',
             style: TextStyle(
               fontSize: 12,
               color: AppColors.textSecondary,
@@ -95,7 +96,7 @@ class CategoryBudgetCard extends StatelessWidget {
               value: percent,
               backgroundColor: AppColors.background,
               valueColor: AlwaysStoppedAnimation<Color>(
-                isExceeded ? AppColors.expense : (percent > 0.8 ? Colors.orange : category.color),
+                isExceeded ? AppColors.expense : (percent > 0.8 && hasLimit ? Colors.orange : category.color),
               ),
               minHeight: 6,
             ),
