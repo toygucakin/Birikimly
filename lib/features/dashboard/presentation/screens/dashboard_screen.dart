@@ -751,8 +751,6 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                     return execDate.year == today.year && execDate.month == today.month && execDate.difference(today).inDays >= 0;
                                   }).toList();
                                   
-                                  if (upcoming.isEmpty) return const SizedBox.shrink();
-
                                   upcoming.sort((a, b) => a.nextExecutionDate.compareTo(b.nextExecutionDate));
 
                                   return Column(
@@ -790,85 +788,112 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                             ? Column(
                                                 children: [
                                                   const SizedBox(height: 8),
-                                                  SizedBox(
-                                                    height: 110,
-                                        child: ListView.builder(
-                                          scrollDirection: Axis.horizontal,
-                                          physics: const BouncingScrollPhysics(),
-                                          itemCount: upcoming.length,
-                                          itemBuilder: (context, index) {
-                                            final rt = upcoming[index];
-                                            final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
-                                            final daysLeft = execDate.difference(today).inDays;
-                                            final isIncome = rt.isIncome;
-                                            
-                                            // Find category
-                                            final rawId = rt.categoryId?.trim() ?? '';
-                                            CategoryModel? cat = categories.cast<CategoryModel?>().firstWhere(
-                                              (c) => c?.id == rawId,
-                                              orElse: () => null,
-                                            );
-                                            final catName = cat?.name ?? (isIncome ? 'Gelir' : 'Gider');
-                                            final catIcon = cat?.icon ?? (isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline);
-                                            final catColor = cat?.color ?? Colors.grey;
-
-                                            return Container(
-                                              width: 160,
-                                              margin: const EdgeInsets.only(right: 12),
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.surface,
-                                                borderRadius: BorderRadius.circular(16),
-                                                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
-                                              ),
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Icon(catIcon, color: catColor, size: 24),
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                                        decoration: BoxDecoration(
-                                                          color: daysLeft <= 3 ? AppColors.expense.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: Text(
-                                                          daysLeft == 0 ? 'Bugün' : (daysLeft == 1 ? 'Yarın' : '$daysLeft gün'),
-                                                          style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight: FontWeight.bold,
-                                                            color: daysLeft <= 3 ? AppColors.expense : AppColors.primary,
-                                                          ),
-                                                        ),
+                                                  if (upcoming.isEmpty)
+                                                    Container(
+                                                      width: double.infinity,
+                                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                                                      decoration: BoxDecoration(
+                                                        color: AppColors.surface,
+                                                        borderRadius: BorderRadius.circular(16),
+                                                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.05)),
                                                       ),
-                                                    ],
-                                                  ),
-                                                  Text(
-                                                    rt.description.isNotEmpty ? rt.description : catName,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                                  ),
-                                                  Text(
-                                                    '${isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
-                                                    style: TextStyle(
-                                                      color: isIncome ? AppColors.income : AppColors.expense,
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 16,
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(Icons.check_circle_outline, color: AppColors.income, size: 24),
+                                                          const SizedBox(width: 12),
+                                                          Expanded(
+                                                            child: Text(
+                                                              'Bu ay için planlanmış başka bir ödemeniz bulunmuyor.',
+                                                              style: TextStyle(
+                                                                color: AppColors.textSecondary,
+                                                                fontSize: 13,
+                                                                fontWeight: FontWeight.w500,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    )
+                                                  else
+                                                    SizedBox(
+                                                      height: 110,
+                                                      child: ListView.builder(
+                                                        scrollDirection: Axis.horizontal,
+                                                        physics: const BouncingScrollPhysics(),
+                                                        itemCount: upcoming.length,
+                                                        itemBuilder: (context, index) {
+                                                          final rt = upcoming[index];
+                                                          final execDate = DateTime(rt.nextExecutionDate.year, rt.nextExecutionDate.month, rt.nextExecutionDate.day);
+                                                          final daysLeft = execDate.difference(today).inDays;
+                                                          final isIncome = rt.isIncome;
+                                                          
+                                                          // Find category
+                                                          final rawId = rt.categoryId?.trim() ?? '';
+                                                          CategoryModel? cat = categories.cast<CategoryModel?>().firstWhere(
+                                                            (c) => c?.id == rawId,
+                                                            orElse: () => null,
+                                                          );
+                                                          final catName = cat?.name ?? (isIncome ? 'Gelir' : 'Gider');
+                                                          final catIcon = cat?.icon ?? (isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline);
+                                                          final catColor = cat?.color ?? Colors.grey;
+
+                                                          return Container(
+                                                            width: 160,
+                                                            margin: const EdgeInsets.only(right: 12),
+                                                            padding: const EdgeInsets.all(12),
+                                                            decoration: BoxDecoration(
+                                                              color: AppColors.surface,
+                                                              borderRadius: BorderRadius.circular(16),
+                                                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                                                            ),
+                                                            child: Column(
+                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: [
+                                                                Row(
+                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                  children: [
+                                                                    Icon(catIcon, color: catColor, size: 24),
+                                                                    Container(
+                                                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                                      decoration: BoxDecoration(
+                                                                        color: daysLeft <= 3 ? AppColors.expense.withValues(alpha: 0.1) : AppColors.primary.withValues(alpha: 0.1),
+                                                                        borderRadius: BorderRadius.circular(8),
+                                                                      ),
+                                                                      child: Text(
+                                                                        daysLeft == 0 ? 'Bugün' : (daysLeft == 1 ? 'Yarın' : '$daysLeft gün'),
+                                                                        style: TextStyle(
+                                                                          fontSize: 10,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          color: daysLeft <= 3 ? AppColors.expense : AppColors.primary,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                                Text(
+                                                                  rt.description.isNotEmpty ? rt.description : catName,
+                                                                  maxLines: 1,
+                                                                  overflow: TextOverflow.ellipsis,
+                                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                                                ),
+                                                                Text(
+                                                                  '${isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
+                                                                  style: TextStyle(
+                                                                    color: isIncome ? AppColors.income : AppColors.expense,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize: 16,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
                                                     ),
-                                                  ),
                                                 ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : const SizedBox(width: double.infinity, height: 0),
+                                              )
+                                            : const SizedBox(width: double.infinity, height: 0),
                                       ),
                                     ],
                                   );
