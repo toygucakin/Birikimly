@@ -38,6 +38,7 @@ class _DashboardScreenContent extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with TickerProviderStateMixin {
   bool _isUpcomingExpanded = false;
+  bool _isCategoryBudgetsExpanded = true;
 
   @override
   void initState() {
@@ -691,21 +692,54 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                               ...warningWidgets,
                               if (categoryBudgetCards.isNotEmpty) ...[
                                 const SizedBox(height: 16),
-                                const Text(
-                                  'Kategori Bütçeleri',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                                GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _isCategoryBudgetsExpanded = !_isCategoryBudgetsExpanded;
+                                    });
+                                  },
+                                  behavior: HitTestBehavior.opaque,
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Kategori Bütçeleri',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Icon(
+                                          _isCategoryBudgetsExpanded
+                                              ? Icons.keyboard_arrow_up
+                                              : Icons.keyboard_arrow_down,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                SizedBox(
-                                  height: 160,
-                                  child: ListView(
-                                    scrollDirection: Axis.horizontal,
-                                    physics: const BouncingScrollPhysics(),
-                                    children: categoryBudgetCards,
-                                  ),
+                                AnimatedSize(
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  child: _isCategoryBudgetsExpanded
+                                      ? Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const SizedBox(height: 12),
+                                            SizedBox(
+                                              height: 160,
+                                              child: ListView(
+                                                scrollDirection: Axis.horizontal,
+                                                physics: const BouncingScrollPhysics(),
+                                                children: categoryBudgetCards,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : const SizedBox(width: double.infinity, height: 0),
                                 ),
                               ],
                               recurringAsync.maybeWhen(
