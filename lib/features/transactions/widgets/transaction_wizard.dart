@@ -107,20 +107,57 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         return;
       }
 
-      final dateAtNoon = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 12, 0, 0);
-      final rtEntry = RecurringTransactionsCompanion(
-        userId: drift.Value(userId),
-        amount: drift.Value(amount),
-        categoryId: drift.Value(category.id),
-        description: drift.Value(_descriptionController.text),
-        startDate: drift.Value(dateAtNoon),
-        nextExecutionDate: drift.Value(dateAtNoon),
-        isIncome: drift.Value(widget.isIncome),
-        isSynced: const drift.Value(false),
-        frequency: drift.Value(_frequency),
-        isActive: const drift.Value(true),
-      );
-      ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
+      final isSelectedDateToday = _selectedDate.year == now.year &&
+          _selectedDate.month == now.month &&
+          _selectedDate.day == now.day;
+
+      if (isSelectedDateToday) {
+        // 1. Create the regular transaction for today immediately with current time
+        final entry = TransactionsCompanion(
+          userId: drift.Value(userId),
+          amount: drift.Value(amount),
+          categoryId: drift.Value(category.id),
+          description: drift.Value(_descriptionController.text),
+          date: drift.Value(now),
+          isIncome: drift.Value(widget.isIncome),
+          isSynced: const drift.Value(false),
+        );
+        ref.read(transactionNotifierProvider.notifier).addTransaction(entry);
+
+        // 2. Schedule the next execution for the next period at 12:00 PM
+        final nextDate = _advanceDate(now, now, _frequency);
+        final nextDateAtNoon = DateTime(nextDate.year, nextDate.month, nextDate.day, 12, 0, 0);
+
+        final rtEntry = RecurringTransactionsCompanion(
+          userId: drift.Value(userId),
+          amount: drift.Value(amount),
+          categoryId: drift.Value(category.id),
+          description: drift.Value(_descriptionController.text),
+          startDate: drift.Value(now),
+          nextExecutionDate: drift.Value(nextDateAtNoon),
+          isIncome: drift.Value(widget.isIncome),
+          isSynced: const drift.Value(false),
+          frequency: drift.Value(_frequency),
+          isActive: const drift.Value(true),
+        );
+        ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
+      } else {
+        // Schedule future recurring transaction at 12:00 PM
+        final dateAtNoon = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 12, 0, 0);
+        final rtEntry = RecurringTransactionsCompanion(
+          userId: drift.Value(userId),
+          amount: drift.Value(amount),
+          categoryId: drift.Value(category.id),
+          description: drift.Value(_descriptionController.text),
+          startDate: drift.Value(dateAtNoon),
+          nextExecutionDate: drift.Value(dateAtNoon),
+          isIncome: drift.Value(widget.isIncome),
+          isSynced: const drift.Value(false),
+          frequency: drift.Value(_frequency),
+          isActive: const drift.Value(true),
+        );
+        ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
+      }
     } else {
       final entry = TransactionsCompanion(
         userId: drift.Value(userId),
@@ -556,6 +593,59 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           ),
         ],
       ),
+    );
+  }
+
+  DateTime _advanceDate(DateTime current, DateTime originalStart, String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return current.add(const Duration(days: 7));
+      case 'yearly':
+        return _advanceOneYear(current, originalStart);
+      case 'monthly':
+      default:
+        return _advanceOneMonth(current, originalStart);
+    }
+  }
+
+  DateTime _advanceOneMonth(DateTime current, DateTime originalStart) {
+    int nextMonth = current.month + 1;
+    int nextYear = current.year;
+    
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+
+    final targetDay = originalStart.day;
+    final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
+
+    return DateTime(
+      nextYear,
+      nextMonth,
+      clampedDay,
+      originalStart.hour,
+      originalStart.minute,
+      originalStart.second,
+    );
+  }
+
+  DateTime _advanceOneYear(DateTime current, DateTime originalStart) {
+    int nextYear = current.year + 1;
+    int nextMonth = current.month;
+    
+    final targetDay = originalStart.day;
+    final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
+
+    return DateTime(
+      nextYear,
+      nextMonth,
+      clampedDay,
+      originalStart.hour,
+      originalStart.minute,
+      originalStart.second,
     );
   }
 }

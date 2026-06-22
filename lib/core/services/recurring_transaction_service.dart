@@ -25,21 +25,12 @@ class RecurringTransactionService {
     for (var rt in recurringTxs) {
       if (!rt.isActive) continue;
 
-      // Ensure nextExecutionDate is normalized to noon (12:00:00)
-      DateTime nextDate = DateTime(
-        rt.nextExecutionDate.year,
-        rt.nextExecutionDate.month,
-        rt.nextExecutionDate.day,
-        12,
-        0,
-        0,
-      );
+      DateTime nextDate = rt.nextExecutionDate;
       bool wasUpdated = false;
 
       // Use a while loop in case the user hasn't opened the app for multiple months
       while (nextDate.isBefore(now) || nextDate.isAtSameMomentAs(now)) {
-        // Ensure execution date is set to 12:00 PM
-        final execDate = DateTime(nextDate.year, nextDate.month, nextDate.day, 12, 0, 0);
+        final execDate = nextDate;
 
         // 1. Create a transaction for this execution date
         final txCompanion = TransactionsCompanion(
