@@ -8,7 +8,7 @@ import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/core/services/recurring_transaction_service.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
-import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/utils/currency_utils.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -32,17 +32,48 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final isGuest = ref.read(guestModeProvider);
       if (user != null || isGuest) {
         final userId = isGuest ? 'guest' : user!.id;
-        final processed = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
-        if (processed > 0 && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$processed adet yeni düzenli işlem hesabınıza eklendi.'),
-              backgroundColor: const Color(0xFF22C55E),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              duration: const Duration(seconds: 4),
-            ),
-          );
+        final processedTxs = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
+        if (processedTxs.isNotEmpty && mounted) {
+          if (processedTxs.length == 1) {
+            final tx = processedTxs.first;
+            final db = ref.read(databaseProvider);
+            final categories = await db.getAllCategories(userId);
+            final rawId = tx.categoryId?.trim() ?? '';
+            final category = categories.firstWhere(
+              (c) => c.uuid == rawId,
+              orElse: () => categories.firstWhere(
+                (c) => c.uuid.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase() == rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase(),
+                orElse: () => categories.first,
+              ),
+            );
+
+            final categoryName = category.name;
+            final typeStr = tx.isIncome ? 'geliriniz' : 'gideriniz';
+            final descStr = tx.description.isNotEmpty ? "'${tx.description}' açıklamalı " : '';
+            final amountStr = CurrencyUtils.format(tx.amount);
+
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Bugün $categoryName kategorisinden $descStr$amountStr $typeStr hesabınıza eklendi.'),
+                backgroundColor: const Color(0xFF22C55E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                duration: const Duration(seconds: 6),
+              ),
+            );
+          } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${processedTxs.length} adet yeni düzenli işlem hesabınıza eklendi.'),
+                backgroundColor: const Color(0xFF22C55E),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
         }
       }
       ref.read(syncServiceProvider).start();

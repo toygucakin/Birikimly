@@ -107,13 +107,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         return;
       }
 
+      final dateAtNoon = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 12, 0, 0);
       final rtEntry = RecurringTransactionsCompanion(
         userId: drift.Value(userId),
         amount: drift.Value(amount),
         categoryId: drift.Value(category.id),
         description: drift.Value(_descriptionController.text),
-        startDate: drift.Value(_selectedDate),
-        nextExecutionDate: drift.Value(_selectedDate),
+        startDate: drift.Value(dateAtNoon),
+        nextExecutionDate: drift.Value(dateAtNoon),
         isIncome: drift.Value(widget.isIncome),
         isSynced: const drift.Value(false),
         frequency: drift.Value(_frequency),

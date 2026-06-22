@@ -143,7 +143,7 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Transaction>> getAllTransactionsRaw(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId))).get();
 
-  Future<int> insertTransaction(TransactionsCompanion entry) => into(transactions).insert(entry);
+  Future<Transaction> insertTransaction(TransactionsCompanion entry) => into(transactions).insertReturning(entry);
   
   Future<bool> updateTransaction(Transaction transaction) => 
     update(transactions).replace(transaction);

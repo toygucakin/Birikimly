@@ -16,20 +16,31 @@ class RecurringTransactionService {
 
   /// Processes all pending recurring transactions for the given user.
   /// If a transaction's next execution date has passed, it creates a regular transaction
-  /// and updates the next execution date. Returns the number of created transactions.
-  Future<int> processRecurringTransactions(String userId) async {
+  /// and updates the next execution date. Returns the list of created transactions.
+  Future<List<Transaction>> processRecurringTransactions(String userId) async {
     final recurringTxs = await _db.getAllRecurringTransactions(userId);
     final now = DateTime.now();
-    int processedCount = 0;
+    final List<Transaction> processed = [];
     
     for (var rt in recurringTxs) {
       if (!rt.isActive) continue;
 
-      DateTime nextDate = rt.nextExecutionDate;
+      // Ensure nextExecutionDate is normalized to noon (12:00:00)
+      DateTime nextDate = DateTime(
+        rt.nextExecutionDate.year,
+        rt.nextExecutionDate.month,
+        rt.nextExecutionDate.day,
+        12,
+        0,
+        0,
+      );
       bool wasUpdated = false;
 
       // Use a while loop in case the user hasn't opened the app for multiple months
       while (nextDate.isBefore(now) || nextDate.isAtSameMomentAs(now)) {
+        // Ensure execution date is set to 12:00 PM
+        final execDate = DateTime(nextDate.year, nextDate.month, nextDate.day, 12, 0, 0);
+
         // 1. Create a transaction for this execution date
         final txCompanion = TransactionsCompanion(
           uuid: Value(_uuid.v4()),
@@ -37,19 +48,21 @@ class RecurringTransactionService {
           amount: Value(rt.amount),
           categoryId: Value(rt.categoryId),
           description: Value(rt.description),
-          date: Value(nextDate),
+          date: Value(execDate),
           isIncome: Value(rt.isIncome),
           isSynced: const Value(false),
           isDeleted: const Value(false),
           recurringUuid: Value(rt.uuid),
         );
         
-        await _db.insertTransaction(txCompanion);
+        final insertedTx = await _db.insertTransaction(txCompanion);
+        processed.add(insertedTx);
 
         // 2. Advance the nextDate based on frequency
         nextDate = _advanceDate(nextDate, rt.startDate, rt.frequency);
+        // Normalize advanced date to 12:00 PM
+        nextDate = DateTime(nextDate.year, nextDate.month, nextDate.day, 12, 0, 0);
         wasUpdated = true;
-        processedCount++;
       }
 
       // 3. Update the recurring transaction record if we executed it
@@ -62,7 +75,7 @@ class RecurringTransactionService {
       }
     }
     
-    return processedCount;
+    return processed;
   }
 
   DateTime _advanceDate(DateTime current, DateTime originalStart, String frequency) {

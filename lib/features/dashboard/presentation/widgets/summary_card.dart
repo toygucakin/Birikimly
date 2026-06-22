@@ -20,6 +20,14 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+    final remainingDays = lastDay.difference(today).inDays;
+    final remainingDaysText = remainingDays == 0
+        ? 'Bugün ayın son günü'
+        : 'Ay sonuna $remainingDays gün kaldı';
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -102,6 +110,18 @@ class SummaryCard extends StatelessWidget {
                             : Colors.white,
                   ),
                   minHeight: 6,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  remainingDaysText,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.7),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
               ),
             ],
