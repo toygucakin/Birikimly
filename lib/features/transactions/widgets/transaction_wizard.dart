@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:birikimly/core/database/database.dart';
@@ -465,6 +466,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   focusNode: _occurrencesFocusNode,
                   controller: _occurrencesController,
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
                     hintText: 'Taksit/Tekrar sayısı girin...',
@@ -801,6 +806,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             _occurrenceSelection = val;
             _occurrencesError = null;
             if (val == 'custom') {
+              if (_occurrencesController.text.isEmpty) {
+                _occurrencesController.text = _maxOccurrences.toString();
+              }
               _maxOccurrences = int.tryParse(_occurrencesController.text) ?? 12;
               FocusScope.of(context).requestFocus(_occurrencesFocusNode);
             } else {
