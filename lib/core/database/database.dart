@@ -21,6 +21,8 @@ class Transactions extends Table {
   BoolColumn get isSynced => boolean().withDefault(const Constant(false))();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   TextColumn get recurringUuid => text().nullable()();
+  IntColumn get installmentNumber => integer().nullable()();
+  IntColumn get totalInstallments => integer().nullable()();
 }
 
 class Categories extends Table {
@@ -53,6 +55,8 @@ class RecurringTransactions extends Table {
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   TextColumn get frequency => text().withDefault(const Constant('monthly'))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  IntColumn get maxOccurrences => integer().withDefault(const Constant(100))();
+  IntColumn get occurrencesExecuted => integer().withDefault(const Constant(0))();
 }
 
 @DriftDatabase(tables: [Transactions, Categories, RecurringTransactions])
@@ -60,7 +64,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration {
@@ -89,6 +93,12 @@ class AppDatabase extends _$AppDatabase {
           await m.addColumn(transactions, transactions.recurringUuid);
           await m.addColumn(recurringTransactions, recurringTransactions.frequency);
           await m.addColumn(recurringTransactions, recurringTransactions.isActive);
+        }
+        if (from < 15) {
+          await m.addColumn(recurringTransactions, recurringTransactions.maxOccurrences);
+          await m.addColumn(recurringTransactions, recurringTransactions.occurrencesExecuted);
+          await m.addColumn(transactions, transactions.installmentNumber);
+          await m.addColumn(transactions, transactions.totalInstallments);
         }
       },
       beforeOpen: (details) async {

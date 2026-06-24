@@ -32,11 +32,18 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   late FocusNode _amountFocusNode;
   late FocusNode _descriptionFocusNode;
 
+  // Recurring Installments State
+  int _maxOccurrences = 12;
+  String _occurrenceSelection = '12'; // '3', '6', '12', 'custom'
+  final _occurrencesController = TextEditingController();
+  late FocusNode _occurrencesFocusNode;
+
   @override
   void initState() {
     super.initState();
     _amountFocusNode = FocusNode();
     _descriptionFocusNode = FocusNode();
+    _occurrencesFocusNode = FocusNode();
   }
 
   @override
@@ -44,8 +51,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     _pageController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _occurrencesController.dispose();
     _amountFocusNode.dispose();
     _descriptionFocusNode.dispose();
+    _occurrencesFocusNode.dispose();
     super.dispose();
   }
 
@@ -121,6 +130,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           date: drift.Value(now),
           isIncome: drift.Value(widget.isIncome),
           isSynced: const drift.Value(false),
+          installmentNumber: drift.Value(_maxOccurrences != 100 ? 1 : null),
+          totalInstallments: drift.Value(_maxOccurrences != 100 ? _maxOccurrences : null),
         );
         ref.read(transactionNotifierProvider.notifier).addTransaction(entry);
 
@@ -138,7 +149,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           isIncome: drift.Value(widget.isIncome),
           isSynced: const drift.Value(false),
           frequency: drift.Value(_frequency),
-          isActive: const drift.Value(true),
+          isActive: drift.Value(_maxOccurrences > 1),
+          maxOccurrences: drift.Value(_maxOccurrences),
+          occurrencesExecuted: const drift.Value(1),
         );
         ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
       } else {
@@ -155,6 +168,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           isSynced: const drift.Value(false),
           frequency: drift.Value(_frequency),
           isActive: const drift.Value(true),
+          maxOccurrences: drift.Value(_maxOccurrences),
+          occurrencesExecuted: const drift.Value(0),
         );
         ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
       }
@@ -228,7 +243,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              height: _currentStep == 3 ? categoryStepHeight : (_currentStep == 0 && _isRecurring ? 190 : 130),
+              height: _currentStep == 3 
+                  ? categoryStepHeight 
+                  : (_currentStep == 0 
+                      ? (_isRecurring ? (_occurrenceSelection == 'custom' ? 350.0 : 310.0) : 130.0)
+                      : 130.0),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
@@ -344,7 +363,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             ),
           ),
           if (_isRecurring) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'weekly', label: Text('Haftalık', style: TextStyle(fontSize: 12))),
@@ -353,7 +372,20 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               ],
               selected: {_frequency},
               onSelectionChanged: (Set<String> newSelection) {
-                setState(() => _frequency = newSelection.first);
+                final newFreq = newSelection.first;
+                setState(() {
+                  _frequency = newFreq;
+                  if (newFreq == 'weekly') {
+                    _occurrenceSelection = '4';
+                    _maxOccurrences = 4;
+                  } else if (newFreq == 'yearly') {
+                    _occurrenceSelection = '1';
+                    _maxOccurrences = 1;
+                  } else {
+                    _occurrenceSelection = '12';
+                    _maxOccurrences = 12;
+                  }
+                });
               },
               style: ButtonStyle(
                 backgroundColor: WidgetStateProperty.resolveWith<Color>(
@@ -374,7 +406,104 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ),
               ),
             ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Geçerlilik Süresi (Taksit)',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                ),
+                Builder(
+                  builder: (context) {
+                    final endDate = _calculateEndDate(_selectedDate, _frequency, _maxOccurrences);
+                    final formattedEndDate = DateFormat('MMMM yyyy', 'tr_TR').format(endDate);
+                    return Text(
+                      'Tahmini Bitiş: $formattedEndDate',
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Builder(
+                builder: (context) {
+                  final List<String> values;
+                  if (_frequency == 'weekly') {
+                    values = ['4', '26', '52'];
+                  } else if (_frequency == 'yearly') {
+                    values = ['1', '3', '5'];
+                  } else {
+                    values = ['3', '6', '12'];
+                  }
+                  
+                  return Row(
+                    children: [
+                      ...values.map((v) => Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: _buildLimitChip(v, '$v ${_getFreqSuffix()}'),
+                      )),
+                      _buildLimitChip('custom', 'Özel'),
+                    ],
+                  );
+                },
+              ),
+            ),
+            if (_occurrenceSelection == 'custom') ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 40,
+                child: TextField(
+                  focusNode: _occurrencesFocusNode,
+                  controller: _occurrencesController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    hintText: 'Taksit/Tekrar sayısı girin...',
+                    hintStyle: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primary),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    final num = int.tryParse(val);
+                    if (num != null) {
+                      if (num > 100) {
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Düzenli işlemler en fazla 100 tekrar ile sınırlandırılabilir.'),
+                            backgroundColor: AppColors.expense,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                        _occurrencesController.text = '100';
+                        _occurrencesController.selection = TextSelection.fromPosition(
+                          TextPosition(offset: _occurrencesController.text.length),
+                        );
+                        setState(() {
+                          _maxOccurrences = 100;
+                        });
+                      } else {
+                        setState(() {
+                          _maxOccurrences = num.clamp(1, 100);
+                        });
+                      }
+                    }
+                  },
+                ),
+              ),
             ],
+          ],
           ],
         ),
       ),
@@ -593,6 +722,62 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           ),
         ],
       ),
+    );
+  }
+
+  DateTime _calculateEndDate(DateTime start, String freq, int maxOccs) {
+    DateTime date = start;
+    for (int i = 0; i < maxOccs - 1; i++) {
+      date = _advanceDate(date, start, freq);
+    }
+    return date;
+  }
+
+  String _getFreqSuffix() {
+    if (_frequency == 'weekly') {
+      return 'Hafta';
+    } else if (_frequency == 'yearly') {
+      return 'Yıl';
+    } else {
+      return 'Ay';
+    }
+  }
+
+  Widget _buildLimitChip(String val, String label) {
+    final isSelected = _occurrenceSelection == val;
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          color: isSelected ? Colors.white : AppColors.textSecondary,
+        ),
+      ),
+      selected: isSelected,
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+        side: BorderSide(
+          color: isSelected ? Colors.transparent : AppColors.primary.withValues(alpha: 0.15),
+        ),
+      ),
+      showCheckmark: false,
+      onSelected: (selected) {
+        if (selected) {
+          setState(() {
+            _occurrenceSelection = val;
+            if (val == 'custom') {
+              _maxOccurrences = int.tryParse(_occurrencesController.text) ?? 12;
+              FocusScope.of(context).requestFocus(_occurrencesFocusNode);
+            } else {
+              _maxOccurrences = int.parse(val);
+              FocusScope.of(context).unfocus();
+            }
+          });
+        }
+      },
     );
   }
 

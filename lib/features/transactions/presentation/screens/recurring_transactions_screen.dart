@@ -148,6 +148,20 @@ class RecurringTransactionsScreen extends ConsumerWidget {
                     style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
+                if (rt.maxOccurrences != 100) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Taksit: ${rt.occurrencesExecuted}/${rt.maxOccurrences}',
+                      style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
               ],
             ),
             subtitle: Padding(

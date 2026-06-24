@@ -27,10 +27,15 @@ class RecurringTransactionService {
 
       DateTime nextDate = rt.nextExecutionDate;
       bool wasUpdated = false;
+      int occurrencesExecuted = rt.occurrencesExecuted;
+      bool isActive = rt.isActive;
 
       // Use a while loop in case the user hasn't opened the app for multiple months
-      while (nextDate.isBefore(now) || nextDate.isAtSameMomentAs(now)) {
+      while (isActive && (nextDate.isBefore(now) || nextDate.isAtSameMomentAs(now))) {
         final execDate = nextDate;
+        
+        final currentInstallment = occurrencesExecuted + 1;
+        final total = rt.maxOccurrences;
 
         // 1. Create a transaction for this execution date
         final txCompanion = TransactionsCompanion(
@@ -44,10 +49,17 @@ class RecurringTransactionService {
           isSynced: const Value(false),
           isDeleted: const Value(false),
           recurringUuid: Value(rt.uuid),
+          installmentNumber: Value(total != null ? currentInstallment : null),
+          totalInstallments: Value(total),
         );
         
         final insertedTx = await _db.insertTransaction(txCompanion);
         processed.add(insertedTx);
+
+        occurrencesExecuted++;
+        if (total != null && occurrencesExecuted >= total) {
+          isActive = false;
+        }
 
         // 2. Advance the nextDate based on frequency
         nextDate = _advanceDate(nextDate, rt.startDate, rt.frequency);
@@ -60,6 +72,8 @@ class RecurringTransactionService {
       if (wasUpdated) {
         final updatedRt = rt.copyWith(
           nextExecutionDate: nextDate,
+          occurrencesExecuted: occurrencesExecuted,
+          isActive: isActive,
           isSynced: false, // Mark for sync since we updated the execution date
         );
         await _db.updateRecurringTransaction(updatedRt);
