@@ -14,7 +14,7 @@ class WidgetService {
     return NumberFormat.currency(
       locale: 'tr_TR',
       symbol: '₺',
-      decimalDigits: 2,
+      decimalDigits: 0,
     ).format(val);
   }
 
