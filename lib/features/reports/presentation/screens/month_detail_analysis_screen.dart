@@ -260,7 +260,7 @@ class _MonthlyTransactionsSheet extends StatefulWidget {
 
 class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
   String _selectedType = 'all'; // 'all', 'income', 'expense'
-  CategoryModel? _selectedCategory;
+  final Set<String> _selectedCategoryIds = {};
 
   void _showCategorySelectionSheet() {
     final availableCategories = widget.categories.where((c) {
@@ -269,94 +269,188 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
       return true;
     }).toList();
 
+    final tempSelectedIds = Set<String>.from(_selectedCategoryIds);
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: const EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 20),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Kategori Seçin',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            if (availableCategories.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                child: Center(
-                  child: Text(
-                    'Kategori bulunmuyor.',
-                    style: TextStyle(color: AppColors.textSecondary),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setSheetState) => Container(
+          padding: const EdgeInsets.only(top: 24, left: 20, right: 20, bottom: 20),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Kategorileri Filtrele',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-              )
-            else
-              Flexible(
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 4,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: availableCategories.length,
-                  itemBuilder: (context, index) {
-                    final cat = availableCategories[index];
-                    final isSelected = _selectedCategory?.id == cat.id;
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedCategory = cat;
-                          _selectedType = cat.isIncome ? 'income' : 'expense';
+                  if (tempSelectedIds.isNotEmpty)
+                    TextButton(
+                      onPressed: () {
+                        setSheetState(() {
+                          tempSelectedIds.clear();
                         });
-                        Navigator.pop(context);
                       },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isSelected ? cat.color.withValues(alpha: 0.1) : AppColors.surface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected ? cat.color : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      child: Text(
+                        'Temizle',
+                        style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              if (availableCategories.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Text(
+                      'Kategori bulunmuyor.',
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                  ),
+                )
+              else
+                Flexible(
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      childAspectRatio: 0.9,
+                    ),
+                    itemCount: availableCategories.length,
+                    itemBuilder: (context, index) {
+                      final cat = availableCategories[index];
+                      final isSelected = tempSelectedIds.contains(cat.id);
+
+                      return GestureDetector(
+                        onTap: () {
+                          setSheetState(() {
+                            if (isSelected) {
+                              tempSelectedIds.remove(cat.id);
+                            } else {
+                              tempSelectedIds.add(cat.id);
+                            }
+                          });
+                        },
+                        child: Stack(
                           children: [
-                            Icon(
-                              cat.icon,
-                              color: isSelected ? cat.color : AppColors.textSecondary,
-                              size: 24,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              cat.name,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                color: isSelected ? cat.color : AppColors.textSecondary,
+                            Container(
+                              width: double.infinity,
+                              height: double.infinity,
+                              decoration: BoxDecoration(
+                                color: isSelected ? cat.color.withValues(alpha: 0.1) : AppColors.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? cat.color : Colors.transparent,
+                                  width: 2,
+                                ),
                               ),
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    cat.icon,
+                                    color: isSelected ? cat.color : AppColors.textSecondary,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                                    child: Text(
+                                      cat.name,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                        color: isSelected ? cat.color : AppColors.textSecondary,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
+                            if (isSelected)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: Container(
+                                  padding: const EdgeInsets.all(2),
+                                  decoration: BoxDecoration(
+                                    color: cat.color,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 10,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
-                      ),
-                    );
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _selectedCategoryIds.clear();
+                      _selectedCategoryIds.addAll(tempSelectedIds);
+                      
+                      if (_selectedCategoryIds.isNotEmpty) {
+                        final firstCat = widget.categories.cast<CategoryModel?>().firstWhere(
+                          (c) => c?.id == _selectedCategoryIds.first,
+                          orElse: () => null,
+                        );
+                        if (firstCat != null) {
+                          final allSame = _selectedCategoryIds.every((id) {
+                            final cat = widget.categories.cast<CategoryModel?>().firstWhere(
+                              (c) => c?.id == id,
+                              orElse: () => null,
+                            );
+                            return cat != null && cat.isIncome == firstCat.isIncome;
+                          });
+                          if (allSame) {
+                            _selectedType = firstCat.isIncome ? 'income' : 'expense';
+                          }
+                        }
+                      }
+                    });
+                    Navigator.pop(context);
                   },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text(
+                    'Uygula',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  ),
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -393,9 +487,29 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
   }
 
   Widget _buildCategoryFilterChip() {
-    final hasCategory = _selectedCategory != null;
-    final label = hasCategory ? 'Kategori: ${_selectedCategory!.name}' : 'Kategori Seç';
-    final isSelected = hasCategory;
+    final hasCategories = _selectedCategoryIds.isNotEmpty;
+    String label;
+    IconData icon;
+    Color iconColor;
+    
+    if (!hasCategories) {
+      label = 'Kategori Seç';
+      icon = Icons.arrow_drop_down;
+      iconColor = AppColors.textSecondary;
+    } else if (_selectedCategoryIds.length == 1) {
+      final cat = widget.categories.cast<CategoryModel?>().firstWhere(
+        (c) => c?.id == _selectedCategoryIds.first,
+        orElse: () => null,
+      );
+      label = cat != null ? 'Kategori: ${cat.name}' : 'Kategori Seç';
+      icon = cat?.icon ?? Icons.category;
+      iconColor = Colors.white;
+    } else {
+      label = 'Kategori: ${_selectedCategoryIds.length} Seçili';
+      icon = Icons.filter_list;
+      iconColor = Colors.white;
+    }
+    final isSelected = hasCategories;
 
     return GestureDetector(
       onTap: _showCategorySelectionSheet,
@@ -413,10 +527,10 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (hasCategory) ...[
+            if (isSelected) ...[
               Icon(
-                _selectedCategory!.icon,
-                color: Colors.white,
+                icon,
+                color: iconColor,
                 size: 14,
               ),
               const SizedBox(width: 6),
@@ -429,12 +543,14 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
                 fontSize: 13,
               ),
             ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.arrow_drop_down,
-              color: isSelected ? Colors.white : AppColors.textSecondary,
-              size: 18,
-            ),
+            if (!isSelected) ...[
+              const SizedBox(width: 4),
+              Icon(
+                icon,
+                color: iconColor,
+                size: 18,
+              ),
+            ],
           ],
         ),
       ),
@@ -447,11 +563,19 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
       if (_selectedType == 'income' && !tx.isIncome) return false;
       if (_selectedType == 'expense' && tx.isIncome) return false;
       
-      if (_selectedCategory != null) {
+      if (_selectedCategoryIds.isNotEmpty) {
         final rawId = tx.categoryId?.trim() ?? '';
         final cleanId = rawId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
-        final selId = _selectedCategory!.id.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
-        return cleanId == selId || tx.categoryId?.toLowerCase().trim() == _selectedCategory!.name.toLowerCase().trim();
+        
+        return _selectedCategoryIds.any((selId) {
+          final cleanSelId = selId.replaceAll('def_', '').replaceAll('temp_', '').toLowerCase();
+          final cat = widget.categories.cast<CategoryModel?>().firstWhere(
+            (c) => c?.id == selId,
+            orElse: () => null,
+          );
+          if (cat == null) return false;
+          return cleanId == cleanSelId || tx.categoryId?.toLowerCase().trim() == cat.name.toLowerCase().trim();
+        });
       }
       return true;
     }).toList();
@@ -489,33 +613,33 @@ class _MonthlyTransactionsSheetState extends State<_MonthlyTransactionsSheet> {
                 children: [
                   _buildFilterChip(
                     label: 'Tümü',
-                    isSelected: _selectedType == 'all' && _selectedCategory == null,
+                    isSelected: _selectedType == 'all' && _selectedCategoryIds.isEmpty,
                     onTap: () {
                       setState(() {
                         _selectedType = 'all';
-                        _selectedCategory = null;
+                        _selectedCategoryIds.clear();
                       });
                     },
                   ),
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     label: 'Gelirler',
-                    isSelected: _selectedType == 'income' && _selectedCategory == null,
+                    isSelected: _selectedType == 'income' && _selectedCategoryIds.isEmpty,
                     onTap: () {
                       setState(() {
                         _selectedType = 'income';
-                        _selectedCategory = null;
+                        _selectedCategoryIds.clear();
                       });
                     },
                   ),
                   const SizedBox(width: 8),
                   _buildFilterChip(
                     label: 'Giderler',
-                    isSelected: _selectedType == 'expense' && _selectedCategory == null,
+                    isSelected: _selectedType == 'expense' && _selectedCategoryIds.isEmpty,
                     onTap: () {
                       setState(() {
                         _selectedType = 'expense';
-                        _selectedCategory = null;
+                        _selectedCategoryIds.clear();
                       });
                     },
                   ),
