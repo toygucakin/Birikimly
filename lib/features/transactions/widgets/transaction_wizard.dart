@@ -37,6 +37,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   String _occurrenceSelection = '12'; // '3', '6', '12', 'custom'
   final _occurrencesController = TextEditingController();
   late FocusNode _occurrencesFocusNode;
+  String? _occurrencesError;
 
   @override
   void initState() {
@@ -246,7 +247,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               height: _currentStep == 3 
                   ? categoryStepHeight 
                   : (_currentStep == 0 
-                      ? (_isRecurring ? (_occurrenceSelection == 'custom' ? 350.0 : 310.0) : 130.0)
+                      ? (_isRecurring 
+                          ? (_occurrenceSelection == 'custom' 
+                              ? (_occurrencesError != null ? 370.0 : 350.0) 
+                              : 310.0) 
+                          : 130.0)
                       : 130.0),
               child: PageView(
                 controller: _pageController,
@@ -467,41 +472,65 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
+                      borderSide: BorderSide(
+                        color: _occurrencesError != null 
+                            ? AppColors.expense 
+                            : AppColors.primary.withValues(alpha: 0.2)
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.primary),
+                      borderSide: BorderSide(
+                        color: _occurrencesError != null 
+                            ? AppColors.expense 
+                            : AppColors.primary
+                      ),
                     ),
                   ),
                   onChanged: (val) {
                     final num = int.tryParse(val);
-                    if (num != null) {
-                      if (num > 100) {
-                        ScaffoldMessenger.of(context).clearSnackBars();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Düzenli işlemler en fazla 100 tekrar ile sınırlandırılabilir.'),
-                            backgroundColor: AppColors.expense,
-                            duration: const Duration(seconds: 2),
-                          ),
-                        );
-                        _occurrencesController.text = '100';
-                        _occurrencesController.selection = TextSelection.fromPosition(
-                          TextPosition(offset: _occurrencesController.text.length),
-                        );
-                        setState(() {
-                          _maxOccurrences = 100;
-                        });
-                      } else {
-                        setState(() {
-                          _maxOccurrences = num.clamp(1, 100);
-                        });
-                      }
+                    if (val.isEmpty) {
+                      setState(() {
+                        _occurrencesError = 'Lütfen bir sayı girin.';
+                      });
+                    } else if (num == null || num <= 0) {
+                      setState(() {
+                        _occurrencesError = 'Geçerli bir pozitif sayı girin.';
+                      });
+                    } else if (num > 100) {
+                      setState(() {
+                        _occurrencesError = 'En fazla 100 tekrar girilebilir.';
+                        _maxOccurrences = 100;
+                      });
+                    } else {
+                      setState(() {
+                        _occurrencesError = null;
+                        _maxOccurrences = num;
+                      });
                     }
                   },
                 ),
               ),
+              if (_occurrencesError != null) ...[
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                      const SizedBox(width: 6),
+                      Text(
+                        _occurrencesError!,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.expense,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ],
           ],
@@ -697,6 +726,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             child: ElevatedButton(
               onPressed: () {
                 if (_currentStep == 0 && _amountController.text.isEmpty) return;
+                if (_currentStep == 0 && _isRecurring && _occurrenceSelection == 'custom' && _occurrencesError != null) return;
                 if (_currentStep == 3) {
                   if (_selectedCategoryId == null) return;
                   _submit();
@@ -705,7 +735,8 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: _currentStep == 3 && _selectedCategoryId == null
+                backgroundColor: (_currentStep == 3 && _selectedCategoryId == null) ||
+                                 (_currentStep == 0 && _isRecurring && _occurrenceSelection == 'custom' && _occurrencesError != null)
                     ? Colors.grey
                     : AppColors.primary,
                 foregroundColor: Colors.white,
@@ -768,6 +799,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         if (selected) {
           setState(() {
             _occurrenceSelection = val;
+            _occurrencesError = null;
             if (val == 'custom') {
               _maxOccurrences = int.tryParse(_occurrencesController.text) ?? 12;
               FocusScope.of(context).requestFocus(_occurrencesFocusNode);
