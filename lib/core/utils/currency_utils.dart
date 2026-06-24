@@ -18,7 +18,16 @@ class ThousandsFormatter extends TextInputFormatter {
     
     if (stripped.isEmpty) return newValue.copyWith(text: '');
 
-    final number = int.parse(stripped);
+    int number;
+    try {
+      number = int.parse(stripped);
+      if (number > 9999999999) {
+        number = 9999999999;
+      }
+    } catch (e) {
+      number = 9999999999;
+    }
+    
     final formatted = NumberFormat('#,###', 'tr_TR').format(number).replaceAll(',', '.');
 
     return TextEditingValue(

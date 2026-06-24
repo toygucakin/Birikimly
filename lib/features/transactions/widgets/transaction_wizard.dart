@@ -40,6 +40,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   late FocusNode _occurrencesFocusNode;
   String? _occurrencesError;
   String? _occurrencesWarning;
+  String? _amountError;
 
   @override
   void initState() {
@@ -253,7 +254,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                           ? (_occurrenceSelection == 'custom' 
                               ? 370.0 
                               : 310.0) 
-                          : 130.0)
+                          : (_amountError != null ? 150.0 : 130.0)) 
                       : 130.0),
               child: PageView(
                 controller: _pageController,
@@ -368,7 +369,40 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
+            onChanged: (val) {
+              final amountString = val.replaceAll('.', '').replaceAll(',', '.');
+              final amount = double.tryParse(amountString) ?? 0;
+              if (amount >= 9999999999) {
+                setState(() {
+                  _amountError = 'En fazla 9.999.999.999 ₺ girilebilir.';
+                });
+              } else {
+                if (_amountError != null) {
+                  setState(() {
+                    _amountError = null;
+                  });
+                }
+              }
+            },
           ),
+          if (_amountError != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                const SizedBox(width: 6),
+                Text(
+                  _amountError!,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.expense,
+                  ),
+                ),
+              ],
+            ),
+          ],
           if (_isRecurring) ...[
             const SizedBox(height: 12),
             SegmentedButton<String>(
@@ -743,6 +777,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             child: ElevatedButton(
               onPressed: () {
                 if (_currentStep == 0 && _amountController.text.isEmpty) return;
+                if (_currentStep == 0 && _amountError != null) return;
                 if (_currentStep == 0 && _isRecurring && _occurrenceSelection == 'custom' && _occurrencesError != null) return;
                 if (_currentStep == 3) {
                   if (_selectedCategoryId == null) return;
@@ -753,6 +788,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: (_currentStep == 3 && _selectedCategoryId == null) ||
+                                 (_currentStep == 0 && _amountError != null) ||
                                  (_currentStep == 0 && _isRecurring && _occurrenceSelection == 'custom' && _occurrencesError != null)
                     ? Colors.grey
                     : AppColors.primary,

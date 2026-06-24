@@ -317,84 +317,132 @@ class TransactionItem extends StatelessWidget {
 
   void _showEditAmountDialog(BuildContext context) {
     final initialValue = NumberFormat('#,###', 'tr_TR')
-        .format(transaction.amount.toInt())
+        .format(transaction.amount)
         .replaceAll(',', '.');
     final controller = TextEditingController(text: initialValue);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
+      builder: (context) {
+        String? localError;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  color: AppColors.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    const Text(
+                      'Miktarı Düzenle',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: localError != null 
+                              ? AppColors.expense 
+                              : AppColors.primary.withValues(alpha: 0.2)
+                        ),
+                      ),
+                      child: TextField(
+                        controller: controller,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [ThousandsFormatter()],
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          suffixText: 'TL',
+                          suffixStyle: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+                        ),
+                        autofocus: true,
+                        onChanged: (val) {
+                          final cleanText = val.replaceAll('.', '').replaceAll(',', '.');
+                          final newAmount = double.tryParse(cleanText) ?? 0;
+                          if (newAmount >= 9999999999) {
+                            setModalState(() {
+                              localError = 'En fazla 9.999.999.999 ₺ girilebilir.';
+                            });
+                          } else {
+                            if (localError != null) {
+                              setModalState(() {
+                                localError = null;
+                              });
+                            }
+                          }
+                        },
+                      ),
+                    ),
+                    if (localError != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                          const SizedBox(width: 6),
+                          Text(
+                            localError!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.expense,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: localError != null || controller.text.isEmpty
+                            ? null
+                            : () {
+                                final cleanText = controller.text.replaceAll('.', '').replaceAll(',', '.');
+                                final newAmount = double.tryParse(cleanText);
+                                if (newAmount != null) {
+                                  onEdit?.call(newAmount);
+                                }
+                                Navigator.pop(context);
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: localError != null || controller.text.isEmpty
+                              ? Colors.grey
+                              : AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        child: const Text('Kaydet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 24),
-              const Text(
-                'Miktarı Düzenle',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 24),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.background,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
-                ),
-                child: TextField(
-                  controller: controller,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [ThousandsFormatter()],
-                  decoration: InputDecoration(
-                    border: InputBorder.none,
-                    suffixText: 'TL',
-                    suffixStyle: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-                  ),
-                  autofocus: true,
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final cleanText = controller.text.replaceAll('.', '').replaceAll(',', '.');
-                    final newAmount = double.tryParse(cleanText);
-                    if (newAmount != null) {
-                      onEdit?.call(newAmount);
-                    }
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text('Kaydet', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }
