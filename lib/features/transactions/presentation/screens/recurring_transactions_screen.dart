@@ -192,6 +192,79 @@ class RecurringTransactionsScreen extends ConsumerWidget {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.repeat, 
+                      size: 14, 
+                      color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      rt.maxOccurrences == 100
+                          ? 'Kalan: Süresiz'
+                          : 'Kalan: ${rt.maxOccurrences - rt.occurrencesExecuted} taksit',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                if (rt.maxOccurrences != 100) ...[
+                  Builder(
+                    builder: (context) {
+                      final endDate = _calculateEndDate(rt.startDate, rt.frequency, rt.maxOccurrences);
+                      final formattedEndDate = DateFormat('MMMM yyyy', 'tr_TR').format(endDate);
+                      return Row(
+                        children: [
+                          Icon(
+                            Icons.event_available, 
+                            size: 14, 
+                            color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Bitiş: $formattedEndDate',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.event_repeat, 
+                        size: 14, 
+                        color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Bitiş: Süresiz',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
           const Divider(height: 1, indent: 16, endIndent: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -308,6 +381,67 @@ class RecurringTransactionsScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+
+  DateTime _calculateEndDate(DateTime start, String freq, int maxOccs) {
+    DateTime date = start;
+    for (int i = 0; i < maxOccs - 1; i++) {
+      date = _advanceDate(date, start, freq);
+    }
+    return date;
+  }
+
+  DateTime _advanceDate(DateTime current, DateTime originalStart, String frequency) {
+    switch (frequency) {
+      case 'weekly':
+        return current.add(const Duration(days: 7));
+      case 'yearly':
+        return _advanceOneYear(current, originalStart);
+      case 'monthly':
+      default:
+        return _advanceOneMonth(current, originalStart);
+    }
+  }
+
+  DateTime _advanceOneMonth(DateTime current, DateTime originalStart) {
+    int nextMonth = current.month + 1;
+    int nextYear = current.year;
+    
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear++;
+    }
+
+    final targetDay = originalStart.day;
+    final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
+
+    return DateTime(
+      nextYear,
+      nextMonth,
+      clampedDay,
+      originalStart.hour,
+      originalStart.minute,
+      originalStart.second,
+    );
+  }
+
+  DateTime _advanceOneYear(DateTime current, DateTime originalStart) {
+    int nextYear = current.year + 1;
+    int nextMonth = current.month;
+    
+    final targetDay = originalStart.day;
+    final maxDaysInNextMonth = DateTime(nextYear, nextMonth + 1, 0).day;
+    final clampedDay = targetDay > maxDaysInNextMonth ? maxDaysInNextMonth : targetDay;
+
+    return DateTime(
+      nextYear,
+      nextMonth,
+      clampedDay,
+      originalStart.hour,
+      originalStart.minute,
+      originalStart.second,
     );
   }
 }
