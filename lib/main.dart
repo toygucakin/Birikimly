@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,6 +20,12 @@ import 'package:birikimly/features/transactions/widgets/transaction_wizard.dart'
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Lock app orientation to portrait
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   
   // Initialize date formatting
   await initializeDateFormatting('tr_TR', null);
