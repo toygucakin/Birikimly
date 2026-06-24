@@ -372,7 +372,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             onChanged: (val) {
               final amountString = val.replaceAll('.', '').replaceAll(',', '.');
               final amount = double.tryParse(amountString) ?? 0;
-              if (amount >= 9999999999) {
+              if (amount > 9999999999) {
                 setState(() {
                   _amountError = 'En fazla 9.999.999.999 ₺ girilebilir.';
                 });

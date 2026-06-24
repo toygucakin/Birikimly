@@ -379,7 +379,7 @@ class TransactionItem extends StatelessWidget {
                         onChanged: (val) {
                           final cleanText = val.replaceAll('.', '').replaceAll(',', '.');
                           final newAmount = double.tryParse(cleanText) ?? 0;
-                          if (newAmount >= 9999999999) {
+                          if (newAmount > 9999999999) {
                             setModalState(() {
                               localError = 'En fazla 9.999.999.999 ₺ girilebilir.';
                             });
