@@ -251,7 +251,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   : (_currentStep == 0 
                       ? (_isRecurring 
                           ? (_occurrenceSelection == 'custom' 
-                              ? ((_occurrencesError != null || _occurrencesWarning != null) ? 370.0 : 350.0) 
+                              ? 370.0 
                               : 310.0) 
                           : 130.0)
                       : 130.0),
@@ -469,7 +469,6 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(3),
                   ],
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
@@ -532,9 +531,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   child: Row(
                     children: [
                       Icon(
-                        _occurrencesError != null ? Icons.error_outline : Icons.warning_amber_outlined, 
+                        Icons.error_outline, 
                         size: 14, 
-                        color: _occurrencesError != null ? AppColors.expense : Colors.amber
+                        color: AppColors.expense
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -542,7 +541,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: _occurrencesError != null ? AppColors.expense : Colors.amber,
+                          color: AppColors.expense,
                         ),
                       ),
                     ],
