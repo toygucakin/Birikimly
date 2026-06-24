@@ -39,6 +39,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   final _occurrencesController = TextEditingController();
   late FocusNode _occurrencesFocusNode;
   String? _occurrencesError;
+  String? _occurrencesWarning;
 
   @override
   void initState() {
@@ -250,7 +251,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   : (_currentStep == 0 
                       ? (_isRecurring 
                           ? (_occurrenceSelection == 'custom' 
-                              ? (_occurrencesError != null ? 370.0 : 350.0) 
+                              ? ((_occurrencesError != null || _occurrencesWarning != null) ? 370.0 : 350.0) 
                               : 310.0) 
                           : 130.0)
                       : 130.0),
@@ -497,39 +498,51 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                     if (val.isEmpty) {
                       setState(() {
                         _occurrencesError = 'Lütfen bir sayı girin.';
+                        _occurrencesWarning = null;
                       });
                     } else if (num == null || num <= 0) {
                       setState(() {
                         _occurrencesError = 'Geçerli bir pozitif sayı girin.';
+                        _occurrencesWarning = null;
                       });
                     } else if (num > 100) {
+                      _occurrencesController.text = '100';
+                      _occurrencesController.selection = TextSelection.fromPosition(
+                        TextPosition(offset: _occurrencesController.text.length),
+                      );
                       setState(() {
-                        _occurrencesError = 'En fazla 100 tekrar girilebilir.';
+                        _occurrencesError = null;
+                        _occurrencesWarning = 'En fazla 100 tekrar girilebilir.';
                         _maxOccurrences = 100;
                       });
                     } else {
                       setState(() {
                         _occurrencesError = null;
+                        _occurrencesWarning = null;
                         _maxOccurrences = num;
                       });
                     }
                   },
                 ),
               ),
-              if (_occurrencesError != null) ...[
+              if (_occurrencesError != null || _occurrencesWarning != null) ...[
                 const SizedBox(height: 4),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                      Icon(
+                        _occurrencesError != null ? Icons.error_outline : Icons.warning_amber_outlined, 
+                        size: 14, 
+                        color: _occurrencesError != null ? AppColors.expense : Colors.amber
+                      ),
                       const SizedBox(width: 6),
                       Text(
-                        _occurrencesError!,
+                        _occurrencesError ?? _occurrencesWarning!,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.expense,
+                          color: _occurrencesError != null ? AppColors.expense : Colors.amber,
                         ),
                       ),
                     ],
@@ -805,6 +818,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           setState(() {
             _occurrenceSelection = val;
             _occurrencesError = null;
+            _occurrencesWarning = null;
             if (val == 'custom') {
               if (_occurrencesController.text.isEmpty) {
                 _occurrencesController.text = _maxOccurrences.toString();
