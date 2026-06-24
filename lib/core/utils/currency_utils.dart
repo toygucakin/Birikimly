@@ -21,11 +21,11 @@ class ThousandsFormatter extends TextInputFormatter {
     int number;
     try {
       number = int.parse(stripped);
-      if (number > 9999999999) {
-        number = 9999999999;
+      if (number > 999999999999999) {
+        number = 999999999999999;
       }
     } catch (e) {
-      number = 9999999999;
+      number = 999999999999999;
     }
     
     final formatted = NumberFormat('#,###', 'tr_TR').format(number).replaceAll(',', '.');

@@ -254,7 +254,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                           ? (_occurrenceSelection == 'custom' 
                               ? 370.0 
                               : 310.0) 
-                          : (_amountError != null ? 150.0 : 130.0)) 
+                          : 150.0) 
                       : 130.0),
               child: PageView(
                 controller: _pageController,
@@ -280,7 +280,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
 
   Widget _buildAmountStep() {
     return SingleChildScrollView(
-      physics: const NeverScrollableScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         child: Column(

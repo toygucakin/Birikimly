@@ -338,49 +338,121 @@ class RecurringTransactionsScreen extends ConsumerWidget {
   }
 
   void _showEditDialog(BuildContext context, WidgetRef ref, RecurringTransaction rt, String categoryName) {
-    final amountController = TextEditingController(text: rt.amount.toStringAsFixed(2).replaceAll('.00', ''));
+    final initialValue = NumberFormat('#,###', 'tr_TR')
+        .format(rt.amount)
+        .replaceAll(',', '.');
+    final amountController = TextEditingController(text: initialValue);
     final descController = TextEditingController(text: rt.description);
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Düzenli İşlemi Düzenle'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'Yeni Miktar', prefixText: '₺ '),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'Yeni Açıklama'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newAmount = double.tryParse(amountController.text.replaceAll(',', '.'));
-              if (newAmount != null && newAmount != rt.amount) {
-                ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionAmount(rt, newAmount);
-              }
-              if (descController.text != rt.description) {
-                ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionName(rt, descController.text);
-              }
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-            child: const Text('Kaydet'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        String? localError;
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text('Düzenli İşlemi Düzenle'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: localError != null 
+                            ? AppColors.expense 
+                            : AppColors.primary.withValues(alpha: 0.2)
+                      ),
+                    ),
+                    child: TextField(
+                      controller: amountController,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [ThousandsFormatter()],
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        labelText: 'Yeni Miktar',
+                        labelStyle: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                        prefixText: '₺ ',
+                        prefixStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
+                      ),
+                      onChanged: (val) {
+                        final cleanText = val.replaceAll('.', '').replaceAll(',', '.');
+                        final newAmount = double.tryParse(cleanText) ?? 0;
+                        if (newAmount > 9999999999) {
+                          setStateDialog(() {
+                            localError = 'En fazla 9.999.999.999 ₺ girilebilir.';
+                          });
+                        } else {
+                          if (localError != null) {
+                            setStateDialog(() {
+                              localError = null;
+                            });
+                          }
+                        }
+                      },
+                    ),
+                  ),
+                  if (localError != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                        const SizedBox(width: 6),
+                        Text(
+                          localError!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.expense,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(labelText: 'Yeni Açıklama'),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('İptal'),
+                ),
+                ElevatedButton(
+                  onPressed: localError != null || amountController.text.isEmpty
+                      ? null
+                      : () {
+                          final cleanText = amountController.text.replaceAll('.', '').replaceAll(',', '.');
+                          final newAmount = double.tryParse(cleanText);
+                          if (newAmount != null && newAmount != rt.amount) {
+                            ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionAmount(rt, newAmount);
+                          }
+                          if (descController.text != rt.description) {
+                            ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionName(rt, descController.text);
+                          }
+                          Navigator.pop(context);
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: localError != null || amountController.text.isEmpty
+                        ? Colors.grey
+                        : AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Kaydet'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
