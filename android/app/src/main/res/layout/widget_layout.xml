@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
     <!-- Dynamic Background Image -->
     <ImageView
@@ -18,9 +18,10 @@
     <LinearLayout
         android:id="@+id/content_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:orientation="vertical"
-        android:padding="8dp">
+        android:gravity="center"
+        android:padding="6dp">
 
         <TextView
             android:id="@+id/tv_title"
@@ -29,7 +30,7 @@
             android:gravity="center"
             android:text="Aylık Net Durum"
             android:textColor="#E0FFFFFF"
-            android:textSize="12sp" />
+            android:textSize="11sp" />
 
         <TextView
             android:id="@+id/tv_net"
@@ -38,9 +39,9 @@
             android:gravity="center"
             android:text="₺0,00"
             android:textColor="#FFFFFF"
-            android:textSize="22sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_marginBottom="2dp"/>
+            android:layout_marginBottom="1dp"/>
             
         <TextView
             android:id="@+id/tv_limit"
@@ -49,15 +50,15 @@
             android:gravity="center"
             android:text=""
             android:textColor="#FFCDD2"
-            android:textSize="11sp"
-            android:layout_marginBottom="2dp"/>
+            android:textSize="10sp"
+            android:layout_marginBottom="1dp"/>
 
         <ProgressBar
             android:id="@+id/pb_limit"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_height="3dp"
+            android:layout_marginBottom="3dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:progressTint="#FFCDD2"
@@ -77,19 +78,19 @@
                 android:layout_weight="1"
                 android:background="@drawable/widget_btn_bg"
                 android:orientation="vertical"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
                 android:paddingStart="4dp"
                 android:paddingEnd="4dp"
-                android:layout_marginEnd="4dp"
+                android:layout_marginEnd="3dp"
                 android:gravity="center">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="▼ Gider Ekle"
+                    android:text="▼ Gider"
                     android:textColor="#E0FFFFFF"
-                    android:textSize="9.5sp"
+                    android:textSize="9sp"
                     android:textStyle="bold"
                     android:singleLine="true"
                     android:ellipsize="end" />
@@ -101,7 +102,7 @@
                     android:text="₺0"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:singleLine="true"
                     android:ellipsize="end" />
             </LinearLayout>
@@ -114,19 +115,19 @@
                 android:layout_weight="1"
                 android:background="@drawable/widget_btn_bg"
                 android:orientation="vertical"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
                 android:paddingStart="4dp"
                 android:paddingEnd="4dp"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="3dp"
                 android:gravity="center">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="▲ Gelir Ekle"
+                    android:text="▲ Gelir"
                     android:textColor="#E0FFFFFF"
-                    android:textSize="9.5sp"
+                    android:textSize="9sp"
                     android:textStyle="bold"
                     android:singleLine="true"
                     android:ellipsize="end" />
@@ -138,7 +139,7 @@
                     android:text="₺0"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="11sp"
+                    android:textSize="10sp"
                     android:singleLine="true"
                     android:ellipsize="end" />
             </LinearLayout>
