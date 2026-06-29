@@ -256,10 +256,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                     : (_currentStep == 0 
                         ? (_isRecurring 
                             ? (_occurrenceSelection == 'custom' 
-                                ? 370.0 
-                                : 310.0) 
-                            : 150.0) 
-                        : 150.0)),
+                                ? 290.0 
+                                : 230.0) 
+                            : 120.0) 
+                        : 120.0)),
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (int step) async {
@@ -287,7 +287,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     return SingleChildScrollView(
       physics: const ClampingScrollPhysics(),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -363,7 +363,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextField(
             focusNode: _amountFocusNode,
             controller: _amountController,
@@ -371,10 +371,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             keyboardType: TextInputType.number,
             inputFormatters: [ThousandsFormatter()],
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.primary),
+            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary),
             decoration: InputDecoration(
               prefixText: '₺ ',
-              prefixStyle: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
+              prefixStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary),
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
             ),
@@ -413,7 +413,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             ),
           ],
           if (_isRecurring) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: 'weekly', label: Text('Haftalık', style: TextStyle(fontSize: 12))),
@@ -456,7 +456,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -483,7 +483,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Builder(
