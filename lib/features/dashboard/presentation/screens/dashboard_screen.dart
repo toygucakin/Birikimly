@@ -160,6 +160,207 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
     );
   }
 
+  void _showUnifiedWarningsModal({
+    required BuildContext context,
+    required bool isGeneralLimitExceeded,
+    required double totalExpense,
+    required double? monthlyLimit,
+    required List<Map<String, dynamic>> exceededCategories,
+    required bool hasCategoryMismatch,
+    required double totalCategoryLimits,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 24),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            Row(
+              children: [
+                Icon(
+                  isGeneralLimitExceeded || exceededCategories.isNotEmpty
+                      ? Icons.warning_amber_rounded
+                      : Icons.info_outline_rounded,
+                  color: isGeneralLimitExceeded || exceededCategories.isNotEmpty
+                      ? AppColors.expense
+                      : Colors.amber,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Bütçe & Limit Uyarısı',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            if (isGeneralLimitExceeded && monthlyLimit != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.expense.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.expense.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.trending_up, color: AppColors.expense, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Genel Bütçe Sınırı Aşıldı!',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                    ),
+                    Text(
+                      'Toplam Harcama: ${CurrencyUtils.format(totalExpense)} / Limit: ${CurrencyUtils.format(monthlyLimit)}',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            if (exceededCategories.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.expense.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.expense.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.category_outlined, color: AppColors.expense, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Aşılan Kategori Limitleri',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ...exceededCategories.map((item) {
+                      final CategoryModel cat = item['category'];
+                      final double spent = item['spent'];
+                      final double limit = item['limit'];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Icon(cat.icon, color: cat.color, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Aşım: ${CurrencyUtils.format(spent - limit)}',
+                                  style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                Text(
+                                  '${CurrencyUtils.format(spent)} / ${CurrencyUtils.format(limit)}',
+                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+            ],
+            if (hasCategoryMismatch && monthlyLimit != null) ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Kategori Limit Uyuşmazlığı',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 15),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Kategori limitlerinin toplamı (${CurrencyUtils.format(totalCategoryLimits)}), aylık genel limitinizi (${CurrencyUtils.format(monthlyLimit)}) aşıyor.',
+                      style: TextStyle(color: AppColors.textPrimary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Bu durum, tüm kategorilerde limitleri doldurursanız genel bütçenizi aşacağınız anlamına gelir. Limitlerinizi dengelemenizi öneririz.',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('Kapat', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final transactionsAsync = ref.watch(transactionStreamProvider);
@@ -286,7 +487,6 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                           final totalExpense = notifier.calculateExpense(transactions);
 
                           double totalCategoryLimits = 0;
-                          final List<Widget> warningWidgets = [];
                           final List<Map<String, dynamic>> exceededCategories = [];
                           final List<Map<String, dynamic>> categoryBudgetCardData = [];
 
@@ -502,204 +702,92 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                           
                           final List<Widget> categoryBudgetCards = categoryBudgetCardData.map((e) => e['widget'] as Widget).toList();
 
-                          if (exceededCategories.isNotEmpty) {
-                            warningWidgets.add(
-                              GestureDetector(
-                                onTap: () {
-                                  showModalBottomSheet(
-                                    context: context,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (context) => Container(
-                                      padding: const EdgeInsets.all(24),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.surface,
-                                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                                      ),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            width: 40,
-                                            height: 4,
-                                            margin: const EdgeInsets.only(bottom: 24),
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey.withValues(alpha: 0.3),
-                                              borderRadius: BorderRadius.circular(2),
-                                            ),
-                                          ),
-                                          Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 48),
-                                          const SizedBox(height: 16),
-                                          const Text(
-                                            'Aşılan Kategoriler',
-                                            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                                          ),
-                                          const SizedBox(height: 24),
-                                          ...exceededCategories.map((item) {
-                                            final CategoryModel cat = item['category'];
-                                            final double spent = item['spent'];
-                                            final double limit = item['limit'];
-                                            return Padding(
-                                              padding: const EdgeInsets.only(bottom: 16),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    padding: const EdgeInsets.all(8),
-                                                    decoration: BoxDecoration(
-                                                      color: cat.color.withValues(alpha: 0.1),
-                                                      borderRadius: BorderRadius.circular(12),
-                                                    ),
-                                                    child: Icon(cat.icon, color: cat.color, size: 24),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                                                  ),
-                                                  Column(
-                                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                                    children: [
-                                                      Text(
-                                                        'Aşım: ${CurrencyUtils.format(spent - limit)}',
-                                                        style: TextStyle(color: AppColors.expense, fontWeight: FontWeight.bold),
-                                                      ),
-                                                      Text(
-                                                        '${CurrencyUtils.format(spent)} / ${CurrencyUtils.format(limit)}',
-                                                        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }),
-                                          const SizedBox(height: 16),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              onPressed: () => Navigator.pop(context),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: AppColors.primary,
-                                                foregroundColor: Colors.white,
-                                                padding: const EdgeInsets.symmetric(vertical: 16),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                              ),
-                                              child: const Text('Kapat', style: TextStyle(fontWeight: FontWeight.bold)),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                          final isGeneralLimitExceeded = monthlyLimit != null && totalExpense > monthlyLimit;
+                          final hasCategoryExceeded = exceededCategories.isNotEmpty;
+                          final hasCategoryMismatch = monthlyLimit != null && totalCategoryLimits > monthlyLimit;
+
+                          final hasAnyWarning = isGeneralLimitExceeded || hasCategoryExceeded || hasCategoryMismatch;
+
+                          Widget? warningPanel;
+                          if (hasAnyWarning) {
+                            final isCritical = isGeneralLimitExceeded || hasCategoryExceeded;
+                            final warningColor = isCritical ? AppColors.expense : Colors.amber;
+
+                            String summaryText = '';
+                            if (isCritical) {
+                              final List<String> parts = [];
+                              if (isGeneralLimitExceeded) parts.add('Genel Limit');
+                              if (hasCategoryExceeded) parts.add('${exceededCategories.length} Kategori');
+                              summaryText = '${parts.join(" ve ")} Aşımı Mevcut';
+                            } else {
+                              summaryText = 'Kategori Limit Uyuşmazlığı';
+                            }
+
+                            warningPanel = GestureDetector(
+                              onTap: () {
+                                _showUnifiedWarningsModal(
+                                  context: context,
+                                  isGeneralLimitExceeded: isGeneralLimitExceeded,
+                                  totalExpense: totalExpense,
+                                  monthlyLimit: monthlyLimit,
+                                  exceededCategories: exceededCategories,
+                                  hasCategoryMismatch: hasCategoryMismatch,
+                                  totalCategoryLimits: totalCategoryLimits,
+                                );
+                              },
+                              child: Container(
+                                margin: const EdgeInsets.only(top: 16),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: warningColor.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: warningColor.withValues(alpha: 0.25), width: 1.2),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isCritical ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
+                                      color: warningColor,
+                                      size: 20,
                                     ),
-                                  );
-                                },
-                                child: Container(
-                                  margin: const EdgeInsets.only(top: 16),
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.expense.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: AppColors.expense.withValues(alpha: 0.3), width: 1.5),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Kategori Limitleri Aşıldı!',
-                                              style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
-                                            ),
-                                            Text(
-                                              '${exceededCategories.length} kategoride limitinizi aştınız. Detaylar için tıklayın.',
-                                              style: TextStyle(color: AppColors.expense, fontSize: 13),
-                                            ),
-                                          ],
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        summaryText,
+                                        style: TextStyle(
+                                          color: warningColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 13,
                                         ),
                                       ),
-                                      Icon(Icons.chevron_right, color: AppColors.expense),
-                                    ],
-                                  ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: warningColor.withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Detay',
+                                        style: TextStyle(
+                                          color: warningColor,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(Icons.chevron_right, color: warningColor, size: 18),
+                                  ],
                                 ),
                               ),
                             );
                           }
 
-                          if (monthlyLimit != null) {
-                            final hasExpenseExceeded = totalExpense > monthlyLimit;
-                            final hasCategoryMismatch = totalCategoryLimits > monthlyLimit;
-
-                            if (hasExpenseExceeded) {
-                              warningWidgets.insert(0, Container(
-                                margin: const EdgeInsets.only(top: 16),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: AppColors.expense.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: AppColors.expense.withValues(alpha: 0.3), width: 1.5),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: 24),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Genel Bütçe Sınırı Aşıldı!',
-                                            style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.expense, fontSize: 14),
-                                          ),
-                                          Text(
-                                            'Aylık harcama limitinizi ${CurrencyUtils.format(totalExpense - monthlyLimit)} aştınız.',
-                                            style: TextStyle(color: AppColors.expense, fontSize: 13),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ));
-                            }
-
-                            if (hasCategoryMismatch) {
-                              warningWidgets.add(Container(
-                                margin: const EdgeInsets.only(top: 16),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: Colors.amber.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(16),
-                                  border: Border.all(color: Colors.amber.withValues(alpha: 0.3), width: 1.5),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 24),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Kategori Limit Uyuşmazlığı',
-                                            style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14),
-                                          ),
-                                          Text(
-                                            'Kategori limitlerinin toplamı (${CurrencyUtils.format(totalCategoryLimits)}), aylık genel limitinizi (${CurrencyUtils.format(monthlyLimit)}) aşıyor.',
-                                            style: const TextStyle(color: Colors.amber, fontSize: 13),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ));
-                            }
-                          }
-
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ...warningWidgets,
+                              if (warningPanel != null) warningPanel,
                               if (categoryBudgetCards.isNotEmpty) ...[
                                 const SizedBox(height: 16),
                                 GestureDetector(
