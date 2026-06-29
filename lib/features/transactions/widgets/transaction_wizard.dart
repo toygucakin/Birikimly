@@ -206,7 +206,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final double maxAvailableStepHeight = (screenHeight - keyboardHeight - 140.0).clamp(80.0, 500.0);
+    final double maxAvailableStepHeight = (screenHeight - keyboardHeight - 190.0).clamp(80.0, 500.0);
 
     final gridWidth = (screenWidth - 40) - 32; // Dialog inset padding (40) + Step padding (32)
     final itemHeight = (gridWidth - 30) / 4; // 4 columns, 10px spacing
@@ -221,7 +221,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         clipBehavior: Clip.antiAlias,
         width: double.infinity,
         constraints: BoxConstraints(
-          maxHeight: (screenHeight - keyboardHeight - 40.0).clamp(100.0, screenHeight * 0.65),
+          maxHeight: (screenHeight - keyboardHeight - 70.0).clamp(100.0, screenHeight * 0.65),
         ),
         decoration: BoxDecoration(
           color: AppColors.background,
