@@ -206,7 +206,6 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-    final double maxAvailableStepHeight = (screenHeight - keyboardHeight - 190.0).clamp(80.0, 500.0);
 
     final gridWidth = (screenWidth - 40) - 32; // Dialog inset padding (40) + Step padding (32)
     final itemHeight = (gridWidth - 30) / 4; // 4 columns, 10px spacing
@@ -221,7 +220,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         clipBehavior: Clip.antiAlias,
         width: double.infinity,
         constraints: BoxConstraints(
-          maxHeight: (screenHeight - keyboardHeight - 70.0).clamp(100.0, screenHeight * 0.65),
+          maxHeight: (screenHeight - keyboardHeight - 40.0).clamp(100.0, screenHeight * 0.8),
         ),
         decoration: BoxDecoration(
           color: AppColors.background,
@@ -233,7 +232,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           children: [
             const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -248,31 +247,33 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 ],
               ),
             ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              height: (_currentStep == 3 
-                  ? categoryStepHeight 
-                  : (_currentStep == 0 
-                      ? (_isRecurring 
-                          ? (_occurrenceSelection == 'custom' 
-                              ? 370.0 
-                              : 310.0) 
-                          : 150.0) 
-                      : 150.0)).clamp(0.0, maxAvailableStepHeight),
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (int step) async {
-                  setState(() => _currentStep = step);
-                  FocusScope.of(context).unfocus();
-                },
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildAmountStep(),
-                  _buildDateStep(),
-                  _buildDescriptionStep(),
-                  _buildCategoryStep(),
-                ],
+            Flexible(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                height: (_currentStep == 3 
+                    ? categoryStepHeight 
+                    : (_currentStep == 0 
+                        ? (_isRecurring 
+                            ? (_occurrenceSelection == 'custom' 
+                                ? 370.0 
+                                : 310.0) 
+                            : 150.0) 
+                        : 150.0)),
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (int step) async {
+                    setState(() => _currentStep = step);
+                    FocusScope.of(context).unfocus();
+                  },
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildAmountStep(),
+                    _buildDateStep(),
+                    _buildDescriptionStep(),
+                    _buildCategoryStep(),
+                  ],
+                ),
               ),
             ),
             _buildNavigation(),
