@@ -457,7 +457,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               children: [
                 Expanded(
                   child: Text(
-                    'Geçerlilik Süresi (Taksit)',
+                    'Tahmini Süre',
                     style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -469,7 +469,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                       final endDate = _calculateEndDate(_selectedDate, _frequency, _maxOccurrences);
                       final formattedEndDate = DateFormat('MMMM yyyy', 'tr_TR').format(endDate);
                       return Text(
-                        'Tahmini Bitiş: $formattedEndDate',
+                        'Bitiş: $formattedEndDate',
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
                         textAlign: TextAlign.end,
                       );
