@@ -50,6 +50,21 @@ final recurringTransactionStreamProvider = StreamProvider<List<RecurringTransact
   return db.watchAllRecurringTransactions(user.id);
 });
 
+final autoProcessedTransactionStreamProvider = StreamProvider<List<Transaction>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final isGuest = ref.watch(guestModeProvider);
+  final user = ref.watch(currentUserProvider);
+  
+  if (isGuest) {
+    return db.watchAutoProcessedTransactions('guest');
+  }
+  
+  if (user == null) {
+    return Stream.value([]);
+  }
+  return db.watchAutoProcessedTransactions(user.id);
+});
+
 class TransactionNotifier extends Notifier<void> {
   @override
   void build() {

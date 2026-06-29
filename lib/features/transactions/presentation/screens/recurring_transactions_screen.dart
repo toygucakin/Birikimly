@@ -14,65 +14,234 @@ class RecurringTransactionsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final recurringTxsAsync = ref.watch(recurringTransactionStreamProvider);
+    final autoProcessedTxsAsync = ref.watch(autoProcessedTransactionStreamProvider);
     final categoriesAsync = ref.watch(categoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Düzenli İşlemler', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: AppColors.textPrimary,
-      ),
-      body: SafeArea(
-        child: categoriesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Kategoriler yüklenemedi: $err')),
-          data: (categories) => recurringTxsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('İşlemler yüklenemedi: $err')),
-            data: (transactions) {
-              if (transactions.isEmpty) {
-                return Center(
-                  child: Text(
-                    'Henüz düzenli işlem eklenmemiş.',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
-                  ),
-                );
-              }
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Düzenli İşlemler', style: TextStyle(fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: AppColors.textPrimary,
+          bottom: TabBar(
+            indicatorColor: AppColors.primary,
+            labelColor: AppColors.primary,
+            unselectedLabelColor: AppColors.textSecondary,
+            tabs: const [
+              Tab(text: 'Planlar'),
+              Tab(text: 'İşlem Geçmişi'),
+            ],
+          ),
+        ),
+        body: SafeArea(
+          child: TabBarView(
+            children: [
+              // Tab 1: Planlar
+              categoriesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Kategoriler yüklenemedi: $err')),
+                data: (categories) => recurringTxsAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('İşlemler yüklenemedi: $err')),
+                  data: (transactions) {
+                    if (transactions.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'Henüz düzenli işlem eklenmemiş.',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                        ),
+                      );
+                    }
 
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                itemCount: transactions.length,
-                itemBuilder: (context, index) {
-                  final rt = transactions[index];
-                  
-                  // Kategori Bulma Mantığı
-                  CategoryModel? txCategory;
-                  final rawId = rt.categoryId ?? '';
-                  if (rawId.isNotEmpty) {
-                    txCategory = categories.cast<CategoryModel?>().firstWhere(
-                      (c) => c?.id == rawId,
-                      orElse: () => null,
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final rt = transactions[index];
+                        
+                        // Kategori Bulma Mantığı
+                        CategoryModel? txCategory;
+                        final rawId = rt.categoryId ?? '';
+                        if (rawId.isNotEmpty) {
+                          txCategory = categories.cast<CategoryModel?>().firstWhere(
+                            (c) => c?.id == rawId,
+                            orElse: () => null,
+                          );
+                        }
+
+                        String displayName = rt.isIncome ? 'Genel Gelir' : 'Genel Gider';
+                        if (txCategory != null) {
+                          displayName = txCategory.name;
+                        }
+
+                        final displayCategory = txCategory ?? CategoryModel(
+                          id: 'unknown',
+                          name: displayName,
+                          icon: rt.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                          color: Colors.grey,
+                          isIncome: rt.isIncome,
+                        );
+
+                        return _buildRecurringItem(context, ref, rt, displayCategory);
+                      },
                     );
-                  }
+                  },
+                ),
+              ),
 
-                  String displayName = rt.isIncome ? 'Genel Gelir' : 'Genel Gider';
-                  if (txCategory != null) {
-                    displayName = txCategory.name;
-                  }
+              // Tab 2: İşlem Geçmişi
+              categoriesAsync.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) => Center(child: Text('Kategoriler yüklenemedi: $err')),
+                data: (categories) => autoProcessedTxsAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('İşlem geçmişi yüklenemedi: $err')),
+                  data: (transactions) {
+                    if (transactions.isEmpty) {
+                      return Center(
+                        child: Text(
+                          'Otomatik gerçekleştirilen işlem bulunmuyor.',
+                          style: TextStyle(color: AppColors.textSecondary, fontSize: 16),
+                        ),
+                      );
+                    }
 
-                  final displayCategory = txCategory ?? CategoryModel(
-                    id: 'unknown',
-                    name: displayName,
-                    icon: rt.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                    color: Colors.grey,
-                    isIncome: rt.isIncome,
-                  );
+                    return ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final tx = transactions[index];
+                        
+                        // Kategori Bulma Mantığı
+                        CategoryModel? txCategory;
+                        final rawId = tx.categoryId ?? '';
+                        if (rawId.isNotEmpty) {
+                          txCategory = categories.cast<CategoryModel?>().firstWhere(
+                            (c) => c?.id == rawId,
+                            orElse: () => null,
+                          );
+                        }
 
-                  return _buildRecurringItem(context, ref, rt, displayCategory);
-                },
-              );
-            },
+                        String displayName = tx.isIncome ? 'Genel Gelir' : 'Genel Gider';
+                        if (txCategory != null) {
+                          displayName = txCategory.name;
+                        }
+
+                        final displayCategory = txCategory ?? CategoryModel(
+                          id: 'unknown',
+                          name: displayName,
+                          icon: tx.isIncome ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                          color: Colors.grey,
+                          isIncome: tx.isIncome,
+                        );
+
+                        final formattedDate = DateFormat('dd MMMM yyyy HH:mm', 'tr_TR').format(tx.date);
+                        final amountSign = tx.isIncome ? '+' : '-';
+                        final amountColor = tx.isIncome ? AppColors.income : AppColors.expense;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              // Kategori İkonu
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: displayCategory.color.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  displayCategory.icon,
+                                  color: displayCategory.color,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              
+                              // Detaylar
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayCategory.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    if (tx.description.isNotEmpty) ...[
+                                      Text(
+                                        tx.description,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                    ],
+                                    Text(
+                                      formattedDate,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: AppColors.textSecondary.withValues(alpha: 0.7),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                              // Tutar
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '$amountSign${CurrencyUtils.format(tx.amount)}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: amountColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF22C55E).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Otomatik',
+                                      style: TextStyle(
+                                        color: Color(0xFF22C55E),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),

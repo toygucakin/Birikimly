@@ -151,6 +151,13 @@ class AppDatabase extends _$AppDatabase {
     return query.watch();
   }
 
+  Stream<List<Transaction>> watchAutoProcessedTransactions(String userId) {
+    return (select(transactions)
+      ..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false) & t.recurringUuid.isNotNull())
+      ..orderBy([(t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)])
+    ).watch();
+  }
+
   Future<List<Transaction>> getAllTransactions(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId) & t.isDeleted.equals(false))).get();
 

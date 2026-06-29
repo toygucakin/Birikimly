@@ -34,11 +34,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         final userId = isGuest ? 'guest' : user!.id;
         final processedTxs = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
         if (processedTxs.isNotEmpty && mounted) {
+          final allRecurring = await ref.read(databaseProvider).getAllRecurringTransactions(userId);
+          if (!mounted) return;
           showDialog(
             context: context,
             barrierDismissible: true,
             builder: (context) => ProcessedTransactionsDialog(
               transactions: processedTxs,
+              allRecurring: allRecurring,
               userId: userId,
             ),
           );
