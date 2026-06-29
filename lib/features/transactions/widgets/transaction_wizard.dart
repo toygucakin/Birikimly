@@ -204,6 +204,10 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
     );
     final rows = (categoriesCount / 4).ceil();
     final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final double maxAvailableStepHeight = (screenHeight - keyboardHeight - 140.0).clamp(80.0, 500.0);
+
     final gridWidth = (screenWidth - 40) - 32; // Dialog inset padding (40) + Step padding (32)
     final itemHeight = (gridWidth - 30) / 4; // 4 columns, 10px spacing
     final gridHeight = (rows * itemHeight) + ((rows - 1) * 10);
@@ -217,7 +221,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         clipBehavior: Clip.antiAlias,
         width: double.infinity,
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.65,
+          maxHeight: (screenHeight - keyboardHeight - 40.0).clamp(100.0, screenHeight * 0.65),
         ),
         decoration: BoxDecoration(
           color: AppColors.background,
@@ -247,7 +251,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              height: _currentStep == 3 
+              height: (_currentStep == 3 
                   ? categoryStepHeight 
                   : (_currentStep == 0 
                       ? (_isRecurring 
@@ -255,7 +259,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                               ? 370.0 
                               : 310.0) 
                           : 150.0) 
-                      : 150.0),
+                      : 150.0)).clamp(0.0, maxAvailableStepHeight),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
@@ -457,7 +461,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               children: [
                 Expanded(
                   child: Text(
-                    'Tahmini Süre',
+                    'Düzenli Tekrar Miktarı',
                     style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
                     overflow: TextOverflow.ellipsis,
                   ),
