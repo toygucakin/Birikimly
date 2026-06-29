@@ -36,7 +36,20 @@ class UserNameNotifier extends Notifier<String> {
   @override
   String build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getString(_key) ?? 'Misafir';
+    final localVal = prefs.getString(_key);
+    if (localVal != null) return localVal;
+
+    // Restore from Supabase metadata on a new device
+    final isGuest = ref.watch(guestModeProvider);
+    if (!isGuest) {
+      final user = ref.watch(currentUserProvider);
+      final metaName = user?.userMetadata?['display_name']?.toString();
+      if (metaName != null && metaName.isNotEmpty) {
+        prefs.setString(_key, metaName);
+        return metaName;
+      }
+    }
+    return 'Misafir';
   }
 
   Future<void> setUserName(String value) async {
@@ -60,7 +73,23 @@ class MonthlyLimitNotifier extends Notifier<double?> {
   @override
   double? build() {
     final prefs = ref.watch(sharedPreferencesProvider);
-    return prefs.getDouble(_key);
+    final localVal = prefs.getDouble(_key);
+    if (localVal != null) return localVal;
+
+    // Restore from Supabase metadata on a new device
+    final isGuest = ref.watch(guestModeProvider);
+    if (!isGuest) {
+      final user = ref.watch(currentUserProvider);
+      final metaLimit = user?.userMetadata?['monthly_limit'];
+      if (metaLimit != null) {
+        final parsed = double.tryParse(metaLimit.toString());
+        if (parsed != null) {
+          prefs.setDouble(_key, parsed);
+          return parsed;
+        }
+      }
+    }
+    return null;
   }
 
   Future<void> setMonthlyLimit(double? value) async {

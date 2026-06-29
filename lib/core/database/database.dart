@@ -91,12 +91,16 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 14) {
           await m.addColumn(transactions, transactions.recurringUuid);
-          await m.addColumn(recurringTransactions, recurringTransactions.frequency);
-          await m.addColumn(recurringTransactions, recurringTransactions.isActive);
+          if (from >= 12) {
+            await m.addColumn(recurringTransactions, recurringTransactions.frequency);
+            await m.addColumn(recurringTransactions, recurringTransactions.isActive);
+          }
         }
         if (from < 15) {
-          await m.addColumn(recurringTransactions, recurringTransactions.maxOccurrences);
-          await m.addColumn(recurringTransactions, recurringTransactions.occurrencesExecuted);
+          if (from >= 12) {
+            await m.addColumn(recurringTransactions, recurringTransactions.maxOccurrences);
+            await m.addColumn(recurringTransactions, recurringTransactions.occurrencesExecuted);
+          }
           await m.addColumn(transactions, transactions.installmentNumber);
           await m.addColumn(transactions, transactions.totalInstallments);
         }
@@ -153,6 +157,21 @@ class AppDatabase extends _$AppDatabase {
   Future<List<Transaction>> getAllTransactionsRaw(String userId) => 
     (select(transactions)..where((t) => t.userId.equals(userId))).get();
 
+  Future<List<Transaction>> getTransactionsNeedingNormalization(String userId) {
+    return (select(transactions)
+      ..where((t) => 
+        t.userId.equals(userId) & 
+        t.categoryId.isNotNull() & 
+        (
+          t.categoryId.like('temp_%') | 
+          t.categoryId.like('in-%') | 
+          t.categoryId.like('ex-%') |
+          const CustomExpression<bool>("category NOT LIKE '%-%' AND category NOT LIKE 'def_%'")
+        )
+      )
+    ).get();
+  }
+
   Future<Transaction> insertTransaction(TransactionsCompanion entry) => into(transactions).insertReturning(entry);
   
   Future<bool> updateTransaction(Transaction transaction) => 
@@ -191,6 +210,14 @@ class AppDatabase extends _$AppDatabase {
 
   Future<List<RecurringTransaction>> getUnsyncedRecurringTransactions(String userId) => 
     (select(recurringTransactions)..where((rt) => rt.userId.equals(userId) & rt.isSynced.equals(false))).get();
+
+  Future<void> clearAllData() async {
+    await transaction(() async {
+      await delete(transactions).go();
+      await delete(categories).go();
+      await delete(recurringTransactions).go();
+    });
+  }
 }
 
 LazyDatabase _openConnection() {
@@ -205,5 +232,7 @@ final databaseProvider = Provider<AppDatabase>((ref) => AppDatabase());
 
 final syncServiceProvider = Provider<SyncService>((ref) {
   final db = ref.watch(databaseProvider);
-  return SyncService(db);
+  final syncService = SyncService(db);
+  ref.onDispose(() => syncService.stop());
+  return syncService;
 });

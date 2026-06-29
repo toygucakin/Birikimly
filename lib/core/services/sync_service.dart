@@ -469,7 +469,8 @@ final user = SupabaseService.client.auth.currentUser;
   }
   Future<void> _normalizeTransactionCategories(String userId) async {
     try {
-      final txs = await _db.getAllTransactionsRaw(userId);
+      final txs = await _db.getTransactionsNeedingNormalization(userId);
+      if (txs.isEmpty) return;
       final cats = await _db.getAllCategoriesRaw(userId);
 
       for (final tx in txs) {

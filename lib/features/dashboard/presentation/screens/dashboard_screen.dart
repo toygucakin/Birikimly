@@ -455,6 +455,8 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                                   ),
                                   'percent': percent,
                                   'overrun': overrun,
+                                  'spent': spentForCat,
+                                  'hasLimit': cat.maxLimit != null,
                                 });
 
                                 // Aşım kontrolü
@@ -478,6 +480,10 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                             final double percentB = b['percent'] as double;
                             final double overA = a['overrun'] as double;
                             final double overB = b['overrun'] as double;
+                            final double spentA = a['spent'] as double;
+                            final double spentB = b['spent'] as double;
+                            final bool hasLimitA = a['hasLimit'] as bool;
+                            final bool hasLimitB = b['hasLimit'] as bool;
 
                             if (percentA > 1.0 && percentB > 1.0) {
                               return overB.compareTo(overA);
@@ -486,7 +492,11 @@ class _DashboardScreenState extends ConsumerState<_DashboardScreenContent> with 
                             } else if (percentB > 1.0 && percentA <= 1.0) {
                               return 1;
                             } else {
-                              return percentB.compareTo(percentA);
+                              if (hasLimitA && hasLimitB) {
+                                return percentB.compareTo(percentA);
+                              } else {
+                                return spentB.compareTo(spentA);
+                              }
                             }
                           });
                           

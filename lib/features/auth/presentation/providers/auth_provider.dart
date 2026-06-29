@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
+import 'package:birikimly/core/database/database.dart';
 
 final authStateProvider = StreamProvider<AuthState>((ref) {
   return SupabaseService.client.auth.onAuthStateChange;
@@ -124,6 +125,25 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await SupabaseService.client.auth.signOut().timeout(const Duration(seconds: 10));
+      await ref.read(databaseProvider).clearAllData();
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    state = const AsyncValue.loading();
+    try {
+      final user = SupabaseService.client.auth.currentUser;
+      if (user != null) {
+        // Call the RPC function on Supabase to delete user data and Auth account
+        await SupabaseService.client.rpc('delete_user_account').timeout(const Duration(seconds: 15));
+        // Sign out
+        await SupabaseService.client.auth.signOut().timeout(const Duration(seconds: 10));
+      }
+      // Clear local database
+      await ref.read(databaseProvider).clearAllData();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

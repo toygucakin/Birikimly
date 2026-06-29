@@ -8,6 +8,7 @@ import 'package:birikimly/features/auth/presentation/providers/auth_provider.dar
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
+import 'package:birikimly/core/database/database.dart';
 
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
@@ -192,6 +193,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
                     ),
                   ),
                 ),
+                if (!isGuest) ...[
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton.icon(
+                      onPressed: () => _showDeleteAccountConfirm(context, ref),
+                      icon: Icon(Icons.delete_forever, color: AppColors.expense),
+                      label: Text(
+                        'Hesabımı Kalıcı Olarak Sil',
+                        style: TextStyle(
+                          color: AppColors.expense,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
               ],
             ),
@@ -1054,16 +1075,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
             child: const Text('İptal'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               if (isGuest) {
                 ref.read(guestModeProvider.notifier).setGuestMode(false);
+                await ref.read(databaseProvider).clearAllData();
               } else {
-                ref.read(authNotifierProvider.notifier).signOut();
+                await ref.read(authNotifierProvider.notifier).signOut();
               }
-              Navigator.pop(context); 
+              if (context.mounted) {
+                Navigator.pop(context);
+              }
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.expense),
             child: const Text('Çıkış Yap'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountConfirm(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        alignment: Alignment.center,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: AppColors.expense),
+            const SizedBox(width: 8),
+            const Text('Hesabı Sil'),
+          ],
+        ),
+        content: const Text(
+          'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz. Buluttaki tüm verileriniz ve yerel kayıtlarınız kalıcı olarak silinecektir.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await ref.read(authNotifierProvider.notifier).deleteAccount();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.expense,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('Evet, Kalıcı Olarak Sil'),
           ),
         ],
       ),
