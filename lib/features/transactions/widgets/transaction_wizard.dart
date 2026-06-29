@@ -484,30 +484,31 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
               ],
             ),
             const SizedBox(height: 6),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Builder(
-                builder: (context) {
-                  final List<String> values;
-                  if (_frequency == 'weekly') {
-                    values = ['4', '26', '52'];
-                  } else if (_frequency == 'yearly') {
-                    values = ['1', '3', '5'];
-                  } else {
-                    values = ['3', '6', '12'];
-                  }
-                  
-                  return Row(
-                    children: [
-                      ...values.map((v) => Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
+            Builder(
+              builder: (context) {
+                final List<String> values;
+                if (_frequency == 'weekly') {
+                  values = ['4', '26', '52'];
+                } else if (_frequency == 'yearly') {
+                  values = ['1', '3', '5'];
+                } else {
+                  values = ['3', '6', '12'];
+                }
+                
+                return Row(
+                  children: [
+                    ...values.map((v) => Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 6.0),
                         child: _buildLimitChip(v, '$v ${_getFreqSuffix()}'),
-                      )),
-                      _buildLimitChip('custom', 'Özel'),
-                    ],
-                  );
-                },
-              ),
+                      ),
+                    )),
+                    Expanded(
+                      child: _buildLimitChip('custom', 'Özel'),
+                    ),
+                  ],
+                );
+              },
             ),
             if (_occurrenceSelection == 'custom') ...[
               const SizedBox(height: 10),
@@ -855,14 +856,21 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   Widget _buildLimitChip(String val, String label) {
     final isSelected = _occurrenceSelection == val;
     return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? Colors.white : AppColors.textSecondary,
+      label: Container(
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? Colors.white : AppColors.textSecondary,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
+      padding: EdgeInsets.zero,
+      labelPadding: const EdgeInsets.symmetric(horizontal: 2),
       selected: isSelected,
       selectedColor: AppColors.primary,
       backgroundColor: AppColors.surface,
