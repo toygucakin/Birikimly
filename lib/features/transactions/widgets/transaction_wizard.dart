@@ -255,7 +255,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                               ? 370.0 
                               : 310.0) 
                           : 150.0) 
-                      : 130.0),
+                      : 150.0),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (int step) async {
@@ -591,66 +591,72 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   }
 
   Widget _buildDateStep() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'İşlem Tarihi',
-            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: _openDatePicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.calendar_today, color: AppColors.primary),
-                  const SizedBox(width: 12),
-                  Text(
-                    DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'İşlem Tarihi',
+              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            GestureDetector(
+              onTap: _openDatePicker,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.calendar_today, color: AppColors.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildDescriptionStep() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Açıklama Ekleyin',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            focusNode: _descriptionFocusNode,
-            controller: _descriptionController,
-            maxLines: 1,
-            decoration: InputDecoration(
-              hintText: 'Harcama veya gelir detayı...',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Açıklama Ekleyin',
+              style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              focusNode: _descriptionFocusNode,
+              controller: _descriptionController,
+              maxLines: 1,
+              decoration: InputDecoration(
+                hintText: 'Harcama veya gelir detayı...',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
