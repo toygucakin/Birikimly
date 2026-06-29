@@ -35,6 +35,8 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 - **Bellek Sızıntısı (Memory Leak) Engeli:** `syncServiceProvider` Riverpod provider'ına `ref.onDispose` eklenerek aboneliklerin arka planda açık kalarak kaynak sızdırması önlendi. Ayrıca `app_links` paketi bağımlılık karmaşasını önlemek adına transitiflikten çıkarılıp `pubspec.yaml`'a doğrudan eklendi.
 - **İşlem Sihirbazı Taşma (Pixel Overflow) Düzeltmesi:** Gelir/gider ekleme sihirbazında (`TransactionWizard`) tarih ve açıklama adımlarında cihaz metin boyutu ölçeklendirmesine bağlı olarak yaşanan `BOTTOM OVERFLOWED BY 3.0 PIXELS` hatası, adım dikey alanı `130`'dan `150`'ye çıkarılarak ve adımlar `SingleChildScrollView` ile sarmalanarak çözüldü.
 - **Düzenli Ödemeler Gerçekleşme ve Takip Sistemi (Gelen/Gelmeyen Analizi):** Kullanıcı girmeden gerçekleşen otomatik düzenli ödemelerin bildirimi akıllı hale getirildi. Diyalog penceresi sadece yeni otomatik işlem gerçekleştiğinde açılacak şekilde koşullandırıldı; gerçekleşen ödemeler ile önümüzdeki **7 gün içinde** gerçekleşecek aktif **"Bekleyen Planlar"** (kalan gün sayısı ve tarihleriyle) bu diyaloğa dahil edildi. Ayrıca `Düzenli İşlemler` ekranı iki sekmeli (Planlar / İşlem Geçmişi) Tab yapısına kavuşturularak otomatik tamamlanan işlemlerin kalıcı olarak takip edilebilmesi sağlandı.
+- **Yatay Taşma (Right Overflow) Giderilmesi:** Düzenli işlem giriş alanındaki "Miktarı Girin" başlığı ile "Geçerlilik Süresi (Taksit) / Tahmini Bitiş" alanlarının dar ekranlarda sağa doğru piksel taşmasına sebep olması, `Expanded`/`Flexible` ve `ellipsis` metin kesme özellikleri entegre edilerek çözüldü.
+
 
 
 

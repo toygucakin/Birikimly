@@ -289,10 +289,14 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Miktarı Girin',
-                style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              Expanded(
+                child: Text(
+                  'Miktarı Girin',
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -451,19 +455,26 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Geçerlilik Süresi (Taksit)',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                Expanded(
+                  child: Text(
+                    'Geçerlilik Süresi (Taksit)',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                Builder(
-                  builder: (context) {
-                    final endDate = _calculateEndDate(_selectedDate, _frequency, _maxOccurrences);
-                    final formattedEndDate = DateFormat('MMMM yyyy', 'tr_TR').format(endDate);
-                    return Text(
-                      'Tahmini Bitiş: $formattedEndDate',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
-                    );
-                  },
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Builder(
+                    builder: (context) {
+                      final endDate = _calculateEndDate(_selectedDate, _frequency, _maxOccurrences);
+                      final formattedEndDate = DateFormat('MMMM yyyy', 'tr_TR').format(endDate);
+                      return Text(
+                        'Tahmini Bitiş: $formattedEndDate',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                        textAlign: TextAlign.end,
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -617,9 +628,12 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                   children: [
                     Icon(Icons.calendar_today, color: AppColors.primary),
                     const SizedBox(width: 12),
-                    Text(
-                      DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    Flexible(
+                      child: Text(
+                        DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ],
                 ),
