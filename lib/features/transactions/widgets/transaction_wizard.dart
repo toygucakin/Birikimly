@@ -228,55 +228,58 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           borderRadius: BorderRadius.circular(30),
           border: Border.all(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    '${_currentStep + 1} / 4',
-                    style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                  ),
-                ],
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      widget.isIncome ? 'Gelir Ekle' : 'Gider Ekle',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${_currentStep + 1} / 4',
+                      style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              height: (_currentStep == 3 
-                  ? categoryStepHeight 
-                  : (_currentStep == 0 
-                      ? (_isRecurring 
-                          ? (_occurrenceSelection == 'custom' 
-                              ? 370.0 
-                              : 310.0) 
-                          : 150.0) 
-                      : 150.0)).clamp(0.0, maxAvailableStepHeight),
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (int step) async {
-                  setState(() => _currentStep = step);
-                  FocusScope.of(context).unfocus();
-                },
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildAmountStep(),
-                  _buildDateStep(),
-                  _buildDescriptionStep(),
-                  _buildCategoryStep(),
-                ],
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                height: (_currentStep == 3 
+                    ? categoryStepHeight 
+                    : (_currentStep == 0 
+                        ? (_isRecurring 
+                            ? (_occurrenceSelection == 'custom' 
+                                ? 370.0 
+                                : 310.0) 
+                            : 150.0) 
+                        : 150.0)).clamp(0.0, maxAvailableStepHeight),
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (int step) async {
+                    setState(() => _currentStep = step);
+                    FocusScope.of(context).unfocus();
+                  },
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildAmountStep(),
+                    _buildDateStep(),
+                    _buildDescriptionStep(),
+                    _buildCategoryStep(),
+                  ],
+                ),
               ),
-            ),
-            _buildNavigation(),
-          ],
+              _buildNavigation(),
+            ],
+          ),
         ),
       ),
     );
