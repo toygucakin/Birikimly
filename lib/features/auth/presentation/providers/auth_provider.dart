@@ -132,9 +132,15 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
     }
   }
 
-  Future<void> deleteAccount() async {
+  Future<void> deleteAccount({required String email, required String password}) async {
     state = const AsyncValue.loading();
     try {
+      // Re-authenticate user to confirm identity
+      await SupabaseService.client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      ).timeout(const Duration(seconds: 10));
+
       final user = SupabaseService.client.auth.currentUser;
       if (user != null) {
         // Call the RPC function on Supabase to delete user data and Auth account
@@ -147,6 +153,7 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 

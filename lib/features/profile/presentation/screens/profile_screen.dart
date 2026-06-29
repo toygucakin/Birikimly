@@ -5,6 +5,7 @@ import 'package:birikimly/core/utils/currency_utils.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
+import 'package:birikimly/core/services/supabase_service.dart';
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
@@ -1095,42 +1096,156 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
   }
 
   void _showDeleteAccountConfirm(BuildContext context, WidgetRef ref) {
+    final user = SupabaseService.client.auth.currentUser;
+    final emailController = TextEditingController(text: user?.email ?? '');
+    final passwordController = TextEditingController();
+    bool obscurePassword = true;
+    bool isLoading = false;
+    String? errorMessage;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        alignment: Alignment.center,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: AppColors.expense),
-            const SizedBox(width: 8),
-            const Text('Hesabı Sil'),
-          ],
-        ),
-        content: const Text(
-          'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz. Buluttaki tüm verileriniz ve yerel kayıtlarınız kalıcı olarak silinecektir.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('İptal'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await ref.read(authNotifierProvider.notifier).deleteAccount();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.expense,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      barrierDismissible: !isLoading,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            alignment: Alignment.center,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
             ),
-            child: const Text('Evet, Kalıcı Olarak Sil'),
-          ),
-        ],
+            title: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: AppColors.expense),
+                const SizedBox(width: 8),
+                const Text('Hesabı Sil'),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz. Buluttaki tüm verileriniz ve yerel kayıtlarınız kalıcı olarak silinecektir.\n\nDevam etmek için e-posta ve şifrenizi girerek doğrulayın:',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    style: TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'E-posta',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: obscurePassword,
+                    style: TextStyle(color: AppColors.textPrimary),
+                    decoration: InputDecoration(
+                      labelText: 'Şifre',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
+                      ),
+                    ),
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(color: AppColors.expense, fontSize: 13, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pop(context),
+                child: const Text('İptal'),
+              ),
+              ElevatedButton(
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final email = emailController.text.trim();
+                        final password = passwordController.text;
+
+                        if (email.isEmpty || password.isEmpty) {
+                          setState(() {
+                            errorMessage = 'Lütfen e-posta ve şifrenizi girin.';
+                          });
+                          return;
+                        }
+
+                        setState(() {
+                          isLoading = true;
+                          errorMessage = null;
+                        });
+
+                        try {
+                          await ref.read(authNotifierProvider.notifier).deleteAccount(
+                                email: email,
+                                password: password,
+                              );
+                          if (context.mounted) {
+                            Navigator.pop(context); // Close dialog
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Hesabınız kalıcı olarak silindi.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setState(() {
+                            isLoading = false;
+                            errorMessage = 'Doğrulama başarısız: E-posta veya şifre hatalı.';
+                          });
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.expense,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                      )
+                    : const Text('Evet, Kalıcı Olarak Sil'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
