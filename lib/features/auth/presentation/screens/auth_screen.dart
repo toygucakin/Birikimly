@@ -86,7 +86,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           if (error is AuthException) {
             final loginError = error.message.toLowerCase();
             if (loginError.contains('invalid login credentials')) {
-              message = 'E-posta adresi veya şifre hatalı.';
+              message = 'Şifre hatalı.';
             } else if (loginError.contains('email not confirmed')) {
               message = 'Lütfen önce e-posta adresinizi doğrulayın.';
             } else if (loginError.contains('user not found')) {
