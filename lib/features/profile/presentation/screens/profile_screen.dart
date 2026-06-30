@@ -756,135 +756,190 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          alignment: Alignment.topCenter,
-          insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
-          backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
-          ),
-          title: const Text('Kategoriyi Düzenle'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
-                            setDialogState(() => selectedIcon = icon);
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selectedColor.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
-                            ),
-                            child: Icon(selectedIcon, color: selectedColor, size: 32),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () => _showColorPicker(context, selectedColor, (color) {
-                            setDialogState(() => selectedColor = color);
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selectedColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
-                            ),
-                            child: const Icon(Icons.palette, color: Colors.white, size: 32),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: 'Kategori adı',
-                    filled: true,
-                    fillColor: AppColors.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  autofocus: true,
-                ),
-                if (!cat.isIncome) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: limitController,
-                    decoration: InputDecoration(
-                      hintText: 'Kategori limiti (Opsiyonel)',
-                      suffixText: '₺',
-                      filled: true,
-                      fillColor: AppColors.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                    inputFormatters: [ThousandsFormatter()],
-                  ),
-                ],
-              ],
+        builder: (context, setDialogState) {
+          final screenHeight = MediaQuery.of(context).size.height;
+          final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+          final isKeyboardOpen = keyboardHeight > 0;
+          final double maxDialogHeight = screenHeight - keyboardHeight - 120;
+
+          return Dialog(
+            alignment: Alignment.topCenter,
+            insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20, bottom: 20),
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  final limitStr = limitController.text.trim().replaceAll('.', '');
-                  final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
-                  
-                  Navigator.pop(context); // Pop first
-                  
-                  _checkAndSaveCategoryLimit(
-                    context,
-                    ref,
-                    categoryId: cat.id,
-                    name: controller.text.trim(),
-                    icon: selectedIcon,
-                    color: selectedColor,
-                    isIncome: cat.isIncome,
-                    newCategoryLimit: limitVal,
-                  );
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.fastOutSlowIn,
+              constraints: BoxConstraints(
+                maxHeight: maxDialogHeight.clamp(150.0, screenHeight * 0.9),
               ),
-              child: const Text('Kaydet'),
+              child: SingleChildScrollView(
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.fastOutSlowIn,
+                  padding: EdgeInsets.fromLTRB(24, isKeyboardOpen ? 12 : 24, 24, isKeyboardOpen ? 10 : 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.fastOutSlowIn,
+                        style: (Theme.of(context).textTheme.titleLarge ?? const TextStyle()).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isKeyboardOpen ? 18 : 22,
+                        ),
+                        textAlign: TextAlign.center,
+                        child: const Text('Kategoriyi Düzenle'),
+                      ),
+                      SizedBox(height: isKeyboardOpen ? 12 : 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              if (!isKeyboardOpen) ...[
+                                Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                const SizedBox(height: 8),
+                              ],
+                              InkWell(
+                                onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                                  setDialogState(() => selectedIcon = icon);
+                                }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.fastOutSlowIn,
+                                  padding: EdgeInsets.all(isKeyboardOpen ? 10 : 16),
+                                  decoration: BoxDecoration(
+                                    color: selectedColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                                  ),
+                                  child: AnimatedScale(
+                                    scale: isKeyboardOpen ? 0.75 : 1.0,
+                                    duration: const Duration(milliseconds: 350),
+                                    curve: Curves.fastOutSlowIn,
+                                    child: Icon(selectedIcon, color: selectedColor, size: 32),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              if (!isKeyboardOpen) ...[
+                                Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                const SizedBox(height: 8),
+                              ],
+                              InkWell(
+                                onTap: () => _showColorPicker(context, selectedColor, (color) {
+                                  setDialogState(() => selectedColor = color);
+                                }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.fastOutSlowIn,
+                                  padding: EdgeInsets.all(isKeyboardOpen ? 10 : 16),
+                                  decoration: BoxDecoration(
+                                    color: selectedColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                                  ),
+                                  child: AnimatedScale(
+                                    scale: isKeyboardOpen ? 0.75 : 1.0,
+                                    duration: const Duration(milliseconds: 350),
+                                    curve: Curves.fastOutSlowIn,
+                                    child: const Icon(Icons.palette, color: Colors.white, size: 32),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: isKeyboardOpen ? 12 : 16),
+                      TextField(
+                        controller: controller,
+                        decoration: InputDecoration(
+                          hintText: 'Kategori adı',
+                          filled: true,
+                          fillColor: AppColors.background,
+                          contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        autofocus: true,
+                      ),
+                      if (!cat.isIncome) ...[
+                        SizedBox(height: isKeyboardOpen ? 8 : 12),
+                        TextField(
+                          controller: limitController,
+                          decoration: InputDecoration(
+                            hintText: 'Kategori limiti (Opsiyonel)',
+                            suffixText: '₺',
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                          inputFormatters: [ThousandsFormatter()],
+                        ),
+                      ],
+                      SizedBox(height: isKeyboardOpen ? 16 : 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (controller.text.trim().isNotEmpty) {
+                                final limitStr = limitController.text.trim().replaceAll('.', '');
+                                final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
+                                
+                                Navigator.pop(context); // Pop first
+                                
+                                _checkAndSaveCategoryLimit(
+                                  context,
+                                  ref,
+                                  categoryId: cat.id,
+                                  name: controller.text.trim(),
+                                  icon: selectedIcon,
+                                  color: selectedColor,
+                                  isIncome: cat.isIncome,
+                                  newCategoryLimit: limitVal,
+                                );
+                              } else {
+                                Navigator.pop(context);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Kaydet'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -925,135 +980,192 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          alignment: Alignment.topCenter,
-          insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20),
-          backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
-          ),
-          title: Text(isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Column(
-                      children: [
-                        Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
-                            setDialogState(() => selectedIcon = icon);
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selectedColor.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
-                            ),
-                            child: Icon(selectedIcon, color: selectedColor, size: 32),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      children: [
-                        Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () => _showColorPicker(context, selectedColor, (color) {
-                            setDialogState(() => selectedColor = color);
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: selectedColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
-                            ),
-                            child: const Icon(Icons.palette, color: Colors.white, size: 32),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: controller,
-                  decoration: InputDecoration(
-                    hintText: 'Kategori adı',
-                    filled: true,
-                    fillColor: AppColors.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  autofocus: true,
-                ),
-                if (!isIncome) ...[
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: limitController,
-                    decoration: InputDecoration(
-                      hintText: 'Kategori limiti (Opsiyonel)',
-                      suffixText: '₺',
-                      filled: true,
-                      fillColor: AppColors.background,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
-                    inputFormatters: [ThousandsFormatter()],
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  final limitStr = limitController.text.trim().replaceAll('.', '');
-                  final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
+        builder: (context, setDialogState) {
+          final screenHeight = MediaQuery.of(context).size.height;
+          final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+          final isKeyboardOpen = keyboardHeight > 0;
+          final double maxDialogHeight = screenHeight - keyboardHeight - 120;
 
-                  Navigator.pop(context); // Pop first
-
-                  _checkAndSaveCategoryLimit(
-                    context,
-                    ref,
-                    categoryId: null,
-                    name: controller.text.trim(),
-                    icon: selectedIcon,
-                    color: selectedColor,
-                    isIncome: isIncome,
-                    newCategoryLimit: limitVal,
-                  );
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          return Dialog(
+            alignment: Alignment.topCenter,
+            insetPadding: const EdgeInsets.only(top: 40, left: 20, right: 20, bottom: 20),
+            backgroundColor: AppColors.surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+              side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2), width: 1.5),
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 350),
+              curve: Curves.fastOutSlowIn,
+              constraints: BoxConstraints(
+                maxHeight: maxDialogHeight.clamp(150.0, screenHeight * 0.9),
               ),
-              child: const Text('Ekle'),
+              child: SingleChildScrollView(
+                child: AnimatedPadding(
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.fastOutSlowIn,
+                  padding: EdgeInsets.fromLTRB(24, isKeyboardOpen ? 12 : 24, 24, isKeyboardOpen ? 10 : 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AnimatedDefaultTextStyle(
+                        duration: const Duration(milliseconds: 350),
+                        curve: Curves.fastOutSlowIn,
+                        style: (Theme.of(context).textTheme.titleLarge ?? const TextStyle()).copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: isKeyboardOpen ? 18 : 22,
+                        ),
+                        textAlign: TextAlign.center,
+                        child: Text(
+                          isIncome ? 'Gelir Kategorisi Ekle' : 'Gider Kategorisi Ekle',
+                        ),
+                      ),
+                      SizedBox(height: isKeyboardOpen ? 12 : 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Column(
+                            children: [
+                              if (!isKeyboardOpen) ...[
+                                Text('İkon', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                const SizedBox(height: 8),
+                              ],
+                              InkWell(
+                                onTap: () => _showIconPicker(context, selectedColor, selectedIcon, (icon) {
+                                  setDialogState(() => selectedIcon = icon);
+                                }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.fastOutSlowIn,
+                                  padding: EdgeInsets.all(isKeyboardOpen ? 10 : 16),
+                                  decoration: BoxDecoration(
+                                    color: selectedColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: selectedColor.withValues(alpha: 0.3)),
+                                  ),
+                                  child: AnimatedScale(
+                                    scale: isKeyboardOpen ? 0.75 : 1.0,
+                                    duration: const Duration(milliseconds: 350),
+                                    curve: Curves.fastOutSlowIn,
+                                    child: Icon(selectedIcon, color: selectedColor, size: 32),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              if (!isKeyboardOpen) ...[
+                                Text('Renk', style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                                const SizedBox(height: 8),
+                              ],
+                              InkWell(
+                                onTap: () => _showColorPicker(context, selectedColor, (color) {
+                                  setDialogState(() => selectedColor = color);
+                                }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 350),
+                                  curve: Curves.fastOutSlowIn,
+                                  padding: EdgeInsets.all(isKeyboardOpen ? 10 : 16),
+                                  decoration: BoxDecoration(
+                                    color: selectedColor,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                                  ),
+                                  child: AnimatedScale(
+                                    scale: isKeyboardOpen ? 0.75 : 1.0,
+                                    duration: const Duration(milliseconds: 350),
+                                    curve: Curves.fastOutSlowIn,
+                                    child: const Icon(Icons.palette, color: Colors.white, size: 32),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: isKeyboardOpen ? 12 : 16),
+                      TextField(
+                        controller: controller,
+                        decoration: InputDecoration(
+                          hintText: 'Kategori adı',
+                          filled: true,
+                          fillColor: AppColors.background,
+                          contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        autofocus: true,
+                      ),
+                      if (!isIncome) ...[
+                        SizedBox(height: isKeyboardOpen ? 8 : 12),
+                        TextField(
+                          controller: limitController,
+                          decoration: InputDecoration(
+                            hintText: 'Kategori limiti (Opsiyonel)',
+                            suffixText: '₺',
+                            filled: true,
+                            fillColor: AppColors.background,
+                            contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                          inputFormatters: [ThousandsFormatter()],
+                        ),
+                      ],
+                      SizedBox(height: isKeyboardOpen ? 16 : 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              if (controller.text.trim().isNotEmpty) {
+                                final limitStr = limitController.text.trim().replaceAll('.', '');
+                                final double? limitVal = limitStr.isNotEmpty ? double.tryParse(limitStr) : null;
+
+                                Navigator.pop(context); // Pop first
+
+                                _checkAndSaveCategoryLimit(
+                                  context,
+                                  ref,
+                                  categoryId: null,
+                                  name: controller.text.trim(),
+                                  icon: selectedIcon,
+                                  color: selectedColor,
+                                  isIncome: isIncome,
+                                  newCategoryLimit: limitVal,
+                                );
+                              } else {
+                                Navigator.pop(context);
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text('Ekle'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

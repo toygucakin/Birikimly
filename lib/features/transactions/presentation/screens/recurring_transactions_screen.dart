@@ -519,105 +519,162 @@ class RecurringTransactionsScreen extends ConsumerWidget {
         String? localError;
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text('Düzenli İşlemi Düzenle'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: AppColors.background,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: localError != null 
-                            ? AppColors.expense 
-                            : AppColors.primary.withValues(alpha: 0.2)
-                      ),
+            final screenHeight = MediaQuery.of(context).size.height;
+            final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+            final isKeyboardOpen = keyboardHeight > 0;
+            final double maxDialogHeight = screenHeight - keyboardHeight - 120;
+
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              backgroundColor: AppColors.background,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.fastOutSlowIn,
+                constraints: BoxConstraints(
+                  maxHeight: maxDialogHeight.clamp(150.0, screenHeight * 0.9),
+                ),
+                child: SingleChildScrollView(
+                  child: AnimatedPadding(
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.fastOutSlowIn,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: isKeyboardOpen ? 12.0 : 24.0,
                     ),
-                    child: TextField(
-                      controller: amountController,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [ThousandsFormatter()],
-                      decoration: InputDecoration(
-                        border: InputBorder.none,
-                        labelText: 'Yeni Miktar',
-                        labelStyle: TextStyle(fontSize: 14, color: AppColors.textSecondary),
-                        prefixText: '₺ ',
-                        prefixStyle: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary),
-                      ),
-                      onChanged: (val) {
-                        final cleanText = val.replaceAll('.', '').replaceAll(',', '.');
-                        final newAmount = double.tryParse(cleanText) ?? 0;
-                        if (newAmount > 9999999999) {
-                          setStateDialog(() {
-                            localError = 'En fazla 9.999.999.999 ₺ girilebilir.';
-                          });
-                        } else {
-                          if (localError != null) {
-                            setStateDialog(() {
-                              localError = null;
-                            });
-                          }
-                        }
-                      },
-                    ),
-                  ),
-                  if (localError != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Icon(Icons.error_outline, size: 14, color: AppColors.expense),
-                        const SizedBox(width: 6),
-                        Text(
-                          localError!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.expense,
+                        AnimatedDefaultTextStyle(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.fastOutSlowIn,
+                          style: (Theme.of(context).textTheme.titleLarge ?? const TextStyle()).copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isKeyboardOpen ? 18.0 : 22.0,
                           ),
+                          textAlign: TextAlign.center,
+                          child: const Text('Düzenli İşlemi Düzenle'),
+                        ),
+                        SizedBox(height: isKeyboardOpen ? 12.0 : 20.0),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: localError != null 
+                                  ? AppColors.expense 
+                                  : AppColors.primary.withValues(alpha: 0.2)
+                            ),
+                          ),
+                          child: TextField(
+                            controller: amountController,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: isKeyboardOpen ? 20 : 24, 
+                              fontWeight: FontWeight.bold, 
+                              color: AppColors.primary,
+                            ),
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [ThousandsFormatter()],
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              labelText: 'Yeni Miktar',
+                              labelStyle: TextStyle(
+                                fontSize: isKeyboardOpen ? 12 : 14, 
+                                color: AppColors.textSecondary,
+                              ),
+                              prefixText: '₺ ',
+                              prefixStyle: TextStyle(
+                                fontSize: isKeyboardOpen ? 16 : 18, 
+                                fontWeight: FontWeight.bold, 
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            onChanged: (val) {
+                              final cleanText = val.replaceAll('.', '').replaceAll(',', '.');
+                              final newAmount = double.tryParse(cleanText) ?? 0;
+                              if (newAmount > 9999999999) {
+                                setStateDialog(() {
+                                  localError = 'En fazla 9.999.999.999 ₺ girilebilir.';
+                                });
+                              } else {
+                                if (localError != null) {
+                                  setStateDialog(() {
+                                    localError = null;
+                                  });
+                                }
+                              }
+                            },
+                          ),
+                        ),
+                        if (localError != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.error_outline, size: 14, color: AppColors.expense),
+                              const SizedBox(width: 6),
+                              Text(
+                                localError!,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.expense,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                        SizedBox(height: isKeyboardOpen ? 10.0 : 16.0),
+                        TextField(
+                          controller: descController,
+                          decoration: InputDecoration(
+                            labelText: 'Yeni Açıklama',
+                            contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 12, vertical: 8) : null,
+                          ),
+                        ),
+                        SizedBox(height: isKeyboardOpen ? 16.0 : 24.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('İptal'),
+                            ),
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              onPressed: localError != null || amountController.text.isEmpty
+                                  ? null
+                                  : () {
+                                      final cleanText = amountController.text.replaceAll('.', '').replaceAll(',', '.');
+                                      final newAmount = double.tryParse(cleanText);
+                                      if (newAmount != null && newAmount != rt.amount) {
+                                        ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionAmount(rt, newAmount);
+                                      }
+                                      if (descController.text != rt.description) {
+                                        ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionName(rt, descController.text);
+                                      }
+                                      Navigator.pop(context);
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: localError != null || amountController.text.isEmpty
+                                    ? Colors.grey
+                                    : AppColors.primary,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Kaydet'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Yeni Açıklama'),
                   ),
-                ],
+                ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('İptal'),
-                ),
-                ElevatedButton(
-                  onPressed: localError != null || amountController.text.isEmpty
-                      ? null
-                      : () {
-                          final cleanText = amountController.text.replaceAll('.', '').replaceAll(',', '.');
-                          final newAmount = double.tryParse(cleanText);
-                          if (newAmount != null && newAmount != rt.amount) {
-                            ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionAmount(rt, newAmount);
-                          }
-                          if (descController.text != rt.description) {
-                            ref.read(transactionNotifierProvider.notifier).updateRecurringTransactionName(rt, descController.text);
-                          }
-                          Navigator.pop(context);
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: localError != null || amountController.text.isEmpty
-                        ? Colors.grey
-                        : AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                  child: const Text('Kaydet'),
-                ),
-              ],
             );
           },
         );
