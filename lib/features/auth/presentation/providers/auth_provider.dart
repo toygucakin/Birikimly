@@ -38,6 +38,14 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
   Future<void> signInWithEmail(String email, String password) async {
     state = const AsyncValue.loading();
     try {
+      final bool exists = await SupabaseService.client.rpc(
+        'check_email_exists',
+        params: {'email_to_check': email},
+      );
+      if (!exists) {
+        throw const AuthException('Bu e-posta adresi kayıtlı değil. Lütfen önce kayıt olun.');
+      }
+
       await SupabaseService.client.auth.signInWithPassword(
         email: email,
         password: password,
@@ -53,6 +61,14 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
   Future<void> sendOtp(String email) async {
     state = const AsyncValue.loading();
     try {
+      final bool exists = await SupabaseService.client.rpc(
+        'check_email_exists',
+        params: {'email_to_check': email},
+      );
+      if (exists) {
+        throw const AuthException('Bu e-posta adresi zaten kayıtlı.');
+      }
+
       await SupabaseService.client.auth.signInWithOtp(email: email).timeout(const Duration(seconds: 10));
       state = const AsyncValue.data(null);
     } catch (e, st) {
@@ -82,6 +98,14 @@ class AuthNotifier extends Notifier<AsyncValue<void>> {
   Future<void> sendPasswordResetOtp(String email) async {
     state = const AsyncValue.loading();
     try {
+      final bool exists = await SupabaseService.client.rpc(
+        'check_email_exists',
+        params: {'email_to_check': email},
+      );
+      if (!exists) {
+        throw const AuthException('Bu e-posta adresi kayıtlı değil.');
+      }
+
       await SupabaseService.client.auth.resetPasswordForEmail(email).timeout(const Duration(seconds: 10));
       state = const AsyncValue.data(null);
     } catch (e, st) {

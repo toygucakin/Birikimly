@@ -100,6 +100,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             } else {
               message = error.message; // Fallback to original if unknown
             }
+          } else {
+            // For other exceptions (like PostgrestException or custom exceptions)
+            final errMsg = error.toString();
+            if (errMsg.contains('check_email_exists')) {
+              message = 'Lütfen önce SQL kodunu Supabase panelinde çalıştırın.';
+            } else {
+              message = error.toString().replaceAll('Exception: ', '').replaceAll('PostgrestException: ', '');
+            }
           }
 
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
