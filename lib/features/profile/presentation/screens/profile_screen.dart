@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
@@ -1208,157 +1210,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
   }
 
   void _showDeleteAccountConfirm(BuildContext context, WidgetRef ref) {
-    final user = SupabaseService.client.auth.currentUser;
-    final emailController = TextEditingController(text: user?.email ?? '');
-    final passwordController = TextEditingController();
-    bool obscurePassword = true;
-    bool isLoading = false;
-    String? errorMessage;
-
     showDialog(
       context: context,
-      barrierDismissible: !isLoading,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            alignment: Alignment.center,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
-            ),
-            title: Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, color: AppColors.expense),
-                const SizedBox(width: 8),
-                const Text('Hesabı Sil'),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz. Buluttaki tüm verileriniz ve yerel kayıtlarınız kalıcı olarak silinecektir.\n\nDevam etmek için e-posta ve şifrenizi girerek doğrulayın:',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'E-posta',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.primary),
-                      ),
-                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: obscurePassword,
-                    style: TextStyle(color: AppColors.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Şifre',
-                      labelStyle: TextStyle(color: AppColors.textSecondary),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: AppColors.primary),
-                      ),
-                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          obscurePassword ? Icons.visibility_off : Icons.visibility,
-                          color: AppColors.textSecondary,
-                        ),
-                        onPressed: () => setState(() => obscurePassword = !obscurePassword),
-                      ),
-                    ),
-                  ),
-                  if (errorMessage != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      errorMessage!,
-                      style: TextStyle(color: AppColors.expense, fontSize: 13, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading ? null : () => Navigator.pop(context),
-                child: const Text('İptal'),
-              ),
-              ElevatedButton(
-                onPressed: isLoading
-                    ? null
-                    : () async {
-                        final email = emailController.text.trim();
-                        final password = passwordController.text;
-
-                        if (email.isEmpty || password.isEmpty) {
-                          setState(() {
-                            errorMessage = 'Lütfen e-posta ve şifrenizi girin.';
-                          });
-                          return;
-                        }
-
-                        setState(() {
-                          isLoading = true;
-                          errorMessage = null;
-                        });
-
-                        try {
-                          await ref.read(authNotifierProvider.notifier).deleteAccount(
-                                email: email,
-                                password: password,
-                              );
-                          if (context.mounted) {
-                            Navigator.pop(context); // Close dialog
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Hesabınız kalıcı olarak silindi.'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          setState(() {
-                            isLoading = false;
-                            errorMessage = 'Doğrulama başarısız: E-posta veya şifre hatalı.';
-                          });
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.expense,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                      )
-                    : const Text('Evet, Kalıcı Olarak Sil'),
-              ),
-            ],
-          );
-        },
-      ),
+      barrierDismissible: false,
+      builder: (context) => const _DeleteAccountDialog(),
     );
   }
 
@@ -1581,14 +1436,401 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
         isIncome: isIncome,
         maxLimit: limit,
       );
-    } else {
-      await ref.read(categoryProvider.notifier).updateCategory(
-        categoryId,
-        name: name,
-        icon: icon,
-        color: color,
-        maxLimit: drift.Value(limit),
-      );
     }
+  }
+}
+
+class _DeleteAccountDialog extends ConsumerStatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  ConsumerState<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends ConsumerState<_DeleteAccountDialog> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _otpController = TextEditingController();
+  
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+  bool _isPasswordVerified = false;
+  bool _isSendingOtp = false;
+  int _cooldownSeconds = 0;
+  Timer? _cooldownTimer;
+  String? _errorMessage;
+  String? _successMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = SupabaseService.client.auth.currentUser;
+    _emailController.text = user?.email ?? '';
+  }
+
+  @override
+  void dispose() {
+    _cooldownTimer?.cancel();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _otpController.dispose();
+    super.dispose();
+  }
+
+  void _startCooldown() {
+    _cooldownTimer?.cancel();
+    setState(() {
+      _cooldownSeconds = 60;
+    });
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_cooldownSeconds > 0) {
+        setState(() {
+          _cooldownSeconds--;
+        });
+      } else {
+        _cooldownTimer?.cancel();
+      }
+    });
+  }
+
+  Future<void> _handleActionButtonPressed() async {
+    if (!_isPasswordVerified) {
+      // Step 1: Verify Password
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      if (password.isEmpty) {
+        setState(() {
+          _errorMessage = 'Lütfen şifrenizi girin.';
+        });
+        return;
+      }
+      
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _successMessage = null;
+      });
+
+      try {
+        // Re-authenticate user to confirm identity
+        await SupabaseService.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        ).timeout(const Duration(seconds: 10));
+
+        // Password is correct! Now trigger OTP automatically
+        setState(() {
+          _isPasswordVerified = true;
+          _isSendingOtp = true;
+        });
+
+        try {
+          await SupabaseService.client.auth.signInWithOtp(
+            email: email,
+          ).timeout(const Duration(seconds: 10));
+          setState(() {
+            _isSendingOtp = false;
+            _successMessage = 'Şifre doğrulandı. Doğrulama kodu e-postanıza gönderildi.';
+            _isLoading = false;
+            _startCooldown();
+          });
+        } catch (otpError) {
+          setState(() {
+            _isSendingOtp = false;
+            _errorMessage = 'Şifre doğru fakat doğrulama kodu gönderilemedi: ${otpError.toString().replaceAll('AuthException: ', '')}';
+            _isLoading = false;
+          });
+        }
+      } catch (passwordError) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Şifre hatalı. Lütfen tekrar deneyin.';
+        });
+      }
+    } else {
+      // Step 2: Verify OTP and Delete Account
+      final messenger = ScaffoldMessenger.of(context);
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+      final otp = _otpController.text.trim();
+
+      if (otp.isEmpty) {
+        setState(() {
+          _errorMessage = 'Lütfen doğrulama kodunu girin.';
+        });
+        return;
+      }
+
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+        _successMessage = null;
+      });
+
+      try {
+        // Step 2a: Verify OTP
+        await SupabaseService.client.auth.verifyOTP(
+          email: email,
+          token: otp,
+          type: OtpType.email,
+        ).timeout(const Duration(seconds: 10));
+
+        // Pop dialog cleanly to avoid getting stuck on screen
+        if (mounted) {
+          Navigator.pop(context);
+        }
+
+        try {
+          // Step 2b: Delete Account
+          await ref.read(authNotifierProvider.notifier).deleteAccount(
+                email: email,
+                password: password,
+              );
+        } catch (deleteError) {
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text('Hesap silme başarısız: ${deleteError.toString().replaceAll('AuthException: ', '')}'),
+              backgroundColor: AppColors.expense,
+            ),
+          );
+        }
+      } catch (otpError) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Kod doğrulama başarısız: ${otpError.toString().replaceAll('AuthException: ', '')}';
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    final isKeyboardOpen = keyboardHeight > 0;
+    final double maxDialogHeight = screenHeight - keyboardHeight - 120;
+
+    return Dialog(
+      alignment: Alignment.center,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      backgroundColor: AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: BorderSide(color: AppColors.expense.withValues(alpha: 0.2), width: 1.5),
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.fastOutSlowIn,
+        constraints: BoxConstraints(
+          maxHeight: maxDialogHeight.clamp(150.0, screenHeight * 0.9),
+        ),
+        child: SingleChildScrollView(
+          child: AnimatedPadding(
+            duration: const Duration(milliseconds: 350),
+            curve: Curves.fastOutSlowIn,
+            padding: EdgeInsets.fromLTRB(24, isKeyboardOpen ? 12 : 24, 24, isKeyboardOpen ? 10 : 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: AppColors.expense, size: isKeyboardOpen ? 20 : 28),
+                    const SizedBox(width: 8),
+                    AnimatedDefaultTextStyle(
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.fastOutSlowIn,
+                      style: (Theme.of(context).textTheme.titleLarge ?? const TextStyle()).copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isKeyboardOpen ? 18 : 22,
+                        color: AppColors.expense,
+                      ),
+                      child: const Text('Hesabı Sil'),
+                    ),
+                  ],
+                ),
+                SizedBox(height: isKeyboardOpen ? 10 : 16),
+                
+                if (!_isPasswordVerified) ...[
+                  if (!isKeyboardOpen) ...[
+                    const Text(
+                      'Hesabınızı silmek istediğinize emin misiniz? Bu işlem geri alınamaz. Buluttaki tüm verileriniz ve yerel kayıtlarınız kalıcı olarak silinecektir.\n\nİşlemi başlatmak için e-posta ve şifrenizi girerek doğrulayın:',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextField(
+                    controller: _emailController,
+                    enabled: false,
+                    style: TextStyle(color: AppColors.textSecondary),
+                    decoration: InputDecoration(
+                      labelText: 'E-posta',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      disabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.15)),
+                      ),
+                      prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                      contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                    ),
+                  ),
+                  SizedBox(height: isKeyboardOpen ? 8 : 12),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: _obscurePassword,
+                    style: TextStyle(color: AppColors.textPrimary),
+                    onChanged: (val) {
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Şifre',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                      prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+                      contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                    ),
+                  ),
+                ] else ...[
+                  if (!isKeyboardOpen) ...[
+                    Text(
+                      'Güvenliğiniz için ${_emailController.text} adresine 6 haneli bir doğrulama kodu gönderdik. Lütfen aşağıdaki alana girin:',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: AppColors.textPrimary),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+                    onChanged: (val) {
+                      setState(() {});
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'E-posta Doğrulama Kodu',
+                      hintText: '6 Haneli Kod',
+                      counterText: '',
+                      labelStyle: TextStyle(color: AppColors.textSecondary),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary),
+                      ),
+                      prefixIcon: Icon(Icons.pin_outlined, color: AppColors.textSecondary),
+                      contentPadding: isKeyboardOpen ? const EdgeInsets.symmetric(horizontal: 16, vertical: 10) : null,
+                    ),
+                  ),
+                  SizedBox(height: isKeyboardOpen ? 8 : 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: (_cooldownSeconds > 0 || _isSendingOtp || _isLoading) 
+                          ? null 
+                          : () async {
+                              setState(() {
+                                _isSendingOtp = true;
+                                _errorMessage = null;
+                                _successMessage = null;
+                              });
+                              try {
+                                await SupabaseService.client.auth.signInWithOtp(email: _emailController.text.trim()).timeout(const Duration(seconds: 10));
+                                setState(() {
+                                  _isSendingOtp = false;
+                                  _successMessage = 'Doğrulama kodu tekrar e-postanıza gönderildi.';
+                                  _startCooldown();
+                                });
+                              } catch (e) {
+                                setState(() {
+                                  _isSendingOtp = false;
+                                  _errorMessage = 'Kod gönderilemedi: ${e.toString().replaceAll('AuthException: ', '')}';
+                                });
+                              }
+                            },
+                        icon: _isSendingOtp 
+                          ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 1.5))
+                          : const Icon(Icons.send_outlined, size: 16),
+                        label: Text(
+                          _cooldownSeconds > 0 
+                            ? 'Tekrar Kod Gönder (${_cooldownSeconds}sn)' 
+                            : 'Tekrar Kod Gönder', 
+                          style: const TextStyle(fontSize: 12)
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorMessage!,
+                    style: TextStyle(color: AppColors.expense, fontSize: 13, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (_successMessage != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _successMessage!,
+                    style: const TextStyle(color: Colors.green, fontSize: 13, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                SizedBox(height: isKeyboardOpen ? 12 : 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: _isLoading ? null : () => Navigator.pop(context),
+                      child: Text('İptal', style: TextStyle(color: AppColors.textSecondary)),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: (_isLoading || (_isPasswordVerified && _otpController.text.length != 6) || (!_isPasswordVerified && _passwordController.text.isEmpty))
+                          ? null
+                          : () => _handleActionButtonPressed(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.expense,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text(!_isPasswordVerified ? 'Devam Et' : 'Kalıcı Olarak Sil'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
