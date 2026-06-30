@@ -8,6 +8,7 @@ import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:birikimly/features/categories/presentation/providers/category_provider.dart';
 import 'package:birikimly/features/categories/domain/models/category_model.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
@@ -1679,7 +1680,13 @@ class _DeleteAccountDialogState extends ConsumerState<_DeleteAccountDialog> {
                   TextField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
-                    style: TextStyle(color: AppColors.textPrimary),
+                    obscuringCharacter: '•',
+                    style: GoogleFonts.robotoMono(
+                      fontSize: 16,
+                      height: 1.0,
+                      letterSpacing: 2.0,
+                      color: AppColors.textPrimary,
+                    ),
                     onChanged: (val) {
                       setState(() {});
                     },

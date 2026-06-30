@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
@@ -66,12 +67,14 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
               Text(
                 'Şifre Belirle',
                 style: TextStyle(
@@ -94,6 +97,13 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                obscuringCharacter: '•',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 16,
+                  height: 1.0,
+                  letterSpacing: 2.0,
+                  color: AppColors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Yeni Şifre',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -117,6 +127,13 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
               TextField(
                 controller: _confirmPasswordController,
                 obscureText: _obscurePassword,
+                obscuringCharacter: '•',
+                style: GoogleFonts.robotoMono(
+                  fontSize: 16,
+                  height: 1.0,
+                  letterSpacing: 2.0,
+                  color: AppColors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Şifreyi Onayla',
                   prefixIcon: const Icon(Icons.lock_outline),
@@ -157,6 +174,7 @@ class _UpdatePasswordScreenState extends ConsumerState<UpdatePasswordScreen> {
           ),
         ),
       ),
+    ),
     );
   }
 }
