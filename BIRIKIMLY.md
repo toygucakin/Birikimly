@@ -144,4 +144,14 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 - **UI İyileştirmeleri:** Şifre gizleme/gösterme (göz ikonu) ve giriş ekranındaki ekran taşma (overflow) hataları giderildi.
 
 ---
+
+## 🚀 Çözülecek Sorunlar (Issues to Resolve)
+
+1. **Düzenli İşlemlerin Çift (Mükerrer) Girişi [ÇÖZÜLÜYOR]:** Düzenli işlemlerin arka planda veya açılışta bazen ikişer kez işlenmesi/mükerrer işlem oluşturulması sorunu.
+2. **Çoklu Cihaz Senkronizasyon Uyuşmazlığı (Tablet/Telefon) [ÇÖZÜLÜYOR]:** Aynı anda giriş yapıldığında veya senkronizasyon sırasında, örneğin telefonda bir adet 5 TL'lik işlem görünürken, tablette 10 TL (çift işlem) görünmesi sorunu.
+3. **Taksitli Düzenli İşlemlerin Cihazlar Arasında Senkronize Olmaması [ÇÖZÜLÜYOR]:** Tablette "sasa" işleminin 1. ve 2. taksitlerinin bugün ödendiği gösterilmesine rağmen, telefonda bu taksitlerle ilgili hiçbir bilgi/işlem yer almaması.
+4. **Düzenli İşlem Güncellemelerinin (Açıklama Değişikliklerinin) Diğer Cihaza Yansımaması [ÇÖZÜLÜYOR]:** Bir cihazda düzenli işlem açıklaması değiştirildiğinde (örn: "sasa" -> "sasa11"), bu değişikliğin diğer cihaza senkronize olmaması/yansımaması.
+5. **Tablet ve Büyük Ekranlarda Ev Ekranı Widget'ının Bozulması:** Tablet gibi büyük ekranlarda ev ekranı widget'ının yerleşiminin bozulması/saçmalaması.
+
+---
 *Bu dosya projenin hafızasıdır ve gitignore edilerek yerelde saklanmaktadır.*

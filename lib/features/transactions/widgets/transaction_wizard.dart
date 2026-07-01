@@ -10,6 +10,7 @@ import 'package:birikimly/features/transactions/presentation/providers/transacti
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/core/utils/currency_utils.dart';
+import 'package:uuid/uuid.dart';
 
 class TransactionWizard extends ConsumerStatefulWidget {
   final bool isIncome;
@@ -125,8 +126,12 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           _selectedDate.day == now.day;
 
       if (isSelectedDateToday) {
+        final rtUuid = const Uuid().v4();
+        final txUuid = const Uuid().v4();
+
         // 1. Create the regular transaction for today immediately with current time
         final entry = TransactionsCompanion(
+          uuid: drift.Value(txUuid),
           userId: drift.Value(userId),
           amount: drift.Value(amount),
           categoryId: drift.Value(category.id),
@@ -134,6 +139,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
           date: drift.Value(now),
           isIncome: drift.Value(widget.isIncome),
           isSynced: const drift.Value(false),
+          recurringUuid: drift.Value(rtUuid),
           installmentNumber: drift.Value(_maxOccurrences != 100 ? 1 : null),
           totalInstallments: drift.Value(_maxOccurrences != 100 ? _maxOccurrences : null),
         );
@@ -144,6 +150,7 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         final nextDateAtNoon = DateTime(nextDate.year, nextDate.month, nextDate.day, 12, 0, 0);
 
         final rtEntry = RecurringTransactionsCompanion(
+          uuid: drift.Value(rtUuid),
           userId: drift.Value(userId),
           amount: drift.Value(amount),
           categoryId: drift.Value(category.id),
@@ -159,9 +166,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         );
         ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
       } else {
+        final rtUuid = const Uuid().v4();
         // Schedule future recurring transaction at 12:00 PM
         final dateAtNoon = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day, 12, 0, 0);
         final rtEntry = RecurringTransactionsCompanion(
+          uuid: drift.Value(rtUuid),
           userId: drift.Value(userId),
           amount: drift.Value(amount),
           categoryId: drift.Value(category.id),
@@ -178,7 +187,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
         ref.read(transactionNotifierProvider.notifier).addRecurringTransaction(rtEntry);
       }
     } else {
+      final txUuid = const Uuid().v4();
       final entry = TransactionsCompanion(
+        uuid: drift.Value(txUuid),
         userId: drift.Value(userId),
         amount: drift.Value(amount),
         categoryId: drift.Value(category.id),

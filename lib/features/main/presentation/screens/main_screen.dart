@@ -32,6 +32,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final isGuest = ref.read(guestModeProvider);
       if (user != null || isGuest) {
         final userId = isGuest ? 'guest' : user!.id;
+        
+        // Sync first to get the latest nextExecutionDate from the cloud before processing recurring transactions
+        if (!isGuest) {
+          print('DEBUG: Syncing before processing recurring transactions...');
+          await ref.read(syncServiceProvider).syncAll();
+        }
+
         final processedTxs = await ref.read(recurringTransactionServiceProvider).processRecurringTransactions(userId);
         if (processedTxs.isNotEmpty && mounted) {
           final allRecurring = await ref.read(databaseProvider).getAllRecurringTransactions(userId);

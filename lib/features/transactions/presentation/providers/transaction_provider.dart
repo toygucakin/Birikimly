@@ -75,8 +75,7 @@ class TransactionNotifier extends Notifier<void> {
     try {
       final db = ref.read(databaseProvider);
       
-      // UUID üretimini ve atanmasını sağlıyoruz
-      final uuid = const Uuid().v4();
+      final uuid = (entry.uuid.present && entry.uuid.value.isNotEmpty) ? entry.uuid.value : const Uuid().v4();
       final finalEntry = entry.copyWith(uuid: drift.Value(uuid));
       
       await db.insertTransaction(finalEntry);
@@ -102,7 +101,7 @@ class TransactionNotifier extends Notifier<void> {
   Future<void> addRecurringTransaction(RecurringTransactionsCompanion entry) async {
     try {
       final db = ref.read(databaseProvider);
-      final uuid = const Uuid().v4();
+      final uuid = (entry.uuid.present && entry.uuid.value.isNotEmpty) ? entry.uuid.value : const Uuid().v4();
       final finalEntry = entry.copyWith(uuid: drift.Value(uuid));
       
       await db.insertRecurringTransaction(finalEntry);

@@ -300,6 +300,7 @@ class SyncService {
           String? remoteIdToUse = rt.remoteId;
           final data = {
             if (remoteIdToUse != null) 'id': remoteIdToUse,
+            'uuid': rt.uuid,
             'user_id': user.id,
             'amount': rt.amount,
             'category_id': rt.categoryId,
@@ -310,6 +311,8 @@ class SyncService {
             'is_deleted': rt.isDeleted,
             'frequency': rt.frequency,
             'is_active': rt.isActive,
+            'max_occurrences': rt.maxOccurrences,
+            'occurrences_executed': rt.occurrencesExecuted,
           };
           try {
             final responseData = await _resilientUpsert('recurring_transactions', data);
@@ -332,32 +335,89 @@ class SyncService {
 
       if (remoteTxs.isNotEmpty) {
         final localTxs = await _db.getAllRecurringTransactionsRaw(user.id);
-        final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
-        final existingUuids = localTxs.map((t) => t.uuid).toSet();
+        final localByRemoteId = {for (var t in localTxs) if (t.remoteId != null) t.remoteId!: t};
+        final localByUuid = {for (var t in localTxs) t.uuid: t};
+        
         int restored = 0;
+        int updatedCount = 0;
         for (final rt in remoteTxs) {
           final rId = rt['id'].toString();
           final rUuid = rt['uuid']?.toString() ?? '';
-          if (existingRemoteIds.contains(rId) || (rUuid.isNotEmpty && existingUuids.contains(rUuid))) continue;
-          final data = RecurringTransactionsCompanion(
-            uuid: Value(rUuid),
-            remoteId: Value(rId),
-            userId: Value(user.id),
-            amount: Value((rt['amount'] as num).toDouble()),
-            categoryId: Value(rt['category_id']?.toString()),
-            description: Value(rt['description'] ?? ''),
-            startDate: Value(DateTime.parse(rt['start_date'] ?? DateTime.now().toIso8601String()).toLocal()),
-            nextExecutionDate: Value(DateTime.parse(rt['next_execution_date'] ?? DateTime.now().toIso8601String()).toLocal()),
-            isIncome: Value(rt['is_income'] ?? false),
-            isSynced: const Value(true),
-            isDeleted: Value(rt['is_deleted'] ?? false),
-            frequency: Value(rt['frequency'] ?? 'monthly'),
-            isActive: Value(rt['is_active'] ?? true),
-          );
-          await _db.insertRecurringTransaction(data);
-          restored++;
+          
+          final localRt = localByRemoteId[rId] ?? (rUuid.isNotEmpty ? localByUuid[rUuid] : null);
+          
+          final rAmount = (rt['amount'] as num).toDouble();
+          final rCategoryId = rt['category_id']?.toString();
+          final rDescription = rt['description'] ?? '';
+          final rStartDate = DateTime.parse(rt['start_date'] ?? DateTime.now().toIso8601String()).toLocal();
+          final rNextExecutionDate = DateTime.parse(rt['next_execution_date'] ?? DateTime.now().toIso8601String()).toLocal();
+          final rIsIncome = rt['is_income'] ?? false;
+          final rIsDeleted = rt['is_deleted'] ?? false;
+          final rFrequency = rt['frequency'] ?? 'monthly';
+          final rIsActive = rt['is_active'] ?? true;
+          final rMaxOccurrences = rt['max_occurrences'] as int? ?? 100;
+          final rOccurrencesExecuted = rt['occurrences_executed'] as int? ?? 0;
+
+          if (localRt != null) {
+            // Update only if local is already synced (no unsynced local edits pending)
+            if (localRt.isSynced) {
+              final hasChanged = localRt.amount != rAmount ||
+                  localRt.categoryId != rCategoryId ||
+                  localRt.description != rDescription ||
+                  localRt.startDate != rStartDate ||
+                  localRt.nextExecutionDate != rNextExecutionDate ||
+                  localRt.isIncome != rIsIncome ||
+                  localRt.isDeleted != rIsDeleted ||
+                  localRt.frequency != rFrequency ||
+                  localRt.isActive != rIsActive ||
+                  localRt.maxOccurrences != rMaxOccurrences ||
+                  localRt.occurrencesExecuted != rOccurrencesExecuted ||
+                  localRt.remoteId != rId;
+
+              if (hasChanged) {
+                final updated = localRt.copyWith(
+                  remoteId: Value(rId),
+                  amount: rAmount,
+                  categoryId: Value(rCategoryId),
+                  description: rDescription,
+                  startDate: rStartDate,
+                  nextExecutionDate: rNextExecutionDate,
+                  isIncome: rIsIncome,
+                  isDeleted: rIsDeleted,
+                  frequency: rFrequency,
+                  isActive: rIsActive,
+                  maxOccurrences: rMaxOccurrences,
+                  occurrencesExecuted: rOccurrencesExecuted,
+                  isSynced: true,
+                );
+                await _db.updateRecurringTransaction(updated);
+                updatedCount++;
+              }
+            }
+          } else {
+            final data = RecurringTransactionsCompanion(
+              uuid: Value(rUuid),
+              remoteId: Value(rId),
+              userId: Value(user.id),
+              amount: Value(rAmount),
+              categoryId: Value(rCategoryId),
+              description: Value(rDescription),
+              startDate: Value(rStartDate),
+              nextExecutionDate: Value(rNextExecutionDate),
+              isIncome: Value(rIsIncome),
+              isSynced: const Value(true),
+              isDeleted: Value(rIsDeleted),
+              frequency: Value(rFrequency),
+              isActive: Value(rIsActive),
+              maxOccurrences: Value(rMaxOccurrences),
+              occurrencesExecuted: Value(rOccurrencesExecuted),
+            );
+            await _db.insertRecurringTransaction(data);
+            restored++;
+          }
         }
         if (restored > 0) print('SyncService: Restored $restored recurring transactions from cloud.');
+        if (updatedCount > 0) print('SyncService: Updated $updatedCount recurring transactions from cloud.');
       }
     } catch (e) {
       print('SyncService: Recurring transaction sync failed: $e');
@@ -365,7 +425,7 @@ class SyncService {
   }
 
 Future<void> syncTransactions() async {
-final user = SupabaseService.client.auth.currentUser;
+    final user = SupabaseService.client.auth.currentUser;
     if (user == null) return;
 
     print('SyncService: Syncing transactions...');
@@ -394,6 +454,7 @@ final user = SupabaseService.client.auth.currentUser;
 
           final data = {
             if (remoteIdToUse != null) 'id': remoteIdToUse,
+            'uuid': tx.uuid,
             'user_id': user.id,
             'amount': tx.amount,
             'category': tx.categoryId,
@@ -401,6 +462,8 @@ final user = SupabaseService.client.auth.currentUser;
             'date': tx.date.toUtc().toIso8601String(),
             'is_income': tx.isIncome,
             if (tx.recurringUuid != null) 'recurring_uuid': tx.recurringUuid,
+            'installment_number': tx.installmentNumber,
+            'total_installments': tx.totalInstallments,
           };
 
           try {
@@ -429,40 +492,94 @@ final user = SupabaseService.client.auth.currentUser;
       if (remoteTxs.isEmpty) return;
 
       final localTxs = await _db.getAllTransactionsRaw(user.id);
-      final existingRemoteIds = localTxs.map((t) => t.remoteId).toSet();
-      final existingUuids = localTxs.map((t) => t.uuid).toSet();
+      final localByRemoteId = {for (var t in localTxs) if (t.remoteId != null) t.remoteId!: t};
+      final localByUuid = {for (var t in localTxs) t.uuid: t};
 
       int restoredCount = 0;
+      int updatedCount = 0;
       for (final rt in remoteTxs) {
         final rId = rt['id'].toString();
         final rUuid = rt['uuid']?.toString() ?? '';
         final isRemoteDeleted = rt['is_deleted'] == true;
 
-        if (existingRemoteIds.contains(rId)) continue;
-        if (rUuid.isNotEmpty && existingUuids.contains(rUuid)) continue;
+        final localTx = localByRemoteId[rId] ?? (rUuid.isNotEmpty ? localByUuid[rUuid] : null);
 
-        final remoteCatId = (rt['category_id'] ?? rt['category'] ?? rt['categoryId'] ?? '').toString();
-        print('SyncService: [PULL] Restoring transaction: ${rt['description']} (Resolved Cat: $remoteCatId)');
-        
-        await _db.insertTransaction(TransactionsCompanion.insert(
-          remoteId: Value(rId),
-          uuid: Value(rUuid),
-          userId: user.id,
-          amount: (rt['amount'] as num? ?? 0.0).toDouble(),
-          categoryId: Value(remoteCatId),
-          description: rt['description'] ?? '',
-          date: DateTime.parse(rt['transaction_date'] ?? rt['date'] ?? DateTime.now().toIso8601String()).toLocal(),
-          isIncome: rt['is_income'] ?? false,
-          isSynced: const Value(true),
-          isDeleted: Value(isRemoteDeleted),
-          recurringUuid: Value(rt['recurring_uuid']?.toString()),
-        ));
-        
-        existingRemoteIds.add(rId);
-        if (rUuid.isNotEmpty) existingUuids.add(rUuid);
-        restoredCount++;
+        final rAmount = (rt['amount'] as num? ?? 0.0).toDouble();
+        final rCategoryId = (rt['category_id'] ?? rt['category'] ?? rt['categoryId'] ?? '').toString();
+        final rDescription = rt['description'] ?? '';
+        final rDate = DateTime.parse(rt['transaction_date'] ?? rt['date'] ?? DateTime.now().toIso8601String()).toLocal();
+        final rIsIncome = rt['is_income'] ?? false;
+        final rRecurringUuid = rt['recurring_uuid']?.toString();
+        final rInstallmentNumber = rt['installment_number'] as int?;
+        final rTotalInstallments = rt['total_installments'] as int?;
+
+        if (localTx != null) {
+          if (localTx.isSynced) {
+            final hasChanged = localTx.amount != rAmount ||
+                localTx.categoryId != rCategoryId ||
+                localTx.description != rDescription ||
+                localTx.date != rDate ||
+                localTx.isIncome != rIsIncome ||
+                localTx.isDeleted != isRemoteDeleted ||
+                localTx.recurringUuid != rRecurringUuid ||
+                localTx.installmentNumber != rInstallmentNumber ||
+                localTx.totalInstallments != rTotalInstallments ||
+                localTx.remoteId != rId;
+
+            if (hasChanged) {
+              final updated = localTx.copyWith(
+                remoteId: Value(rId),
+                amount: rAmount,
+                categoryId: Value(rCategoryId),
+                description: rDescription,
+                date: rDate,
+                isIncome: rIsIncome,
+                isDeleted: isRemoteDeleted,
+                recurringUuid: Value(rRecurringUuid),
+                installmentNumber: Value(rInstallmentNumber),
+                totalInstallments: Value(rTotalInstallments),
+                isSynced: true,
+              );
+              await _db.updateTransaction(updated);
+              updatedCount++;
+            }
+          }
+        } else {
+          print('SyncService: [PULL] Restoring transaction: $rDescription (Resolved Cat: $rCategoryId)');
+          await _db.insertTransaction(TransactionsCompanion.insert(
+            remoteId: Value(rId),
+            uuid: Value(rUuid),
+            userId: user.id,
+            amount: rAmount,
+            categoryId: Value(rCategoryId),
+            description: rDescription,
+            date: rDate,
+            isIncome: rIsIncome,
+            isSynced: const Value(true),
+            isDeleted: Value(isRemoteDeleted),
+            recurringUuid: Value(rRecurringUuid),
+            installmentNumber: Value(rInstallmentNumber),
+            totalInstallments: Value(rTotalInstallments),
+          ));
+          restoredCount++;
+        }
       }
+
+      // Cleanup local transactions that were deleted from Supabase (server is ground truth)
+      final remoteIdsInServer = remoteTxs.map((rt) => rt['id'].toString()).toSet();
+      int deletedCount = 0;
+      for (final localTx in localTxs) {
+        if (localTx.isSynced && !localTx.isDeleted && localTx.remoteId != null && !remoteIdsInServer.contains(localTx.remoteId)) {
+          print('SyncService: Local transaction ${localTx.description} was deleted on server. Deleting locally...');
+          await (_db.update(_db.transactions)..where((t) => t.id.equals(localTx.id)))
+              .write(const TransactionsCompanion(isDeleted: Value(true), isSynced: Value(true)));
+          deletedCount++;
+        }
+      }
+
       if (restoredCount > 0) print('SyncService: Restored $restoredCount transactions from cloud.');
+      if (updatedCount > 0) print('SyncService: Updated $updatedCount transactions from cloud.');
+      if (deletedCount > 0) print('SyncService: Deleted $deletedCount local transactions.');
     } catch (e) {
       print('SyncService: Transaction pull failed: $e');
     }

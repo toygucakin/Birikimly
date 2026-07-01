@@ -281,84 +281,104 @@ class RecurringTransactionsScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          ListTile(
-            contentPadding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
-            leading: Opacity(
-              opacity: rt.isActive ? 1.0 : 0.5,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: category.color.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(category.icon, color: category.color),
-              ),
-            ),
-            title: Row(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: Text(
-                    rt.description.isNotEmpty ? rt.description : category.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold, 
-                      fontSize: 16,
-                      color: rt.isActive ? AppColors.textPrimary : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    freqText,
-                    style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                if (rt.maxOccurrences != 100) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                Opacity(
+                  opacity: rt.isActive ? 1.0 : 0.5,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.amber.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: category.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      'Taksit: ${rt.occurrencesExecuted}/${rt.maxOccurrences}',
-                      style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
+                    child: Icon(category.icon, color: category.color),
                   ),
-                ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              rt.description.isNotEmpty ? rt.description : category.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                fontSize: 16,
+                                color: rt.isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              freqText,
+                              style: TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          if (rt.maxOccurrences != 100) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.amber.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Taksit: ${rt.occurrencesExecuted}/${rt.maxOccurrences}',
+                                style: const TextStyle(color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.calendar_today, size: 12, color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)),
+                          const SizedBox(width: 4),
+                          Text(
+                            DateFormat('dd MMMM', 'tr_TR').format(rt.nextExecutionDate),
+                            style: TextStyle(color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5), fontSize: 12),
+                          ),
+                          const SizedBox(width: 8),
+                          if (rt.isActive)
+                            Flexible(
+                              child: Text(
+                                '($daysLeftText)',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: daysLeft <= 3 ? AppColors.expense : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  '${rt.isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
+                  style: TextStyle(
+                    color: !rt.isActive ? Colors.grey : (rt.isIncome ? AppColors.income : AppColors.expense),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, size: 12, color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5)),
-                  const SizedBox(width: 4),
-                  Text(
-                    DateFormat('dd MMMM', 'tr_TR').format(rt.nextExecutionDate),
-                    style: TextStyle(color: rt.isActive ? AppColors.textSecondary : Colors.grey.withValues(alpha: 0.5), fontSize: 12),
-                  ),
-                  const SizedBox(width: 8),
-                  if (rt.isActive)
-                    Text(
-                      '($daysLeftText)',
-                      style: TextStyle(color: daysLeft <= 3 ? AppColors.expense : AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                ],
-              ),
-            ),
-            trailing: Text(
-              '${rt.isIncome ? '+' : '-'}${CurrencyUtils.format(rt.amount)}',
-              style: TextStyle(
-                color: !rt.isActive ? Colors.grey : (rt.isIncome ? AppColors.income : AppColors.expense),
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
             ),
           ),
           Padding(
