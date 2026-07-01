@@ -151,7 +151,7 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 2. **Çoklu Cihaz Senkronizasyon Uyuşmazlığı (Tablet/Telefon) [ÇÖZÜLDÜ]:** Aynı anda giriş yapıldığında veya senkronizasyon sırasında, örneğin telefonda bir adet 5 TL'lik işlem görünürken, tablette 10 TL (çift işlem) görünmesi sorunu.
 3. **Taksitli Düzenli İşlemlerin Cihazlar Arasında Senkronize Olmaması [ÇÖZÜLDÜ]:** Tablette "sasa" işleminin 1. ve 2. taksitlerinin bugün ödendiği gösterilmesine rağmen, telefonda bu taksitlerle ilgili hiçbir bilgi/işlem yer almaması.
 4. **Düzenli İşlem Güncellemelerinin (Açıklama Değişikliklerinin) Diğer Cihaza Yansımaması [ÇÖZÜLDÜ]:** Bir cihazda düzenli işlem açıklaması değiştirildiğinde (örn: "sasa" -> "sasa11"), bu değişikliğin diğer cihaza senkronize olmaması/yansımaması.
-5. **Tablet ve Büyük Ekranlarda Ev Ekranı Widget'ının Bozulması [SIRADAKİ]:** Tablet gibi büyük ekranlarda ev ekranı widget'ının yerleşiminin bozulması/saçmalaması.
+5. **Tablet ve Büyük Ekranlarda Ev Ekranı Widget'ının Bozulması [ÇÖZÜLDÜ]:** Tablet gibi büyük ekranlarda ev ekranı widget'ının yerleşiminin bozulması/saçmalaması.
 
 ---
 
@@ -160,8 +160,8 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 Birikimly uygulamasının kararlılığını ve kullanıcı deneyimini artırmak amacıyla belirlenen gelecek geliştirme adımları ve öncelik sıralaması şu şekildedir:
 
 ### 📍 Aşama 1: Widget & Ekran Uyumluluğu (Kritik Adım)
-- **Tablet & Büyük Ekran Widget Düzeltmesi (Sıradaki):** Tabletlerde ev ekranı widget'ının görsel olarak bozulması ve layout taşmalarının giderilmesi.
-- **Küçük Ekran Widget Optimizasyonu:** Dar boyutlu (2x2, 2x1) widget'larda bakiye tutarlarının alt satıra kayıp sıkışmasını engellemek için padding/margin daraltmaları ve yazı boyutlarının (`9.5sp` / `11sp`) optimize edilmesi.
+- **Tablet & Büyük Ekran Widget Düzeltmesi [ÇÖZÜLDÜ]:** Tabletlerde ev ekranı widget'ının görsel olarak bozulması ve layout taşmalarının giderilmesi.
+- **Küçük Ekran Widget Optimizasyonu (Sıradaki):** Dar boyutlu (2x2, 2x1) widget'larda bakiye tutarlarının alt satıra kayıp sıkışmasını engellemek için padding/margin daraltmaları ve yazı boyutlarının (`9.5sp` / `11sp`) optimize edilmesi.
 
 ### 🎨 Aşama 2: Görsel Özelleştirme & Kullanıcı Deneyimi
 - **Kişiselleştirilebilir Profil İkonları:** Kullanıcıların profilleri için siyah-beyaz (monochrome/vektörel) simgeler (hayvan, çiçek, manzara) seçebilmesi ve bu simgelerin dinamik temalara tam uyumu.
