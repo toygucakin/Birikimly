@@ -240,48 +240,74 @@ class SyncService {
       if (remoteCats.isEmpty) return;
 
       final allLocalCats = await _db.getAllCategoriesRaw(user.id);
-
-      final existingKeys = allLocalCats.map((c) => 
-        '${c.name.toLowerCase().trim()}_${c.isIncome}'
-      ).toSet();
-      final existingUuids = allLocalCats.map((c) => c.uuid).toSet();
+      final localByRemoteId = {for (var c in allLocalCats) if (c.remoteId != null) c.remoteId!: c};
+      final localByUuid = {for (var c in allLocalCats) c.uuid: c};
 
       int restoredCount = 0;
+      int updatedCount = 0;
       for (final rc in remoteCats) {
-        // We Pull even deleted categories to prevent their re-insertion as 'defaults'
+        final rId = rc['id'].toString();
+        final rUuid = rc['uuid']?.toString() ?? '';
         final isRemoteDeleted = rc['is_deleted'] == true;
 
-        final rcName = (rc['name'] ?? '').toString().toLowerCase().trim();
-        if (rcName.isEmpty) continue;
+        final rcName = (rc['name'] ?? '').toString();
+        if (rcName.trim().isEmpty) continue;
 
         final rcIsIncome = rc['is_income'] as bool;
-        final rcUuid = rc['uuid']?.toString() ?? '';
-        final key = '${rcName}_$rcIsIncome';
+        final rIconCode = rc['icon_code'] as int? ?? 0;
+        final rColorValue = (rc['color_value'] as int? ?? 0).toSigned(32);
+        final rOrderIndex = rc['order_index'] as int? ?? 0;
+        final rMaxLimit = rc['max_limit'] != null ? (rc['max_limit'] as num).toDouble() : null;
 
-        if (existingUuids.contains(rcUuid) || existingKeys.contains(key)) {
-          continue;
+        final localCat = localByRemoteId[rId] ?? (rUuid.isNotEmpty ? localByUuid[rUuid] : null);
+
+        if (localCat != null) {
+          if (localCat.isSynced) {
+            final hasChanged = localCat.name != rcName ||
+                localCat.iconCode != rIconCode ||
+                localCat.colorValue != rColorValue ||
+                localCat.isIncome != rcIsIncome ||
+                localCat.isDeleted != isRemoteDeleted ||
+                localCat.orderIndex != rOrderIndex ||
+                localCat.maxLimit != rMaxLimit ||
+                localCat.remoteId != rId;
+
+            if (hasChanged) {
+              final updated = localCat.copyWith(
+                remoteId: Value(rId),
+                name: rcName,
+                iconCode: rIconCode,
+                colorValue: rColorValue,
+                isIncome: rcIsIncome,
+                isDeleted: isRemoteDeleted,
+                orderIndex: rOrderIndex,
+                maxLimit: Value(rMaxLimit),
+                isSynced: true,
+              );
+              await _db.updateCategoryRecord(updated);
+              updatedCount++;
+            }
+          }
+        } else {
+          print('SyncService: [PULL] Restoring unique newest category: $rcName');
+          await _db.insertCategory(CategoriesCompanion.insert(
+            uuid: rUuid,
+            userId: user.id,
+            name: rcName,
+            iconCode: rIconCode,
+            colorValue: rColorValue,
+            isIncome: rcIsIncome,
+            isSynced: const Value(true),
+            remoteId: Value(rId),
+            isDeleted: Value(isRemoteDeleted),
+            orderIndex: Value(rOrderIndex),
+            maxLimit: Value(rMaxLimit),
+          ));
+          restoredCount++;
         }
-
-        print('SyncService: [PULL] Restoring unique newest category: ${rc['name']}');
-        await _db.insertCategory(CategoriesCompanion.insert(
-          uuid: rcUuid,
-          userId: user.id,
-          name: rc['name'].toString(),
-          iconCode: rc['icon_code'] ?? 0,
-          colorValue: (rc['color_value'] as int? ?? 0).toSigned(32),
-          isIncome: rcIsIncome,
-          isSynced: const Value(true),
-          remoteId: Value(rc['id'].toString()),
-          isDeleted: Value(isRemoteDeleted),
-          orderIndex: Value(rc['order_index'] as int? ?? 0),
-          maxLimit: Value(rc['max_limit'] != null ? (rc['max_limit'] as num).toDouble() : null),
-        ));
-
-        existingKeys.add(key);
-        existingUuids.add(rcUuid);
-        restoredCount++;
       }
       if (restoredCount > 0) print('SyncService: Restored $restoredCount unique categories.');
+      if (updatedCount > 0) print('SyncService: Updated $updatedCount categories.');
     } catch (e) {
       print('SyncService: Category pull failed: $e');
     }
