@@ -147,11 +147,34 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 
 ## 🚀 Çözülecek Sorunlar (Issues to Resolve)
 
-1. **Düzenli İşlemlerin Çift (Mükerrer) Girişi [ÇÖZÜLÜYOR]:** Düzenli işlemlerin arka planda veya açılışta bazen ikişer kez işlenmesi/mükerrer işlem oluşturulması sorunu.
-2. **Çoklu Cihaz Senkronizasyon Uyuşmazlığı (Tablet/Telefon) [ÇÖZÜLÜYOR]:** Aynı anda giriş yapıldığında veya senkronizasyon sırasında, örneğin telefonda bir adet 5 TL'lik işlem görünürken, tablette 10 TL (çift işlem) görünmesi sorunu.
-3. **Taksitli Düzenli İşlemlerin Cihazlar Arasında Senkronize Olmaması [ÇÖZÜLÜYOR]:** Tablette "sasa" işleminin 1. ve 2. taksitlerinin bugün ödendiği gösterilmesine rağmen, telefonda bu taksitlerle ilgili hiçbir bilgi/işlem yer almaması.
-4. **Düzenli İşlem Güncellemelerinin (Açıklama Değişikliklerinin) Diğer Cihaza Yansımaması [ÇÖZÜLÜYOR]:** Bir cihazda düzenli işlem açıklaması değiştirildiğinde (örn: "sasa" -> "sasa11"), bu değişikliğin diğer cihaza senkronize olmaması/yansımaması.
-5. **Tablet ve Büyük Ekranlarda Ev Ekranı Widget'ının Bozulması:** Tablet gibi büyük ekranlarda ev ekranı widget'ının yerleşiminin bozulması/saçmalaması.
+1. **Düzenli İşlemlerin Çift (Mükerrer) Girişi [ÇÖZÜLDÜ]:** Düzenli işlemlerin arka planda veya açılışta bazen ikişer kez işlenmesi/mükerrer işlem oluşturulması sorunu.
+2. **Çoklu Cihaz Senkronizasyon Uyuşmazlığı (Tablet/Telefon) [ÇÖZÜLDÜ]:** Aynı anda giriş yapıldığında veya senkronizasyon sırasında, örneğin telefonda bir adet 5 TL'lik işlem görünürken, tablette 10 TL (çift işlem) görünmesi sorunu.
+3. **Taksitli Düzenli İşlemlerin Cihazlar Arasında Senkronize Olmaması [ÇÖZÜLDÜ]:** Tablette "sasa" işleminin 1. ve 2. taksitlerinin bugün ödendiği gösterilmesine rağmen, telefonda bu taksitlerle ilgili hiçbir bilgi/işlem yer almaması.
+4. **Düzenli İşlem Güncellemelerinin (Açıklama Değişikliklerinin) Diğer Cihaza Yansımaması [ÇÖZÜLDÜ]:** Bir cihazda düzenli işlem açıklaması değiştirildiğinde (örn: "sasa" -> "sasa11"), bu değişikliğin diğer cihaza senkronize olmaması/yansımaması.
+5. **Tablet ve Büyük Ekranlarda Ev Ekranı Widget'ının Bozulması [SIRADAKİ]:** Tablet gibi büyük ekranlarda ev ekranı widget'ının yerleşiminin bozulması/saçmalaması.
+
+---
+
+## 🗺️ Yol Haritası (Roadmap)
+
+Birikimly uygulamasının kararlılığını ve kullanıcı deneyimini artırmak amacıyla belirlenen gelecek geliştirme adımları ve öncelik sıralaması şu şekildedir:
+
+### 📍 Aşama 1: Widget & Ekran Uyumluluğu (Kritik Adım)
+- **Tablet & Büyük Ekran Widget Düzeltmesi (Sıradaki):** Tabletlerde ev ekranı widget'ının görsel olarak bozulması ve layout taşmalarının giderilmesi.
+- **Küçük Ekran Widget Optimizasyonu:** Dar boyutlu (2x2, 2x1) widget'larda bakiye tutarlarının alt satıra kayıp sıkışmasını engellemek için padding/margin daraltmaları ve yazı boyutlarının (`9.5sp` / `11sp`) optimize edilmesi.
+
+### 🎨 Aşama 2: Görsel Özelleştirme & Kullanıcı Deneyimi
+- **Kişiselleştirilebilir Profil İkonları:** Kullanıcıların profilleri için siyah-beyaz (monochrome/vektörel) simgeler (hayvan, çiçek, manzara) seçebilmesi ve bu simgelerin dinamik temalara tam uyumu.
+- **Uygulama İçi Rehber (Tutorial):** Yeni kullanıcıların bütçe yönetimini ve sihirbazı kolayca kavrayabilmesi için interaktif bir "Nasıl Kullanılır?" turu.
+
+### 📊 Aşama 3: Gelişmiş Analitik & Bildirimler
+- **Gelişmiş Grafikler:** Aylık ve yıllık harcama trendlerinin interaktif grafiklerle sunulması.
+- **Geçmiş Dönem Karşılaştırmaları:** Harcamaların bir önceki ay veya geçen yılın aynı dönemiyle otomatik kıyaslanması.
+- **Akıllı Bildirimler (Push Notifications):** Ay sonu bütçe durumu özetleri ve otomatik düzenlenen işlemler gerçekleştiğinde arka planda tetiklenen bildirimler.
+
+### 🤖 Aşama 4: Yapay Zeka Destekli Akıllı Asistan
+- **Yapay Zeka Destekli Analizler:** Kullanıcının harcama alışkanlıklarını inceleyen ve "Bu ay dışarıda yemek yemeye bütçenin %80'ini harcadın" gibi akıllı tavsiyeler üreten yerel/bulut yapay zeka entegrasyonu.
+- **Fatura Hatırlatıcılar:** Gelecek ödemeler ve fatura günleri için akıllı tahmini hatırlatıcılar oluşturulması.
 
 ---
 *Bu dosya projenin hafızasıdır ve gitignore edilerek yerelde saklanmaktadır.*
