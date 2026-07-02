@@ -79,7 +79,12 @@ class SyncService {
           // 3: Sistemin otomatik ürettiği varsayılan kategori (en değersiz)
           return 3;
         }
-        return getPriority(a).compareTo(getPriority(b));
+        int cmp = getPriority(a).compareTo(getPriority(b));
+        if (cmp == 0) {
+          // Eğer öncelikler eşitse, daha yeni ekleneni (ID'si büyük olanı) koru
+          return b.id.compareTo(a.id);
+        }
+        return cmp;
       });
 
       for (final cat in sortedCats) {
