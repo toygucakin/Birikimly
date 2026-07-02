@@ -70,7 +70,19 @@ class SyncService {
       final seenKeys = <String, Category>{};
       final idsToDelete = <int>[];
 
-      for (final cat in allCats) {
+      final sortedCats = List<Category>.from(allCats)..sort((a, b) {
+        int getPriority(Category c) {
+          // 1: Kullanıcının manuel oluşturduğu aktif kategori (en değerli)
+          if (!c.isDeleted && !c.uuid.startsWith('def_')) return 1;
+          // 2: Kullanıcının bilerek sildiği kategori
+          if (c.isDeleted) return 2;
+          // 3: Sistemin otomatik ürettiği varsayılan kategori (en değersiz)
+          return 3;
+        }
+        return getPriority(a).compareTo(getPriority(b));
+      });
+
+      for (final cat in sortedCats) {
         final key = '${cat.name.toLowerCase().trim()}_${cat.isIncome}';
         if (seenKeys.containsKey(key)) {
           idsToDelete.add(cat.id);
@@ -263,13 +275,17 @@ class SyncService {
 
         if (localCat != null) {
           if (localCat.isSynced) {
+            // Eğer uzaktan gelen limit null ise ve lokalde bir limit varsa, lokaldeki limiti KORU!
+            // Bu, Supabase'de limit kolonu eksik olduğunda veya boş döndüğünde limitlerin silinmesini engeller.
+            final resolvedLimit = rMaxLimit ?? localCat.maxLimit;
+
             final hasChanged = localCat.name != rcName ||
                 localCat.iconCode != rIconCode ||
                 localCat.colorValue != rColorValue ||
                 localCat.isIncome != rcIsIncome ||
                 localCat.isDeleted != isRemoteDeleted ||
                 localCat.orderIndex != rOrderIndex ||
-                localCat.maxLimit != rMaxLimit ||
+                localCat.maxLimit != resolvedLimit ||
                 localCat.remoteId != rId;
 
             if (hasChanged) {
@@ -281,7 +297,7 @@ class SyncService {
                 isIncome: rcIsIncome,
                 isDeleted: isRemoteDeleted,
                 orderIndex: rOrderIndex,
-                maxLimit: Value(rMaxLimit),
+                maxLimit: Value(resolvedLimit),
                 isSynced: true,
               );
               await _db.updateCategoryRecord(updated);

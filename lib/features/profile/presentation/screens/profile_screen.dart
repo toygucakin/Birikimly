@@ -1437,6 +1437,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> with TickerProvid
         isIncome: isIncome,
         maxLimit: limit,
       );
+    } else {
+      await ref.read(categoryProvider.notifier).updateCategory(
+        categoryId,
+        name: name,
+        icon: icon,
+        color: color,
+        maxLimit: drift.Value(limit),
+      );
     }
   }
 }

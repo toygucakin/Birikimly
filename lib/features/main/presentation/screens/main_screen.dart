@@ -17,7 +17,7 @@ class MainScreen extends ConsumerStatefulWidget {
   ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends ConsumerState<MainScreen> {
+class _MainScreenState extends ConsumerState<MainScreen> with WidgetsBindingObserver {
   late PageController _pageController;
 
   @override
@@ -25,6 +25,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     print('DEBUG: _MainScreenState.initState called');
     _pageController = PageController();
+    WidgetsBinding.instance.addObserver(this);
     
     // Start sync service when main screen is built (user is logged in)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -59,8 +60,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final isGuest = ref.read(guestModeProvider);
+      if (!isGuest) {
+        print('DEBUG: App resumed, triggering sync...');
+        ref.read(syncServiceProvider).syncAll();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     print('DEBUG: _MainScreenState.dispose called');
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
   }
