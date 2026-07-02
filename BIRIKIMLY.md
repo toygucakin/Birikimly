@@ -25,6 +25,14 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 
 ## 📝 Değişiklik Günlüğü (Change Log)
 
+### [02.07.2026] - Kategori Bütçeleri Görünürlüğü, Senkronizasyon (Sync) Optimizasyonu ve Veri Kaybı Çözümleri
+- **Kategori Bütçeleri Görünürlük Mantığı:** Dashboard üzerindeki "Kategori Bütçeleri" kartlarının yalnızca o ay harcaması olan veya kullanıcı tarafından limit (maxLimit) atanmış kategorileri göstermesi kuralı (eski haline) geri getirildi. Yeni ayda sıfırlanan harcamalar nedeniyle, limiti olmayan kategorilerin kalabalık yapması engellendi. Gelir (Income) işlemlerinin bütçe limitlerine dahil edilmemesi prensibi korundu.
+- **Senkronizasyon (Sync) Kaynaklı Limit Kaybı Giderildi:** Senkronizasyon servisinde (`SyncService`), buluttan `max_limit` değeri `null` geldiğinde, kullanıcının lokal cihazındaki dolu bütçe limitlerini ezerek (overwrite) sıfırlamasına yol açan kritik bir veri kaybı hatası (bug) düzeltildi. Artık bulut verisi boş ise, kullanıcının cihazında ayarladığı limit güvenli bir şekilde korunuyor.
+- **Kategori Limit Kaydetme Hatası Çözümü:** Profil sayfasından "var olan" bir kategorinin limitinin güncellenmesi (`_executeCategorySave`) işlemi sırasında, gerekli güncellemeyi yapacak kod bloğunun (else) unutulduğu tespit edilerek eklendi. Limit belirleme işleminin tepkisiz kalması ve kaydedilmemesi sorunu tamamen çözüldü.
+- **Hortlayan (Silinen) Kategorilerin Geri Gelmesi Çözüldü:** Senkronizasyon sırasında kopya (duplicate) kategoriler temizlenirken yapılan önceliklendirme hatası düzeltildi. Çakışma durumunda *"Kullanıcının sildiği kategori, sistemin otomatik ürettiği varsayılan kategoriden daha değerlidir"* kuralı getirilerek, silinen kategorilerin geri gelmesi (hortlaması) engellendi.
+- **App Lifecycle ile Otomatik Senkronizasyon:** Ana ekrana `WidgetsBindingObserver` entegre edilerek, uygulamanın arka plandan her öne gelişinde (`AppLifecycleState.resumed`) senkronizasyonun otomatik tetiklenmesi sağlandı. Verilerin her girişte güncellenmesi garantilendi.
+- **Proje Adı Temizliği:** Eski proje adından kalan `.idea` klasörü ve `.iml` yapılandırma dosyaları temizlenerek IDE'nin projeyi temiz bir şekilde "Birikimly" olarak tanıması sağlandı.
+
 ### [30.06.2026] - İki Aşamalı Güvenli Hesap Silme Akışı, Postgres Cascade Tetikleyici Optimizasyonu, Parola Hizalamaları ve UI Taşma Çözümleri
 - **İki Aşamalı Hesap Silme Diyaloğu:** Profil sayfasındaki hesabı kalıcı silme akışı tamamen güvenli iki adımlı hale getirildi. İlk adımda e-posta/şifre doğrulaması yapılır, şifre doğruysa kullanıcının mailine Supabase üzerinden doğrulama kodu (OTP) gönderilir. İkinci adımda 6 haneli kod girilerek silme işlemi tamamlanır.
 - **OTP Gönderim Limiti & Geri Sayım Sayacı:** Supabase'in 60 saniyelik OTP istek limitiyle uyumlu çalışması için 1 dakikalık dinamik geri sayım sayacı entegre edildi. Buton geri sayım boyunca pasif kalır ("Tekrar Kod Gönder (45sn)" şeklinde).
