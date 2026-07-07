@@ -17,6 +17,7 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
     ) {
         appWidgetIds.forEach { widgetId ->
             val views = RemoteViews(context.packageName, R.layout.widget_layout).apply {
+                val isAuthenticated = widgetData.getBoolean("is_authenticated", false)
                 val netAmount = widgetData.getString("net_amount", "₺0,00")
                 val incomeAmount = widgetData.getString("income_amount", "₺0,00")
                 val expenseAmount = widgetData.getString("expense_amount", "₺0,00")
@@ -25,17 +26,27 @@ class BirikimlyWidgetProvider : HomeWidgetProvider() {
                 val hasLimit = widgetData.getBoolean("has_limit", false)
                 val expenseProgress = widgetData.getInt("expense_progress", 0)
 
-                setTextViewText(R.id.tv_net, netAmount)
-                setTextViewText(R.id.tv_income, incomeAmount)
-                setTextViewText(R.id.tv_expense, expenseAmount)
-                
-                if (limitAmount.isNullOrEmpty() || !hasLimit) {
+                if (!isAuthenticated) {
+                    setTextViewText(R.id.tv_title, "Birikimly")
+                    setTextViewText(R.id.tv_net, "Lütfen giriş yapın")
                     setTextViewText(R.id.tv_limit, "")
                     setViewVisibility(R.id.pb_limit, android.view.View.GONE)
+                    setViewVisibility(R.id.layout_buttons, android.view.View.GONE)
                 } else {
-                    setTextViewText(R.id.tv_limit, "Aylık Limit: $limitAmount")
-                    setViewVisibility(R.id.pb_limit, android.view.View.VISIBLE)
-                    setProgressBar(R.id.pb_limit, 100, expenseProgress, false)
+                    setViewVisibility(R.id.layout_buttons, android.view.View.VISIBLE)
+                    setTextViewText(R.id.tv_title, "Aylık Net Durum")
+                    setTextViewText(R.id.tv_net, netAmount)
+                    setTextViewText(R.id.tv_income, incomeAmount)
+                    setTextViewText(R.id.tv_expense, expenseAmount)
+                    
+                    if (limitAmount.isNullOrEmpty() || !hasLimit) {
+                        setTextViewText(R.id.tv_limit, "")
+                        setViewVisibility(R.id.pb_limit, android.view.View.GONE)
+                    } else {
+                        setTextViewText(R.id.tv_limit, "Aylık Limit: $limitAmount")
+                        setViewVisibility(R.id.pb_limit, android.view.View.VISIBLE)
+                        setProgressBar(R.id.pb_limit, 100, expenseProgress, false)
+                    }
                 }
 
                 if (themeHex != null) {

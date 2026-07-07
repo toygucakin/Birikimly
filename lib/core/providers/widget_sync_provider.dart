@@ -3,11 +3,14 @@ import 'package:birikimly/features/transactions/presentation/providers/transacti
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
 import 'package:birikimly/core/services/widget_service.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 
 final widgetSyncProvider = Provider<void>((ref) {
   final limit = ref.watch(monthlyLimitProvider);
   final theme = ref.watch(themeProvider);
   final transactionsAsync = ref.watch(transactionStreamProvider);
+  final user = ref.watch(currentUserProvider);
+  final isGuest = ref.watch(guestModeProvider);
 
   transactionsAsync.whenData((transactions) {
     final now = DateTime.now();
@@ -37,6 +40,7 @@ final widgetSyncProvider = Provider<void>((ref) {
       net: net,
       limit: limit,
       themeHex: themeHex,
+      isAuthenticated: user != null || isGuest,
     );
   });
 });

@@ -4,7 +4,6 @@ import 'package:birikimly/features/categories/domain/models/category_model.dart'
 import 'package:birikimly/core/database/database.dart';
 import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
-import 'package:birikimly/core/services/sync_service.dart';
 import 'package:birikimly/core/services/supabase_service.dart';
 import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart' as drift;
@@ -51,20 +50,25 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
     final db = ref.watch(databaseProvider);
 
     return db.watchAllCategories(userId).map((list) {
-      if (list.isEmpty) {
-        // Arka planda veritabanına ekle (Eğer daha önce hiç eklenmemişse)
+      final hasActiveIncome = list.any((c) => c.isIncome);
+      final hasActiveExpense = list.any((c) => !c.isIncome);
+
+      if (list.isEmpty || !hasActiveIncome || !hasActiveExpense) {
+        // Arka planda veritabanına ekle (Eğer daha önce hiç eklenmemişse veya bir tip tamamen silinmişse)
         if (!_isInitializing) {
           _ensureDefaultCategories(userId);
         }
 
-        // KULLANICI BEKLEMESİN: Hemen hafızadaki varsayılanları döndür
-        return _staticDefaults.map((def) => CategoryModel(
-          id: 'def_${(def['name'] as String).toLowerCase().replaceAll(' ', '_')}',
-          name: def['name'] as String,
-          icon: def['icon'] as IconData,
-          color: def['color'] as Color,
-          isIncome: def['income'] as bool,
-        )).toList();
+        // KULLANICI BEKLEMESİN: Eğer liste tamamen boşsa, hemen hafızadaki varsayılanları döndür
+        if (list.isEmpty) {
+          return _staticDefaults.map((def) => CategoryModel(
+            id: 'def_${(def['name'] as String).toLowerCase().replaceAll(' ', '_')}',
+            name: def['name'] as String,
+            icon: def['icon'] as IconData,
+            color: def['color'] as Color,
+            isIncome: def['income'] as bool,
+          )).toList();
+        }
       }
 
       return list.map((c) => CategoryModel.fromDb(c)).toList();
@@ -82,6 +86,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
       // SİLİNENLER DAHİL yerel geçmiş kontrolü
       final allHistory = await (db.select(db.categories)..where((c) => c.userId.equals(userId))).get();
       if (allHistory.isNotEmpty) {
+        await _checkAndRestoreMissingTypes(userId, allHistory, db, isGuest);
         _isInitializing = false;
         return;
       }
@@ -117,7 +122,7 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
           colorValue: (def['color'] as Color).value,
           isIncome: def['income'] as bool,
           orderIndex: drift.Value(_staticDefaults.indexOf(def)),
-          isSynced: drift.Value(!isGuest),
+          isSynced: const drift.Value(false),
         ));
       }
       
@@ -126,6 +131,50 @@ class CategoryNotifier extends StreamNotifier<List<CategoryModel>> {
       }
     } finally {
       _isInitializing = false;
+    }
+  }
+
+  Future<void> _checkAndRestoreMissingTypes(String userId, List<Category> allHistory, AppDatabase db, bool isGuest) async {
+    final hasActiveIncome = allHistory.any((c) => c.isIncome && !c.isDeleted);
+    final hasActiveExpense = allHistory.any((c) => !c.isIncome && !c.isDeleted);
+
+    if (hasActiveIncome && hasActiveExpense) return;
+
+    bool restoredAny = false;
+    for (final def in _staticDefaults) {
+      final isIncome = def['income'] as bool;
+      if ((!hasActiveIncome && isIncome) || (!hasActiveExpense && !isIncome)) {
+        final uuid = 'def_${(def['name'] as String).toLowerCase().replaceAll(' ', '_')}';
+        final existingDeleted = allHistory.cast<Category?>().firstWhere(
+          (c) => c?.uuid == uuid,
+          orElse: () => null,
+        );
+
+        if (existingDeleted != null) {
+          // Eğer silinmiş bir varsayılan kategori varsa, onu aktifleştir ve senkronize edilmedi yap
+          await db.updateCategoryRecord(existingDeleted.copyWith(
+            isDeleted: false,
+            isSynced: false,
+          ));
+        } else {
+          // Yoksa yeni varsayılan kategori ekle
+          await db.insertCategory(CategoriesCompanion.insert(
+            uuid: uuid,
+            userId: userId,
+            name: def['name'] as String,
+            iconCode: (def['icon'] as IconData).codePoint,
+            colorValue: (def['color'] as Color).value,
+            isIncome: isIncome,
+            orderIndex: drift.Value(_staticDefaults.indexOf(def)),
+            isSynced: const drift.Value(false),
+          ));
+        }
+        restoredAny = true;
+      }
+    }
+    
+    if (restoredAny && !isGuest) {
+      ref.read(syncServiceProvider).syncAll();
     }
   }
 

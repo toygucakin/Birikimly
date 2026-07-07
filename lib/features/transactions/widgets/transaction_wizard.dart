@@ -270,7 +270,9 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                                 ? 290.0 
                                 : 230.0) 
                             : 120.0) 
-                        : 120.0)),
+                        : (_currentStep == 1 
+                            ? 135.0 
+                            : 120.0))),
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (int step) async {
@@ -619,45 +621,42 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
   }
 
   Widget _buildDateStep() {
-    return SingleChildScrollView(
-      physics: const ClampingScrollPhysics(),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'İşlem Tarihi',
-              style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              onTap: _openDatePicker,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.calendar_today, color: AppColors.primary),
-                    const SizedBox(width: 12),
-                    Flexible(
-                      child: Text(
-                        DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'İşlem Tarihi',
+            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _openDatePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.calendar_today, color: AppColors.primary),
+                  const SizedBox(width: 12),
+                  Flexible(
+                    child: Text(
+                      DateFormat('dd MMMM yyyy', 'tr_TR').format(_selectedDate),
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -801,6 +800,11 @@ class _TransactionWizardState extends ConsumerState<TransactionWizard> {
                 onPressed: _previousStep,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  foregroundColor: AppColors.primary,
+                  side: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.5),
+                    width: 1.5,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),

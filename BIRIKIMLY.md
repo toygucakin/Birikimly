@@ -164,6 +164,19 @@ Birikimly'nin temel amacı, karmaşık finans takip süreçlerini basitleştirer
 
 ---
 
+## 📱 EMULATOR TESTLERİ
+
+### Pixel 7
+- Uygulamadan çıkış yapınca auth ekranındaysa widgetta net durum değil lütfen giriş yapın uyarısı bulunsun. [ÇÖZÜLDÜ]
+- Gelir/gider eklenirken işlem tarihi bölümü yukarı kaydırılabiliyor. bu sabitlenecek [ÇÖZÜLDÜ]
+- Auth ekranında gelir gider ekle diyince giriş yapma ekranında gelir gider ekleme geliyor [ÇÖZÜLDÜ]
+- pixel 7 modeli için ssteki gibi widget gelir giderlerinde sayının alttaki yarısı gözükmüyor. bu düzeltilecek [ÇÖZÜLDÜ]
+
+### Pixel 4a
+- Pixel 4a modeli için widgetta gelir ve gider miktarları hiç gözükmüyor (görüntüdeki gibi). [ÇÖZÜLDÜ]
+
+---
+
 ## 🗺️ Yol Haritası (Roadmap)
 
 Birikimly uygulamasının kararlılığını ve kullanıcı deneyimini artırmak amacıyla belirlenen gelecek geliştirme adımları ve öncelik sıralaması şu şekildedir:

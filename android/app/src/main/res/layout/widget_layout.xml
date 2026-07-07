@@ -22,7 +22,7 @@
         android:layout_centerInParent="true"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="6dp">
+        android:padding="2dp">
 
         <TextView
             android:id="@+id/tv_title"
@@ -31,7 +31,7 @@
             android:gravity="center"
             android:text="Aylık Net Durum"
             android:textColor="#E0FFFFFF"
-            android:textSize="11sp" />
+            android:textSize="10.5sp" />
 
         <TextView
             android:id="@+id/tv_net"
@@ -40,9 +40,9 @@
             android:gravity="center"
             android:text="₺0,00"
             android:textColor="#FFFFFF"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textStyle="bold"
-            android:layout_marginBottom="1dp"/>
+            android:layout_marginBottom="0dp"/>
             
         <TextView
             android:id="@+id/tv_limit"
@@ -59,13 +59,14 @@
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="3dp"
-            android:layout_marginBottom="3dp"
+            android:layout_marginBottom="2dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
             android:progressTint="#FFCDD2"
             android:visibility="gone" />
 
         <LinearLayout
+            android:id="@+id/layout_buttons"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
@@ -79,10 +80,10 @@
                 android:layout_weight="1"
                 android:background="@drawable/widget_btn_bg"
                 android:orientation="vertical"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
                 android:layout_marginEnd="3dp"
                 android:gravity="center">
 
@@ -103,7 +104,7 @@
                     android:text="₺0"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="10sp"
+                    android:textSize="9sp"
                     android:singleLine="true"
                     android:ellipsize="end" />
             </LinearLayout>
@@ -116,10 +117,10 @@
                 android:layout_weight="1"
                 android:background="@drawable/widget_btn_bg"
                 android:orientation="vertical"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
+                android:paddingTop="2.5dp"
+                android:paddingBottom="2.5dp"
+                android:paddingStart="2dp"
+                android:paddingEnd="2dp"
                 android:layout_marginStart="3dp"
                 android:gravity="center">
 
@@ -140,7 +141,7 @@
                     android:text="₺0"
                     android:textColor="#FFFFFF"
                     android:textStyle="bold"
-                    android:textSize="10sp"
+                    android:textSize="9sp"
                     android:singleLine="true"
                     android:ellipsize="end" />
             </LinearLayout>

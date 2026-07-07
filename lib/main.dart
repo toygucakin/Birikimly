@@ -9,6 +9,7 @@ import 'package:birikimly/core/services/supabase_service.dart';
 import 'package:birikimly/core/theme/app_colors.dart';
 import 'package:birikimly/core/theme/app_theme.dart';
 import 'package:birikimly/features/auth/presentation/screens/auth_gate.dart';
+import 'package:birikimly/features/auth/presentation/providers/auth_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:birikimly/core/providers/preferences_provider.dart';
 import 'package:birikimly/core/providers/theme_provider.dart';
@@ -118,6 +119,13 @@ class _BirikimlyAppState extends ConsumerState<BirikimlyApp> {
   void _handleDeepLink(Uri uri) {
     print('DEBUG: _handleDeepLink called with uri = $uri');
     if (uri.host == 'add_expense' || uri.host == 'add_income') {
+      final user = ref.read(currentUserProvider);
+      final isGuest = ref.read(guestModeProvider);
+      if (user == null && !isGuest) {
+        print('DEBUG: User is not logged in and not in guest mode. Ignoring deep link.');
+        return;
+      }
+
       final now = DateTime.now();
       if (_lastProcessedUri == uri &&
           _lastProcessedTime != null &&

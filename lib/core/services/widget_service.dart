@@ -24,8 +24,10 @@ class WidgetService {
     required double net,
     double? limit,
     String? themeHex,
+    required bool isAuthenticated,
   }) async {
     try {
+      await HomeWidget.saveWidgetData<bool>('is_authenticated', isAuthenticated);
       await HomeWidget.saveWidgetData<String>('net_amount', _formatCurrency(net));
       await HomeWidget.saveWidgetData<String>('income_amount', _formatCurrency(income));
       await HomeWidget.saveWidgetData<String>('expense_amount', _formatCurrency(expense));
